@@ -44,13 +44,13 @@ var contractTypeMap = map[string]reflect.Type{
 	"ExchangeTransactionContract":     reflect.TypeOf(core.ExchangeTransactionContract{}),
 }
 
-// getContract 根据协议内通用contract解析出实际的类型数据
+// GetContract 根据协议内通用contract解析出实际的类型数据
 // in:
 //	contract: core.Transaction的contract对象
 // out:
 // 	reflect.Type: 实际协议类型
 //	interface{}: 实际协议对象
-func getContract(contract *core.Transaction_Contract) (reflect.Type, interface{}) {
+func GetContract(contract *core.Transaction_Contract) (reflect.Type, interface{}) {
 	ctxTypeInfo := strings.Split(contract.Parameter.TypeUrl, ".")
 	if len(ctxTypeInfo) > 0 {
 		ctxTypeName := ctxTypeInfo[len(ctxTypeInfo)-1] // . 分割的类型的最后一个字段

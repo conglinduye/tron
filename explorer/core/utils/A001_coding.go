@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"time"
 
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -58,4 +59,22 @@ func BinaryBigEndianEncodeInt64(num int64) []byte {
 // BinaryBigEndianDecodeUint64 ...
 func BinaryBigEndianDecodeUint64(d []byte) uint64 {
 	return binary.BigEndian.Uint64(d)
+}
+
+// ConverTimestamp convert ms to yyyy-mm-dd hh24:mi:ss.ms
+func ConverTimestamp(ts int64) string {
+	str := fmt.Sprintf("%v", ts)
+	tsv := ts
+	if len(str) == 19 {
+		//
+	} else if len(str) == 16 {
+		tsv *= 1000
+	} else if len(str) == 13 {
+		tsv *= 1000000
+	} else if len(str) == 10 {
+		tsv *= 1000000000
+	} else {
+		return str
+	}
+	return time.Unix(0, tsv).Format("2006-01-02 15:04:05.000000")
 }
