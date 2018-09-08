@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/tronprotocol/grpc-gateway/api"
@@ -87,7 +88,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 
 func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 	dbb := getMysqlDB()
-
+	ts := time.Now()
 	txn, err := dbb.Begin()
 	if err != nil {
 		fmt.Printf("get db failed:%v\n", err)
@@ -120,7 +121,7 @@ func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 	}
 	defer stmt.Close()
 
-	tranList := make([]*core.Transaction, 0, 2000)
+	tranList := make([]*core.Transaction, 0, len(blocks)*10)
 
 	var succCnt, errCnt int64
 	blockIDList := make([]int64, 0, len(blocks))
@@ -160,9 +161,14 @@ func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 		tranList = append(tranList, block.Transactions...)
 	}
 
-	storeTransactions(tranList)
-
 	err = txn.Commit()
+
+	fmt.Printf("store %v blocks cost:%v\n", len(blocks), time.Since(ts))
+
+	// ts = time.Now()
+	// // storeTransactions(tranList)
+	// fmt.Printf("store %v transactions cost:%v\n", len(tranList), time.Since(ts))
+
 	if err != nil {
 		fmt.Printf("connit block failed:%v\n", err)
 		return false, succCnt, errCnt, blockIDList

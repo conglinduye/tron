@@ -38,12 +38,18 @@ func getBlock(id int, b, e int64) {
 	bb := b
 	cnt := int64(0)
 	errCnt := 0
+	newE := int64(0)
+
+	blockBuf := make([]*core.Block, 0, 2000)
+	blockIDs := make([]int64, 0, 2000)
+
+	tsWriteDB := time.Now()
 
 	for {
 
 		if errCnt >= maxErrCnt {
 			stopWorker()
-			getBlock(id, b, e) // redo full bulk of block
+			getBlock(id, bb, e) // redo full bulk of block
 			return
 		}
 
@@ -63,7 +69,7 @@ func getBlock(id int, b, e int64) {
 			}
 		}
 
-		newE := b + bulkFetchLimit
+		newE = b + bulkFetchLimit
 
 		if e > 0 && newE > e {
 			newE = e
@@ -75,17 +81,33 @@ func getBlock(id int, b, e int64) {
 		if nil != err {
 			errCnt++
 		}
-
-		ret := verifyStoreBlock(blocks, genVerifyBlockIDList(b, newE), client, maxErrCnt-errCnt)
-		if !ret {
-			fmt.Printf("bulk get block(%v, %v) check store failed! error:%v\n", b, newE, err)
-			errCnt += maxErrCnt
-		}
-
 		c := int64(len(blocks))
 		cnt += c
 		b += c
+
+		if len(blockBuf)+len(blocks) > cap(blockBuf) || time.Since(tsWriteDB) > 10*time.Second {
+			ret := verifyStoreBlock(blockBuf, blockIDs, client, maxErrCnt-errCnt)
+			if !ret {
+				fmt.Printf("bulk get block(%v, %v) check store failed! error:%v\n", b, newE, err)
+				errCnt += maxErrCnt
+			}
+			blockBuf = blockBuf[:0]
+			blockIDs = blockIDs[:0]
+			tsWriteDB = time.Now()
+		}
+		blockBuf = append(blockBuf, blocks...)
+		blockIDs = append(blockIDs, genVerifyBlockIDList(b, newE)...)
 	}
+
+	ret := verifyStoreBlock(blockBuf, blockIDs, client, maxErrCnt-errCnt)
+	if !ret {
+		fmt.Printf("bulk get block(%v, %v) check store failed\n", b, newE)
+		errCnt += maxErrCnt
+		stopWorker()
+		getBlock(id, bb, e)
+		return
+	}
+
 	fmt.Printf("%v Finish work, total cost:%v, total block:%v(%v), begin:%v, end:%v\n", taskID, time.Since(ts), cnt, b-bb, bb, b)
 
 	stopWorker()
