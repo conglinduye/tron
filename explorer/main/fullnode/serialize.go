@@ -17,6 +17,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 	txn, err := dbb.Begin()
 	if err != nil {
 		fmt.Println(err)
+		return false
 	}
 	/*
 		CREATE TABLE `transactions` (
@@ -45,6 +46,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 		fmt.Println(err)
 		return false
 	}
+	defer stmt.Close()
 
 	for _, tran := range trans {
 		if nil == tran || nil == tran.RawData {
@@ -117,6 +119,7 @@ func storeBlocks(blocks []*core.Block) bool {
 		fmt.Println(err)
 		return false
 	}
+	defer stmt.Close()
 
 	tranList := make([]*core.Transaction, 0, 2000)
 
