@@ -59,6 +59,7 @@ func getBlock(id int, numStart int64, numEnd int64) int64 {
 	startWorker()
 
 	ts := time.Now()
+
 	servAddr := fmt.Sprintf("%s:50051", utils.GetRandFullNode())
 
 	taskID := fmt.Sprintf("[%04v|%v~%v|%v]", id, numStart, numEnd, servAddr)
@@ -73,10 +74,7 @@ func getBlock(id int, numStart int64, numEnd int64) int64 {
 	limit := int64(100)
 
 	if latestNum == 0 || numStart >= latestNum {
-		prop, err := dbc.GetDynamicProperties()
-		if nil == err && nil != prop {
-			latestNum = prop.LastSolidityBlockNum
-		}
+		latestNum = getLatestNum(dbc)
 		fmt.Printf("%v latestNum is [%v]\n", taskID, latestNum)
 	}
 
@@ -90,10 +88,7 @@ func getBlock(id int, numStart int64, numEnd int64) int64 {
 
 	for {
 		if latestNum == 0 || numStart >= latestNum {
-			prop, err := dbc.GetDynamicProperties()
-			if nil == err && nil != prop {
-				latestNum = prop.LastSolidityBlockNum
-			}
+			latestNum = getLatestNum(dbc)
 			fmt.Printf("%v latestNum is [%v]\n", taskID, latestNum)
 		}
 
@@ -118,6 +113,9 @@ func getBlock(id int, numStart int64, numEnd int64) int64 {
 		if numEndNow > numEnd && numEnd > 0 {
 			numEndNow = numEnd
 		}
+		if numEnd == 0 && numEndNow > latestNum {
+			numEndNow = latestNum
+		}
 
 		// tss := time.Now()
 		blocks, err := client.GetBlockByLimitNext(numStart, numEndNow)
@@ -135,23 +133,34 @@ func getBlock(id int, numStart int64, numEnd int64) int64 {
 	return blockCnt
 }
 
-func checkForkTask(id int, taskID string, latestNum, numStart, numEnd int64) int64 {
-	if latestNum == 0 {
-		return numStart
+func getLatestNum(dbc *grpcclient.Database) int64 {
+	prop, err := dbc.GetDynamicProperties()
+	if nil == err && nil != prop {
+		return prop.LastSolidityBlockNum
 	}
+	return 0
+}
 
-	newStart := numStart
+func checkForkTask(id int, taskID string, latestE, b, e int64) (newB int64) {
+	newB = b
+	if e == 0 {
+		if id != 0 { // e == 0 only for task id == 0
+			return
+		}
 
-	if (numEnd == 0 || latestNum < numEnd) && latestNum-*gInt64MaxWorkload > numStart {
-		newStart = latestNum - *gInt64MaxWorkload
-	} else if latestNum >= numEnd && numEnd-numStart > *gInt64MaxWorkload {
-		newStart = numEnd - *gInt64MaxWorkload
+		if latestE-b > *gInt64MaxWorkload {
+			newB = latestE - *gInt64MaxWorkload
+			forkBlockTask(id, b, newB)
+		}
+	} else {
+		if e-b > *gInt64MaxWorkload {
+			newB = e - *gInt64MaxWorkload
+			forkBlockTask(id, b, newB)
+		}
 	}
+	return
+}
 
-	if newStart != numStart { // fork sub
-		fmt.Printf("%v fork task range: %v ~ %v\n", taskID, numStart, newStart)
-		go getBlock(id+1, numStart, newStart)
-	}
-
-	return newStart
+func forkBlockTask(id int, b, e int64) {
+	go getBlock(id, b, e)
 }
