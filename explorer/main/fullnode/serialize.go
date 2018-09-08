@@ -16,7 +16,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 
 	txn, err := dbb.Begin()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("start transaction for storeTransaction failed:%v\n", err)
 		return false
 	}
 	/*
@@ -43,7 +43,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 	sqlstr := "insert into transactions (trx_hash, block_id, contract_type, contract_data, result_data, create_time, expire_time) values (?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := txn.Prepare(sqlstr)
 	if nil != err {
-		fmt.Println(err)
+		fmt.Printf("prepare store transaction SQL failed:%v\n", err)
 		return false
 	}
 	defer stmt.Close()
@@ -68,31 +68,30 @@ func storeTransactions(trans []*core.Transaction) bool {
 				tran.RawData.Timestamp,
 				tran.RawData.Expiration)
 		} else {
-			fmt.Println("transaction contract is empty!")
+			fmt.Println("ERROR: transaction contract is empty!")
 		}
 		if err != nil {
-			fmt.Printf("store transaction failed!%v, %#v\n", err, tran.RawData)
-			return false
+			fmt.Printf("ERROR: store transaction failed!%v, %#v\n", err, utils.ToJSONStr(tran))
+			// return false
 		}
-
 	}
 
 	err = txn.Commit()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("commit transaction data failed:%v\n", err)
 		return false
 	}
 
 	return true
 }
 
-func storeBlocks(blocks []*core.Block) bool {
+func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 	dbb := getMysqlDB()
 
 	txn, err := dbb.Begin()
 	if err != nil {
 		fmt.Printf("get db failed:%v\n", err)
-		return false
+		return false, 0, 0, nil
 	}
 	/*
 		CREATE TABLE `blocks` (
@@ -116,12 +115,15 @@ func storeBlocks(blocks []*core.Block) bool {
 	sqlstr := "insert into blocks (block_id, block_hash, parent_hash, confirmed, transaction_num, block_size, witness_address, create_time, tx_trie_hash) values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := txn.Prepare(sqlstr)
 	if nil != err {
-		fmt.Println(err)
-		return false
+		fmt.Printf("prepare insert block SQL failed:%v\n", err)
+		return false, 0, 0, nil
 	}
 	defer stmt.Close()
 
 	tranList := make([]*core.Transaction, 0, 2000)
+
+	var succCnt, errCnt int64
+	blockIDList := make([]int64, 0, len(blocks))
 
 	for _, block := range blocks {
 		if nil == block || nil == block.BlockHeader {
@@ -129,6 +131,7 @@ func storeBlocks(blocks []*core.Block) bool {
 		}
 		if true {
 			blockHash := utils.HexEncode(utils.CalcBlockHash(block))
+			blockIDList = append(blockIDList, block.BlockHeader.RawData.Number)
 			data, _ := proto.Marshal(&api.TransactionList{Transaction: block.Transactions})
 			_, err = stmt.Exec(
 				block.BlockHeader.RawData.Number,
@@ -144,22 +147,25 @@ func storeBlocks(blocks []*core.Block) bool {
 			fmt.Println("transaction contract is empty!")
 		}
 		if err != nil {
-			fmt.Println(err)
-			return false
+			fmt.Printf("insert into block failed:%v-->%v\n", err, utils.ToJSONStr(block))
+			// return false
+			errCnt++
+		} else {
+			succCnt++
+			for _, tran := range block.Transactions {
+				tran.RawData.RefBlockNum = block.BlockHeader.RawData.Number
+			}
 		}
-		// utils.VerifyCall(block, nil)
-		for _, tran := range block.Transactions {
-			tran.RawData.RefBlockNum = block.BlockHeader.RawData.Number
-		}
+
 		tranList = append(tranList, block.Transactions...)
 	}
 
-	// storeTransactions(tranList)
+	storeTransactions(tranList)
 
 	err = txn.Commit()
 	if err != nil {
-		fmt.Println(err)
-		return false
+		fmt.Printf("connit block failed:%v\n", err)
+		return false, succCnt, errCnt, blockIDList
 	}
-	return true
+	return true, succCnt, errCnt, blockIDList
 }
