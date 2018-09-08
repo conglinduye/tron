@@ -18,3 +18,12 @@ func VerifyCall(val interface{}, err error) {
 		jsonPrint(val)
 	}
 }
+
+// ToJSONStr ...
+func ToJSONStr(val interface{}) string {
+	data, err := json.Marshal(val)
+	if nil != err {
+		return fmt.Sprintf("%#v", val)
+	}
+	return string(data)
+}
