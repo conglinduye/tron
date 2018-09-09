@@ -9,7 +9,7 @@ import (
 
 func TestDatabaseClient(*testing.T) {
 
-	client := NewDatabase(fmt.Sprintf("%s:50051", utils.GetRandFullNode()))
+	client := NewDatabase(fmt.Sprintf("%s:50051", utils.GetRandFullNodeAddr()))
 
 	err := client.Connect()
 	if nil != err {

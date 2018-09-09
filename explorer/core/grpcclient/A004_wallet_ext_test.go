@@ -7,16 +7,16 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
-	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/tronprotocol/grpc-gateway/api"
 	"github.com/tronprotocol/grpc-gateway/core"
+	"github.com/wlcy/tron/explorer/core/utils"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func TestWalletExt(*testing.T) {
 
-	client := NewWalletExt(fmt.Sprintf("%s:50051", utils.GetRandSolidityNode()))
+	client := NewWalletExt(fmt.Sprintf("%s:50051", utils.GetRandSolidityNodeAddr()))
 
 	err := client.Connect()
 	if nil != err {

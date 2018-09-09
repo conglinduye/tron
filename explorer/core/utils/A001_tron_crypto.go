@@ -67,6 +67,15 @@ func GetTronHexAddress(in string) (out string, err error) {
 	return
 }
 
+// VerifyTronAddrByte ...
+func VerifyTronAddrByte(addr []byte) bool {
+	ret := HexEncode(addr)
+	if (ret[0] == '4' && ret[1] == '1') || (ret[0] == 'a' && ret[1] == '0') {
+		return true
+	}
+	return false
+}
+
 // GetTronBase58Address 根据 hex encoding public key生成 hex encoding address
 //	in: hex encoding public key (uncompressed public key)
 //	out: base58 encoding address

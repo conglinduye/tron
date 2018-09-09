@@ -9,13 +9,13 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
-// GetRandSolidityNode 随机获取一个solidity node ip
-func GetRandSolidityNode() string {
+// GetRandSolidityNodeAddr 随机获取一个solidity node ip
+func GetRandSolidityNodeAddr() string {
 	return SolidityNodeList[rand.Int31n(int32(len(SolidityNodeList)))]
 }
 
-// GetRandFullNode 随机获取一个full node ip
-func GetRandFullNode() string {
+// GetRandFullNodeAddr 随机获取一个full node ip
+func GetRandFullNodeAddr() string {
 	return FullNodeList[rand.Int31n(int32(len(FullNodeList)))]
 }
 

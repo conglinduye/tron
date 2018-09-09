@@ -1,9 +1,11 @@
 package grpcclient
 
 import (
-	"github.com/wlcy/tron/explorer/core/utils"
+	"fmt"
+
 	"github.com/tronprotocol/grpc-gateway/api"
 	"github.com/tronprotocol/grpc-gateway/core"
+	"github.com/wlcy/tron/explorer/core/utils"
 )
 
 // WalletSolidity grpc wallet client wrapper
@@ -16,6 +18,15 @@ type WalletSolidity struct {
 func NewWalletSolidity(serverAddr string) *WalletSolidity {
 	ret := &WalletSolidity{}
 	ret.serverAddr = serverAddr
+	return ret
+}
+
+// GetRandomSolidity ...
+func GetRandomSolidity() *WalletSolidity {
+	serverAddr := fmt.Sprintf("%v:%v", utils.GetRandSolidityNodeAddr(), utils.DefaultGrpPort)
+	ret := &WalletSolidity{}
+	ret.serverAddr = serverAddr
+	ret.Connect()
 	return ret
 }
 
@@ -37,13 +48,18 @@ func (ws *WalletSolidity) Connect() (err error) {
 
 // GetAccount 获取账户信息
 func (ws *WalletSolidity) GetAccount(addr string) (*core.Account, error) {
+	return ws.GetAccountRawAddr(utils.Base58DecodeAddr(addr))
+}
+
+// GetAccountRawAddr 获取账户信息 addr 为[]byte数组
+func (ws *WalletSolidity) GetAccountRawAddr(addr []byte) (*core.Account, error) {
 
 	ctx, cancel := getTimeoutContext(defaultTimeout)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 
 	account := &core.Account{}
-	account.Address = utils.Base58DecodeAddr(addr)
+	account.Address = addr
 	account, err := ws.client.GetAccount(ctx, account, callOpt)
 
 	return account, err

@@ -1,11 +1,12 @@
 package grpcclient
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/tronprotocol/grpc-gateway/api"
 	"github.com/tronprotocol/grpc-gateway/core"
+	"github.com/wlcy/tron/explorer/core/utils"
 )
 
 // WalletExt grpc wallet client wrapper
@@ -18,6 +19,15 @@ type WalletExt struct {
 func NewWalletExt(serverAddr string) *WalletExt {
 	ret := &WalletExt{}
 	ret.serverAddr = serverAddr
+	return ret
+}
+
+// GetRandomWalletExt ...
+func GetRandomWalletExt() *WalletExt {
+	serverAddr := fmt.Sprintf("%v:%v", utils.GetRandSolidityNodeAddr(), utils.DefaultGrpPort)
+	ret := &WalletExt{}
+	ret.serverAddr = serverAddr
+	ret.Connect()
 	return ret
 }
 

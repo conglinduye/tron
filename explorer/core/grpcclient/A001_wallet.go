@@ -1,11 +1,12 @@
 package grpcclient
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/tronprotocol/grpc-gateway/api"
 	"github.com/tronprotocol/grpc-gateway/core"
+	"github.com/wlcy/tron/explorer/core/utils"
 )
 
 // Wallet grpc wallet client wrapper
@@ -18,6 +19,15 @@ type Wallet struct {
 func NewWallet(serverAddr string) *Wallet {
 	ret := &Wallet{}
 	ret.serverAddr = serverAddr
+	return ret
+}
+
+// GetRandomWallet ...
+func GetRandomWallet() *Wallet {
+	serverAddr := fmt.Sprintf("%v:%v", utils.GetRandFullNodeAddr(), utils.DefaultGrpPort)
+	ret := &Wallet{}
+	ret.serverAddr = serverAddr
+	ret.Connect()
 	return ret
 }
 

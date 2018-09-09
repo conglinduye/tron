@@ -57,4 +57,6 @@ func TestSignIssue(t *testing.T) {
 	recPubKey, err := GetSignedPublicKey(trx1)
 	fmt.Printf("recPubKey:%v\n%v\n", recPubKey, HexEncode(recPubKey))
 
+	fmt.Println(Base58DecodeAddr("7YxAaK71utTpYJ8u4Zna7muWxd1pQwimpGxy8"))
+
 }

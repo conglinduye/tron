@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/tronprotocol/grpc-gateway/core"
@@ -51,16 +51,32 @@ var contractTypeMap = map[string]reflect.Type{
 // 	reflect.Type: 实际协议类型
 //	interface{}: 实际协议对象
 func GetContract(contract *core.Transaction_Contract) (reflect.Type, interface{}) {
-	ctxTypeInfo := strings.Split(contract.Parameter.TypeUrl, ".")
-	if len(ctxTypeInfo) > 0 {
-		ctxTypeName := ctxTypeInfo[len(ctxTypeInfo)-1] // . 分割的类型的最后一个字段
-		ctxType, ok := contractTypeMap[ctxTypeName]
-		if ok {
-			ret := reflect.New(ctxType).Interface().(proto.Message)
-			proto.Unmarshal(contract.Parameter.Value, ret)
+	// ctxTypeInfo := strings.Split(contract.Parameter.TypeUrl, ".")
+	// if len(ctxTypeInfo) > 0 {
+	// 	ctxTypeName := ctxTypeInfo[len(ctxTypeInfo)-1] // . 分割的类型的最后一个字段
+	// 	ctxType, ok := contractTypeMap[ctxTypeName]
+	// 	if ok {
+	// 		ret := reflect.New(ctxType).Interface().(proto.Message)
+	// 		proto.Unmarshal(contract.Parameter.Value, ret)
 
-			return ctxType, ret
+	// 		return ctxType, ret
+	// 	}
+	// }
+	// return nil, nil
+	return GetContractByParamVal(contract.Type, contract.Parameter.Value)
+}
+
+// GetContractByParamVal 获取实际的协议内容
+func GetContractByParamVal(ctxType core.Transaction_Contract_ContractType, val []byte) (reflect.Type, interface{}) {
+	ctxRealType, ok := contractTypeMap[ctxType.String()]
+	if ok {
+		ret := reflect.New(ctxRealType).Interface().(proto.Message)
+		err := proto.Unmarshal(val, ret)
+		if nil != err {
+			fmt.Printf("convert contract failed:%v, type:%s, value:%v", err, ctxType, HexEncode(val))
+			return nil, nil
 		}
+		return ctxRealType, ret
 	}
 	return nil, nil
 }
