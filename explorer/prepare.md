@@ -93,3 +93,17 @@
     cd $GOPATH/src/github.com/tronprotocol/grpc-gateway/core
     go build
     ```
+
+## 2. explorerService
+1.  安装gin环境
+```
+go get -u github.com/gin-gonic/gin
+```
+
+2. import it in your code:
+```
+import "github.com/gin-gonic/gin"
+```
+
+3. API DOC
+http://test.tronapp.co:8000/blockchain/
