@@ -6,9 +6,6 @@ import (
 
 	"fmt"
 
-	"github.com/wlcy/tron/explorer/core/grpcclient"
-	"github.com/wlcy/tron/explorer/core/utils"
-
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -47,111 +44,120 @@ func workingTaskCnt() int {
 
 func getAllBlocks() {
 	ts := time.Now()
-	blockCnt := getBlock(0, 0, 0)
-	fmt.Printf("total get block count:%v, cost:%v\n", blockCnt, time.Since(ts))
+	getBlock(0, 0, 0)
+	fmt.Printf("get all blocks cost:%v\n", time.Since(ts))
 }
 
 // var maxWorkload = int64(10000) // getBlock任务最大工作负荷
 
 var maxWorker chan struct{}
 
-func getBlock(id int, numStart int64, numEnd int64) int64 {
-	startWorker()
+// func getBlock(id int, numStart int64, numEnd int64) int64 {
+// 	startWorker()
 
-	ts := time.Now()
-	servAddr := fmt.Sprintf("%s:50051", utils.GetRandFullNode())
+// 	ts := time.Now()
 
-	taskID := fmt.Sprintf("[%04v|%v~%v|%v]", id, numStart, numEnd, servAddr)
+// 	servAddr := fmt.Sprintf("%s:50051", utils.GetRandFullNode())
 
-	client := grpcclient.NewWallet(servAddr)
-	client.Connect()
-	dbc := grpcclient.NewDatabase(servAddr)
-	dbc.Connect()
+// 	taskID := fmt.Sprintf("[%04v|%v~%v|%v]", id, numStart, numEnd, servAddr)
 
-	blockCnt := int64(0)
-	latestNum := int64(0)
-	limit := int64(100)
+// 	client := grpcclient.NewWallet(servAddr)
+// 	client.Connect()
+// 	dbc := grpcclient.NewDatabase(servAddr)
+// 	dbc.Connect()
 
-	if latestNum == 0 || numStart >= latestNum {
-		prop, err := dbc.GetDynamicProperties()
-		if nil == err && nil != prop {
-			latestNum = prop.LastSolidityBlockNum
-		}
-		fmt.Printf("%v latestNum is [%v]\n", taskID, latestNum)
-	}
+// 	blockCnt := int64(0)
+// 	latestNum := int64(0)
+// 	limit := int64(100)
 
-	if latestNum == 0 {
-		stopWorker()
-		return getBlock(id, numStart, numEnd)
-	}
+// 	if latestNum == 0 || numStart >= latestNum {
+// 		latestNum = getLatestNum(dbc)
+// 		fmt.Printf("%v latestNum is [%v]\n", taskID, latestNum)
+// 	}
 
-	numStart = checkForkTask(id, taskID, latestNum, numStart, numEnd)
-	taskID = fmt.Sprintf("[%04v|%v~%v|%v]", id, numStart, numEnd, servAddr)
+// 	if latestNum == 0 {
+// 		stopWorker()
+// 		return getBlock(id, numStart, numEnd)
+// 	}
 
-	for {
-		if latestNum == 0 || numStart >= latestNum {
-			prop, err := dbc.GetDynamicProperties()
-			if nil == err && nil != prop {
-				latestNum = prop.LastSolidityBlockNum
-			}
-			fmt.Printf("%v latestNum is [%v]\n", taskID, latestNum)
-		}
+// 	numStart = checkForkTask(id, taskID, latestNum, numStart, numEnd)
+// 	taskID = fmt.Sprintf("[%04v|%v~%v|%v]", id, numStart, numEnd, servAddr)
 
-		if numEnd == 0 && id == 0 { // 特殊的任务，不退出，需要读取最新块
-			if numStart >= latestNum {
-				time.Sleep(10 * time.Second)
-				workingTask := workingTaskCnt()
-				fmt.Printf("current working task:[%v]--max task:[%v]\n", workingTask, *gIntMaxWorker)
-				if workingTask == 1 {
-					fmt.Printf("Sync all data cost:%v\n", time.Since(ts))
-					break
-				}
-			}
-		} else {
-			if numStart >= latestNum || numStart >= numEnd {
-				break
-			}
-		}
+// 	for {
+// 		if latestNum == 0 || numStart >= latestNum {
+// 			latestNum = getLatestNum(dbc)
+// 			fmt.Printf("%v latestNum is [%v]\n", taskID, latestNum)
+// 		}
 
-		numEndNow := numStart + limit
+// 		if numEnd == 0 && id == 0 { // 特殊的任务，不退出，需要读取最新块
+// 			if numStart >= latestNum {
+// 				time.Sleep(10 * time.Second)
+// 				workingTask := workingTaskCnt()
+// 				fmt.Printf("current working task:[%v]--max task:[%v]\n", workingTask, *gIntMaxWorker)
+// 				if workingTask == 1 {
+// 					fmt.Printf("Sync all data cost:%v\n", time.Since(ts))
+// 					break
+// 				}
+// 			}
+// 		} else {
+// 			if numStart >= latestNum || numStart >= numEnd {
+// 				break
+// 			}
+// 		}
 
-		if numEndNow > numEnd && numEnd > 0 {
-			numEndNow = numEnd
-		}
+// 		numEndNow := numStart + limit
 
-		// tss := time.Now()
-		blocks, err := client.GetBlockByLimitNext(numStart, numEndNow)
-		_ = err
-		blockCnt += int64(len(blocks))
-		// fmt.Printf("%v get block:[%v ~ %v], got:[%v], err:[%v], cost:[%v]\n", taskID, numStart, numEndNow, len(blocks), err, time.Since(tss))
+// 		if numEndNow > numEnd && numEnd > 0 {
+// 			numEndNow = numEnd
+// 		}
+// 		if numEnd == 0 && numEndNow > latestNum {
+// 			numEndNow = latestNum
+// 		}
 
-		storeBlocks(blocks)
-		numStart += int64(len(blocks))
-	}
+// 		// tss := time.Now()
+// 		blocks, err := client.GetBlockByLimitNext(numStart, numEndNow)
+// 		_ = err
+// 		blockCnt += int64(len(blocks))
+// 		// fmt.Printf("%v get block:[%v ~ %v], got:[%v], err:[%v], cost:[%v]\n", taskID, numStart, numEndNow, len(blocks), err, time.Since(tss))
 
-	fmt.Printf("%v Finish work, total cost:%v, total block:%v\n", taskID, time.Since(ts), blockCnt)
+// 		storeBlocks(blocks)
+// 		numStart += int64(len(blocks))
+// 	}
 
-	stopWorker()
-	return blockCnt
-}
+// 	fmt.Printf("%v Finish work, total cost:%v, total block:%v\n", taskID, time.Since(ts), blockCnt)
 
-func checkForkTask(id int, taskID string, latestNum, numStart, numEnd int64) int64 {
-	if latestNum == 0 {
-		return numStart
-	}
+// 	stopWorker()
+// 	return blockCnt
+// }
 
-	newStart := numStart
+// func getLatestNum(dbc *grpcclient.Database) int64 {
+// 	prop, err := dbc.GetDynamicProperties()
+// 	if nil == err && nil != prop {
+// 		return prop.LastSolidityBlockNum
+// 	}
+// 	return 0
+// }
 
-	if (numEnd == 0 || latestNum < numEnd) && latestNum-*gInt64MaxWorkload > numStart {
-		newStart = latestNum - *gInt64MaxWorkload
-	} else if latestNum >= numEnd && numEnd-numStart > *gInt64MaxWorkload {
-		newStart = numEnd - *gInt64MaxWorkload
-	}
+// func checkForkTask(id int, taskID string, latestE, b, e int64) (newB int64) {
+// 	newB = b
+// 	if e == 0 {
+// 		if id != 0 { // e == 0 only for task id == 0
+// 			return
+// 		}
 
-	if newStart != numStart { // fork sub
-		fmt.Printf("%v fork task range: %v ~ %v\n", taskID, numStart, newStart)
-		go getBlock(id+1, numStart, newStart)
-	}
+// 		if latestE-b > *gInt64MaxWorkload {
+// 			newB = latestE - *gInt64MaxWorkload
+// 			forkBlockTask(id+1, b, newB)
+// 		}
+// 	} else {
+// 		if e-b > *gInt64MaxWorkload {
+// 			newB = e - *gInt64MaxWorkload
+// 			forkBlockTask(id+1, b, newB)
+// 		}
+// 	}
+// 	return
+// }
 
-	return newStart
-}
+// func forkBlockTask(id int, b, e int64) {
+// 	go getBlock(id, b, e)
+// }
