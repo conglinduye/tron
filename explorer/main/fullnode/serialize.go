@@ -163,11 +163,11 @@ func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 
 	err = txn.Commit()
 
-	fmt.Printf("store %v blocks cost:%v\n", len(blocks), time.Since(ts))
+	// fmt.Printf("store %v blocks cost:%v\n", len(blocks), time.Since(ts))
 
-	// ts = time.Now()
-	// // storeTransactions(tranList)
-	// fmt.Printf("store %v transactions cost:%v\n", len(tranList), time.Since(ts))
+	ts = time.Now()
+	storeTransactions(tranList)
+	fmt.Printf("store %v transactions cost:%v\n", len(tranList), time.Since(ts))
 
 	if err != nil {
 		fmt.Printf("connit block failed:%v\n", err)

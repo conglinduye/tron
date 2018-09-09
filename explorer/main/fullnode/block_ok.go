@@ -81,9 +81,6 @@ func getBlock(id int, b, e int64) {
 		if nil != err {
 			errCnt++
 		}
-		c := int64(len(blocks))
-		cnt += c
-		b += c
 
 		if len(blockBuf)+len(blocks) > cap(blockBuf) || time.Since(tsWriteDB) > 10*time.Second {
 			ret := verifyStoreBlock(blockBuf, blockIDs, client, maxErrCnt-errCnt)
@@ -97,6 +94,10 @@ func getBlock(id int, b, e int64) {
 		}
 		blockBuf = append(blockBuf, blocks...)
 		blockIDs = append(blockIDs, genVerifyBlockIDList(b, newE)...)
+
+		c := int64(len(blocks))
+		cnt += c
+		b += c
 	}
 
 	ret := verifyStoreBlock(blockBuf, blockIDs, client, maxErrCnt-errCnt)
