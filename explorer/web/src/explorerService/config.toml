@@ -1,0 +1,22 @@
+[server]
+address = ":20110"
+objectpool = 10
+
+[mysql]
+#host = "18.216.57.65"
+host = "127.0.0.1"
+port = "3306"
+user = "budev"
+pass = "tron**1"
+#user = "tron"
+#pass = "tron"
+protocol = "tcp"
+schema = "tron"
+charset = "utf8"
+
+[Redis]
+host = "127.0.0.1:6378"
+pass = ""
+index = 0
+poolsize = 10
+
