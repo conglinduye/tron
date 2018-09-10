@@ -14,7 +14,9 @@ func QueryBlocks(req *entity.Blocks) (*entity.BlocksResp, error) {
 	mutiFilter := false
 
 	strSQL := fmt.Sprintf(`
-			select block_id,block_hash,block_size,create_time,tx_trie_hash,parent_hash,witness_address,confirmed
+			select block_id,block_hash,block_size,create_time,
+			transaction_num,
+			tx_trie_hash,parent_hash,witness_address,confirmed
 			from tron.blocks
 			where 1=1 `)
 
@@ -47,4 +49,21 @@ func QueryBlocks(req *entity.Blocks) (*entity.BlocksResp, error) {
 		pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 	}
 	return module.QueryBlocksRealize(strSQL, filterSQL, sortSQL, pageSQL)
+}
+
+//QueryBlock 精确查询  	//number=2135998
+func QueryBlock(req *entity.Blocks) (*entity.BlockInfo, error) {
+	var filterSQL string
+	strSQL := fmt.Sprintf(`
+			select block_id,block_hash,block_size,create_time,
+			transaction_num,
+			tx_trie_hash,parent_hash,witness_address,confirmed
+			from tron.blocks
+			where 1=1 `)
+
+	//按传入条件拼接sql，很容易错误，需要注意
+	if req.Number != "" {
+		filterSQL = fmt.Sprintf(" and block_id=%v", req.Number)
+	}
+	return module.QueryBlockRealize(strSQL, filterSQL)
 }

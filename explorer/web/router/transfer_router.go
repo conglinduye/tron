@@ -1,0 +1,45 @@
+package router
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/util"
+	"github.com/wlcy/tron/explorer/web/entity"
+	"github.com/wlcy/tron/explorer/web/service"
+)
+
+func transferRegister(ginRouter *gin.Engine) {
+
+	//?sort=-number&limit=1&count=true&number=2135998
+	ginRouter.GET("/api/transfer", func(c *gin.Context) {
+		req := &entity.Transfers{}
+		req.Sort = c.Query("sort")
+		req.Limit = c.Query("limit")
+		req.Count = c.Query("count")
+		req.Start = c.Query("start")
+		req.Hash = c.Query("hash")
+		req.Number = c.Query("number")
+		log.Debugf("Hello /api/transfer?%#v", req)
+		resp, err := service.QueryTransfers(req)
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+	//:number=2135998
+	ginRouter.GET("/api/transfer/:hash", func(c *gin.Context) {
+		req := &entity.Blocks{}
+		req.Number = c.Param("hash") //占位符传参
+		log.Debugf("Hello /api/block/:%#v", req.Number)
+		resp, err := service.QueryTransfer(req)
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+
+}
