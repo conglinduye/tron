@@ -134,7 +134,6 @@ func analyzeTrxFrk(b, e int64) {
 var maxWorker chan struct{}
 
 func initWorkerChan() {
-	*gIntMaxWorker = 20
 	maxWorker = make(chan struct{}, *gIntMaxWorker)
 	for i := 0; i < *gIntMaxWorker; i++ {
 		maxWorker <- struct{}{}
