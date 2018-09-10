@@ -14,7 +14,11 @@ func Start(address string, objectpool int) {
 	// 注册区块链查询路由
 	blockRegister(ginRouter)
 	// 注册交易查询路由
+	transactionRegister(ginRouter)
+	// 注册转账查询路由
 	transferRegister(ginRouter)
+	// 注册账户查询路由
+	accountRegister(ginRouter)
 
 	service := http.Server{
 		Addr:           address,

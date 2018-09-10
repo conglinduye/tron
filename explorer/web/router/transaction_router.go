@@ -14,7 +14,7 @@ func transactionRegister(ginRouter *gin.Engine) {
 
 	//?sort=-number&limit=1&count=true&number=2135998
 	ginRouter.GET("/api/transaction", func(c *gin.Context) {
-		req := &entity.Transfers{}
+		req := &entity.Transactions{}
 		req.Sort = c.Query("sort")
 		req.Limit = c.Query("limit")
 		req.Count = c.Query("count")
@@ -31,7 +31,7 @@ func transactionRegister(ginRouter *gin.Engine) {
 	})
 	//:number=2135998
 	ginRouter.GET("/api/transaction/:hash", func(c *gin.Context) {
-		req := &entity.Transfers{}
+		req := &entity.Transactions{}
 		req.Hash = c.Param("hash") //占位符传参
 		log.Debugf("Hello /api/block/:%#v", req.Hash)
 		resp, err := service.QueryTransaction(req)
