@@ -9,7 +9,7 @@ import (
 
 func TestWalletSolidity(*testing.T) {
 
-	client := NewWalletSolidity(fmt.Sprintf("%s:50051", utils.GetRandSolidityNode()))
+	client := NewWalletSolidity(fmt.Sprintf("%s:50051", utils.GetRandSolidityNodeAddr()))
 
 	err := client.Connect()
 	if nil != err {
@@ -92,4 +92,13 @@ func TestWalletSolidity(*testing.T) {
 	// err = proto.Unmarshal(rawData, pp)
 	// fmt.Printf("%s\n%v\n", proto.MarshalTextString(pp), err)
 
+}
+
+func TestRW(*testing.T) {
+	client := GetRandomSolidity()
+
+	account, _ := client.GetAccount("TKoU7MkprWw8q142Sd199XU4B5fUaMVBNm")
+	fmt.Printf("%#v\n", account)
+
+	// "QWvZtdNgH9MCNjy7j27oD+YL4lt6"
 }

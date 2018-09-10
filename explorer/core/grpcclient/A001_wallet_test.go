@@ -10,7 +10,7 @@ import (
 
 func TestWallet(*testing.T) {
 
-	client := NewWallet(fmt.Sprintf("%s:50051", utils.GetRandFullNode()))
+	client := NewWallet(fmt.Sprintf("%s:50051", utils.GetRandFullNodeAddr()))
 
 	err := client.Connect()
 	if nil != err {

@@ -1,9 +1,11 @@
 package grpcclient
 
 import (
-	"github.com/wlcy/tron/explorer/core/utils"
+	"fmt"
+
 	"github.com/tronprotocol/grpc-gateway/api"
 	"github.com/tronprotocol/grpc-gateway/core"
+	"github.com/wlcy/tron/explorer/core/utils"
 )
 
 // Database grpc wallet client wrapper
@@ -17,6 +19,15 @@ type Database struct {
 func NewDatabase(serverAddr string) *Database {
 	ret := &Database{}
 	ret.serverAddr = serverAddr
+	return ret
+}
+
+// GetRandomDatabase ...
+func GetRandomDatabase() *Database {
+	serverAddr := fmt.Sprintf("%v:%v", utils.GetRandFullNodeAddr(), utils.DefaultGrpPort)
+	ret := &Database{}
+	ret.serverAddr = serverAddr
+	ret.Connect()
 	return ret
 }
 
