@@ -41,7 +41,7 @@ output:json
 ```
 
 
-## 单个区块信息
+## 单个转账信息
 - url:/api/transfer/:hash
 - method:get
 
@@ -52,14 +52,14 @@ input:param
 output:json
 ```json
 {
-    "id":"c23254c7-c377-4489-ae07-8ffac4a4668f",
-    "transactionHash":"f07bcf92453bd97591b46e913db29ab721469476bd43fbc7c9aa3e2aa22f32a2",
-    "block":2214131,
-    "timestamp":1536549252000,
-    "transferFromAddress":"TDh2S3T3whq9FxD8cmTbBjSCvhsLHmqftK",
-    "transferToAddress":"TJAwZWjvZUsEwZVrqSpa4QV8Q4YX1i1s4b",
-    "amount":2985719,
-    "tokenName":"TRX",
-    "confirmed":true
+    "id":"c23254c7-c377-4489-ae07-8ffac4a4668f", //转账id
+    "transactionHash":"f07bcf92453bd97591b46e913db29ab721469476bd43fbc7c9aa3e2aa22f32a2",//转账交易hash
+    "block":2214131,//所属区块高度
+    "timestamp":1536549252000,//时间戳
+    "transferFromAddress":"TDh2S3T3whq9FxD8cmTbBjSCvhsLHmqftK", //交易发起人
+    "transferToAddress":"TJAwZWjvZUsEwZVrqSpa4QV8Q4YX1i1s4b",//交易接受人
+    "amount":2985719,//交易金额
+    "tokenName":"TRX",//token名称
+    "confirmed":false//是否确认
 }
 ```

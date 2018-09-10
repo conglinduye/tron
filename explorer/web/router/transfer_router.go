@@ -31,9 +31,9 @@ func transferRegister(ginRouter *gin.Engine) {
 	})
 	//:number=2135998
 	ginRouter.GET("/api/transfer/:hash", func(c *gin.Context) {
-		req := &entity.Blocks{}
-		req.Number = c.Param("hash") //占位符传参
-		log.Debugf("Hello /api/block/:%#v", req.Number)
+		req := &entity.Transfers{}
+		req.Hash = c.Param("hash") //占位符传参
+		log.Debugf("Hello /api/block/:%#v", req.Hash)
 		resp, err := service.QueryTransfer(req)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)

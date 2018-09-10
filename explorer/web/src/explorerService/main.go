@@ -9,7 +9,6 @@
 package main
 
 import (
-	"adx/module/common"
 	"flag"
 
 	"github.com/wlcy/tron/explorer/lib/config"
@@ -32,7 +31,7 @@ func main() {
 	config.LoadConfig(*configfile)
 
 	//获取服务启动参数或其他参数
-	var conf common.ConfigServer
+	var conf config.ConfigServer
 	if 0 != conf.Populate(*configfile) {
 		return
 	}
