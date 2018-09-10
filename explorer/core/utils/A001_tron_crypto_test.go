@@ -60,3 +60,7 @@ func TestSignIssue(t *testing.T) {
 	fmt.Println(Base58DecodeAddr("7YxAaK71utTpYJ8u4Zna7muWxd1pQwimpGxy8"))
 
 }
+
+func TestX(*testing.T) {
+	fmt.Println(GetContractInfoStr2(2, HexDecode("0a0449504653121541d13433f53fdf88820c2e530da7828ce15d6585cb1a154198f4b89409bb65edbcebb26d46d28cd00bb002ed2001")))
+}
