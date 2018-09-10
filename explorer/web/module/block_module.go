@@ -34,6 +34,7 @@ func QueryBlocksRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Blo
 		block.ParentHash = dataPtr.GetField("parent_hash")
 		block.WitnessAddress = dataPtr.GetField("witness_address")
 		block.WitnessID = 0
+		block.NrOfTrx = mysql.ConvertDBValueToInt64(dataPtr.GetField("transaction_num"))
 		confirmed := dataPtr.GetField("confirmed")
 		if confirmed == "1" {
 			block.Confirmed = true
@@ -52,5 +53,40 @@ func QueryBlocksRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Blo
 	blocksResp.Data = blockInfos
 
 	return blocksResp, nil
+
+}
+
+//QueryBlockRealize 操作数据库
+func QueryBlockRealize(strSQL, filterSQL string) (*entity.BlockInfo, error) {
+	strFullSQL := strSQL + " " + filterSQL
+	log.Debug(strFullSQL)
+	dataPtr, err := mysql.QueryTableData(strFullSQL)
+	if err != nil {
+		log.Errorf("QueryBlocks error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryBlocks dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	var block = &entity.BlockInfo{}
+	//填充数据
+	for dataPtr.NextT() {
+		block.Number = mysql.ConvertDBValueToInt64(dataPtr.GetField("block_id"))
+		block.Hash = dataPtr.GetField("block_hash")
+		block.Size = mysql.ConvertDBValueToInt64(dataPtr.GetField("block_size"))
+		block.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
+		block.TxTrieRoot = dataPtr.GetField("tx_trie_hash")
+		block.ParentHash = dataPtr.GetField("parent_hash")
+		block.WitnessAddress = dataPtr.GetField("witness_address")
+		block.WitnessID = 0
+		block.NrOfTrx = mysql.ConvertDBValueToInt64(dataPtr.GetField("transaction_num"))
+		confirmed := dataPtr.GetField("confirmed")
+		if confirmed == "1" {
+			block.Confirmed = true
+		}
+	}
+
+	return block, nil
 
 }

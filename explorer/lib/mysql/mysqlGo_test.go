@@ -8,7 +8,7 @@ import (
 func TestSelect(t *testing.T) {
 	var db *TronDB
 
-	db, err := OpenDB("mysql", "budev:tron**1@tcp(127.0.0.1:3306)/tron?charset=utf8")
+	db, err := OpenDB("mysql", "budev:budev@tcp(127.0.0.1:3306)/tron?charset=utf8")
 
 	if err != nil {
 		fmt.Println("opendb fail")

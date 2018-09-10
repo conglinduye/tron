@@ -25,7 +25,7 @@ output:json
             "parentHash":"0000000000211c9e71b4f0d007d5a6eb508d05dd515c0a82373d685c6325e7ba",//父hash
             "witnessId":0,//所属候选人ID
             "witnessAddress":"TFA1qpUkQ1yBDw4pgZKx25wEZAqkjGoZo1",//所属候选人地址
-            "nrOfTrx":12,//？？
+            "nrOfTrx":12,//交易数
             "confirmed":false//是否经过确认
         },
         {
@@ -44,3 +44,27 @@ output:json
 }
 ```
 可与首页的区块高度，出块记录列表，搜索区块功能复用
+
+## 单个区块信息
+- url:/api/block/:number
+- method:get
+
+input:param
+```param
+
+```
+output:json
+```json
+{
+    "number":2170015,
+    "hash":"0000000000211c9fb87d9cf193db8326349148d32ede34d7c5ac0bee92b22374",
+    "size":2815,
+    "timestamp":1536416862000,
+    "txTrieRoot":"2NT3va4sQGdoHShLFZdyW9jApfCj3AmvyiYLEfnn1NkvMvvewf",
+    "parentHash":"0000000000211c9e71b4f0d007d5a6eb508d05dd515c0a82373d685c6325e7ba",
+    "witnessId":0,
+    "witnessAddress":"TFA1qpUkQ1yBDw4pgZKx25wEZAqkjGoZo1",
+    "nrOfTrx":12,
+    "confirmed":true
+}
+```
