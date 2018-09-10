@@ -2,6 +2,7 @@ package grpcclient
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/wlcy/tron/explorer/core/utils"
@@ -96,9 +97,36 @@ func TestWalletSolidity(*testing.T) {
 
 func TestRW(*testing.T) {
 	client := GetRandomSolidity()
+	client1 := GetRandomWallet()
 
-	account, _ := client.GetAccount("TKoU7MkprWw8q142Sd199XU4B5fUaMVBNm")
-	fmt.Printf("%#v\n", account)
+	addr := "TDGmmTC7xDgQGwH4FYRGuE7SFH2MePHYeH"
+
+	account, _ := client.GetAccount(addr)
+	// fmt.Printf("%#v\n", account)
+	utils.VerifyCall(account, nil)
 
 	// "QWvZtdNgH9MCNjy7j27oD+YL4lt6"
+	utils.VerifyCall(client1.GetAccountNet(addr))
+}
+
+func TestBlock(*testing.T) {
+
+	client := GetRandomSolidity()
+
+	client1 := GetRandomWallet()
+
+	utils.VerifyCall(client.GetBlockByNum(2224654))
+
+	wg := sync.WaitGroup{}
+
+	wg.Add(1)
+	go func() {
+		block, _ := client.GetNowBlock()
+		fmt.Printf("solidity now block:%v\n", block.BlockHeader.RawData.Number)
+		wg.Done()
+	}()
+	block1, _ := client1.GetNowBlock()
+	fmt.Printf("full now block:%v\n", block1.BlockHeader.RawData.Number)
+	utils.VerifyCall(client.GetBlockByNum(block1.BlockHeader.RawData.Number))
+	wg.Wait()
 }
