@@ -72,7 +72,7 @@ func analyzeTrx(b, e int64) {
 		trx.ExtractContract()
 		anaylzeTransaction(trx)
 	}
-	updateTrxOwner(trxList)
+	// updateTrxOwner(trxList)
 
 	waitCnt := 3
 	for {
@@ -123,7 +123,7 @@ func analyzeTrxFrk(b, e int64) {
 		trx.ExtractContract()
 		anaylzeTransaction(trx)
 	}
-	updateTrxOwner(trxList)
+	// updateTrxOwner(trxList)
 
 	stopWorker()
 	return
