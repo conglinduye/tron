@@ -9,7 +9,7 @@ import (
 )
 
 //QueryTransactions 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
-func QueryTransactions(req *entity.Transfers) (*entity.TransactionsResp, error) {
+func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, error) {
 	var filterSQL, sortSQL, pageSQL, sortTemp string
 	mutiFilter := false
 
@@ -63,7 +63,7 @@ func QueryTransactions(req *entity.Transfers) (*entity.TransactionsResp, error) 
 }
 
 //QueryTransfer 精确查询  	//number=2135998
-func QueryTransaction(req *entity.Transfers) (*entity.TransactionInfo, error) {
+func QueryTransaction(req *entity.Transactions) (*entity.TransactionInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
 		select block_id,owner_address,to_address,amount,
