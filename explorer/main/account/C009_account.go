@@ -58,9 +58,14 @@ func (a *account) SetRaw(raw *core.Account) {
 	if raw.IsWitness {
 		a.IsWitness = 1
 	}
-	a.Fronzen = utils.ToJSONStr(raw.Frozen)
+	if len(raw.Frozen) > 0 {
+		a.Fronzen = utils.ToJSONStr(raw.Frozen)
+
+	}
 	a.AssetBalance = a.raw.Asset
-	a.Votes = utils.ToJSONStr(raw.Votes)
+	if len(raw.Votes) > 0 {
+		a.Votes = utils.ToJSONStr(raw.Votes)
+	}
 }
 
 // getAccount addrs from redis which is the raw []byte, need convert to base58
