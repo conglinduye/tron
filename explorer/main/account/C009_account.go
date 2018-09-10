@@ -281,7 +281,7 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 			acc.Votes)
 
 		if err != nil {
-			fmt.Printf("insert into account failed:%v-->[%v]\n", err, acc.Addr)
+			// fmt.Printf("insert into account failed:%v-->[%v]\n", err, acc.Addr)
 
 			_, err := stmtU.Exec(
 				acc.Name,
@@ -299,7 +299,7 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 
 			if err != nil {
 				errCnt++
-				fmt.Printf("update account failed:%v-->[%v]\n", err, acc.Addr)
+				// fmt.Printf("update account failed:%v-->[%v]\n", err, acc.Addr)
 			} else {
 				updateCnt++
 				// fmt.Printf("update account ok!!!\n")
