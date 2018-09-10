@@ -8,16 +8,16 @@ import (
 	"github.com/wlcy/tron/explorer/web/module"
 )
 
-//QueryTransfers 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
-func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
+//QueryTransactions 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
+func QueryTransactions(req *entity.Transfers) (*entity.TransactionsResp, error) {
 	var filterSQL, sortSQL, pageSQL, sortTemp string
 	mutiFilter := false
 
 	strSQL := fmt.Sprintf(`
 			select block_id,owner_address,to_address,amount,
-			token_name,trx_hash,
-			contract_type,confirmed,create_time
-			from tron.contract_token_transfer
+			token_name,trx_hash,contract_data,result_data,fee
+			contract_type,confirmed,create_time,expire_time
+			from tron.transactions
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -59,17 +59,17 @@ func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 	if req.Limit != "" && req.Start != "" {
 		pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 	}
-	return module.QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL)
+	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 
 //QueryTransfer 精确查询  	//number=2135998
-func QueryTransfer(req *entity.Transfers) (*entity.TransferInfo, error) {
+func QueryTransaction(req *entity.Transfers) (*entity.TransactionInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
 		select block_id,owner_address,to_address,amount,
-		token_name,trx_hash,
-		contract_type,confirmed,create_time
-		from tron.contract_token_transfer
+		token_name,trx_hash,contract_data,result_data,fee
+		contract_type,confirmed,create_time,expire_time
+		from tron.transactions
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -79,5 +79,5 @@ func QueryTransfer(req *entity.Transfers) (*entity.TransferInfo, error) {
 	if req.Hash != "" {
 		filterSQL = fmt.Sprintf(" and trx_hash='%v'", req.Hash)
 	}
-	return module.QueryTransferRealize(strSQL, filterSQL)
+	return module.QueryTransactionRealize(strSQL, filterSQL)
 }
