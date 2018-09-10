@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/wlcy/tron/explorer/core/grpcclient"
+	"github.com/wlcy/tron/explorer/core/utils"
 )
 
 func TestLoadTrx(*testing.T) {
@@ -49,7 +50,7 @@ func TestGetAccount(*testing.T) {
 	fmt.Println(err)
 
 	accList, restAddr, _ := getAccount(list)
-	storeAccount(accList)
+	storeAccount(accList, nil)
 
 	fmt.Printf("accList size:%v, restAddr size:%v\n", len(accList), len(restAddr))
 }
@@ -57,19 +58,29 @@ func TestGetAccount(*testing.T) {
 func TestRW(*testing.T) {
 
 	initDB("tron:tron@tcp(172.16.21.224:3306)/tron")
-	client := grpcclient.GetRandomSolidity()
 
-	acc, _ := client.GetAccount("TKoU7MkprWw8q142Sd199XU4B5fUaMVBNm")
+	client := grpcclient.GetRandomSolidity()
+	client1 := grpcclient.GetRandomWallet()
+
+	addr := "TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp"
+	// addr = "TDGmmTC7xDgQGwH4FYRGuE7SFH2MePHYeH"
+	addr = "TJuRfL3tRdSQvVPKDXi6FRivcbZpsbz7AD"
+	acc, _ := client.GetAccount(addr)
+	accn, _ := client1.GetAccountNet(addr)
 
 	accc := new(account)
 	accc.SetRaw(acc)
+	accc.SetNetRaw(accn)
 
-	storeAccount([]*account{accc})
+	fmt.Println(utils.ToJSONStr(accc))
 
-	for {
+	// storeAccount([]*account{accc}, db)
+	storeAccount([]*account{accc}, nil)
 
-		fmt.Printf("\n\n--%v--\n", getDBMaxBlockID())
-		time.Sleep(3 * time.Second)
-	}
+	// for {
+
+	// 	fmt.Printf("\n\n--%v--\n", getDBMaxBlockID())
+	// 	time.Sleep(3 * time.Second)
+	// }
 
 }

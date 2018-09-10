@@ -51,12 +51,17 @@ func (w *Wallet) Connect() (err error) {
 
 // GetAccount 获取账户信息
 func (w *Wallet) GetAccount(addr string) (*core.Account, error) {
+	return w.GetAccountRawAddr(utils.Base58DecodeAddr(addr))
+}
+
+// GetAccountRawAddr 获取账户信息
+func (w *Wallet) GetAccountRawAddr(addr []byte) (*core.Account, error) {
 	ctx, cancel := getTimeoutContext(defaultTimeout)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 
 	account := &core.Account{}
-	account.Address = utils.Base58DecodeAddr(addr)
+	account.Address = addr
 	account, err := w.client.GetAccount(ctx, account, callOpt)
 
 	return account, err
@@ -112,12 +117,17 @@ func (w *Wallet) GetAssetIssueByAccount(addr string) ([]*core.AssetIssueContract
 
 // GetAccountNet ...
 func (w *Wallet) GetAccountNet(addr string) (*api.AccountNetMessage, error) {
+	return w.GetAccountNetRawAddr(utils.Base58DecodeAddr(addr))
+}
+
+// GetAccountNetRawAddr ...
+func (w *Wallet) GetAccountNetRawAddr(addr []byte) (*api.AccountNetMessage, error) {
 	ctx, cancel := getTimeoutContext(defaultTimeout)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 
 	account := &core.Account{}
-	account.Address = utils.Base58DecodeAddr(addr)
+	account.Address = addr
 	accountNet, err := w.client.GetAccountNet(ctx, account, callOpt)
 
 	return accountNet, err
