@@ -86,7 +86,13 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 		go getAcoountF(addrs[0:len(addrs)-getAccountWorkerLimit], &result, &badAddr, lock, wg)
 	}
 
-	waitCnt := 0
+	waitCnt := 3
+	lock.Lock()
+	result = append(result, accountList...)
+	badAddr = append(badAddr, bad...)
+	lock.Unlock()
+	fmt.Printf("***** main routine, working task:%v, current account result count:%v, badAddr:%v, waitCnt:%v\n", workingTaskCnt(), len(result), len(badAddr), waitCnt)
+
 	for {
 		workCnt := workingTaskCnt()
 		lock.Lock()
@@ -94,9 +100,9 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 		lock.Unlock()
 
 		if workCnt == 1 {
-			waitCnt++
+			waitCnt--
 		}
-		if waitCnt > 5 {
+		if waitCnt <= 0 {
 			break
 		}
 		time.Sleep(3 * time.Second)
@@ -104,12 +110,7 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 
 	// storeAccount(accountList)
 
-	lock.Lock()
-	result = append(result, accountList...)
-	badAddr = append(badAddr, bad...)
-	lock.Unlock()
-	fmt.Printf("***** main routine, working task:%v, current account result count:%v, badAddr:%v, waitCnt:%v\n", workingTaskCnt(), len(result), len(badAddr), waitCnt)
-
+	stopWorker()
 	return result, badAddr, nil
 }
 
@@ -233,8 +234,7 @@ func storeAccount(accountList []*account) bool {
 		)
 
 		if err != nil {
-			fmt.Printf("insert into account failed:%v-->[%v]\n", err, acc.Addr)
-			// return false
+			// fmt.Printf("insert into account failed:%v-->[%v]\n", err, acc.Addr)
 
 			_, err := stmtU.Exec(
 				acc.Name,
@@ -245,7 +245,7 @@ func storeAccount(accountList []*account) bool {
 
 			if err != nil {
 				errCnt++
-				fmt.Printf("update account failed:%v-->[%v]\n", err, acc.Addr)
+				// fmt.Printf("update account failed:%v-->[%v]\n", err, acc.Addr)
 			} else {
 				updateCnt++
 				// fmt.Printf("update account ok!!!\n")
@@ -272,7 +272,7 @@ func storeAccount(accountList []*account) bool {
 		fmt.Printf("connit block failed:%v\n", err)
 		return false
 	}
-	fmt.Printf("store account OK, cost:%v, insertCnt:%v, updateCnt:%v, errCnt:%v, total source:%v!", time.Since(ts), insertCnt, updateCnt, errCnt, len(accountList))
+	fmt.Printf("store account OK, cost:%v, insertCnt:%v, updateCnt:%v, errCnt:%v, total source:%v\n", time.Since(ts), insertCnt, updateCnt, errCnt, len(accountList))
 
 	return true
 }
@@ -318,7 +318,13 @@ func updateTrxOwner(trxList []*transaction) bool {
 func getDBMaxBlockID() int64 {
 	dbb := getMysqlDB()
 
-	row, err := dbb.Query("select max(block_id) from blocks")
+	txn, err := dbb.Begin()
+	if nil != err {
+		fmt.Printf("start db transaction failed:%v\n", err)
+		return 10000000
+	}
+
+	row, err := txn.Query("select max(block_id) from blocks")
 	if nil != err {
 		fmt.Printf("getDBMaxBlockID failed:%v, return 10000000 as default!\n", err)
 		return 10000000

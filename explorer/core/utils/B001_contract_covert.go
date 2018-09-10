@@ -80,3 +80,33 @@ func GetContractByParamVal(ctxType core.Transaction_Contract_ContractType, val [
 	}
 	return nil, nil
 }
+
+// GetContractInfoStr ...
+func GetContractInfoStr(contract *core.Transaction_Contract) (ownerAddr string, contractDetail string) {
+	_, ctx := GetContractByParamVal(contract.Type, contract.Parameter.Value)
+	if nil != ctx {
+		contractDetail = ToJSONStr(ctx)
+		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
+			ownerAddr = Base58EncodeAddr(ownerIF.GetOwnerAddress())
+		}
+	}
+	return
+}
+
+// GetContractInfoStr2 ...
+func GetContractInfoStr2(ctxType int32, val []byte) (ownerAddr string, contractDetail string) {
+
+	_, ctx := GetContractByParamVal(core.Transaction_Contract_ContractType(ctxType), val)
+	if nil != ctx {
+		contractDetail = ToJSONStr(ctx)
+		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
+			ownerAddr = Base58EncodeAddr(ownerIF.GetOwnerAddress())
+		}
+	}
+	return
+}
+
+// OwnerAddressIF ...
+type OwnerAddressIF interface {
+	GetOwnerAddress() []byte
+}

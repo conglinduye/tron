@@ -66,6 +66,10 @@ func TestRW(*testing.T) {
 
 	storeAccount([]*account{accc})
 
-	fmt.Printf("\n\n--%v--\n", getDBMaxBlockID())
+	for {
+
+		fmt.Printf("\n\n--%v--\n", getDBMaxBlockID())
+		time.Sleep(3 * time.Second)
+	}
 
 }
