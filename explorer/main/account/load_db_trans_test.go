@@ -49,7 +49,7 @@ func TestGetAccount(*testing.T) {
 	fmt.Println(err)
 
 	accList, restAddr, _ := getAccount(list)
-	storeAccount(accList)
+	storeAccount(accList, nil)
 
 	fmt.Printf("accList size:%v, restAddr size:%v\n", len(accList), len(restAddr))
 }
@@ -57,19 +57,21 @@ func TestGetAccount(*testing.T) {
 func TestRW(*testing.T) {
 
 	initDB("tron:tron@tcp(172.16.21.224:3306)/tron")
+
 	client := grpcclient.GetRandomSolidity()
 
-	acc, _ := client.GetAccount("TKoU7MkprWw8q142Sd199XU4B5fUaMVBNm")
+	acc, _ := client.GetAccount("TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp")
 
 	accc := new(account)
 	accc.SetRaw(acc)
 
-	storeAccount([]*account{accc})
+	// storeAccount([]*account{accc}, db)
+	storeAccount([]*account{accc}, nil)
 
-	for {
+	// for {
 
-		fmt.Printf("\n\n--%v--\n", getDBMaxBlockID())
-		time.Sleep(3 * time.Second)
-	}
+	// 	fmt.Printf("\n\n--%v--\n", getDBMaxBlockID())
+	// 	time.Sleep(3 * time.Second)
+	// }
 
 }

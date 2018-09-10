@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"sync"
 	"time"
@@ -11,14 +12,32 @@ import (
 )
 
 type account struct {
-	raw        *core.Account
-	Name       string
-	Addr       string
-	CreateTime int64
-	IsWitness  int8
-	Fronzen    string
+	raw            *core.Account
+	Name           string
+	Addr           string
+	CreateTime     int64
+	IsWitness      int8
+	Fronzen        string
+	AssetIssueName string
 
 	AssetBalance map[string]int64
+	Votes        string
+
+	/*
+		`account_name` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Account name',
+		`address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Base 58 encoding address',
+		`balance` bigint(20) NOT NULL DEFAULT '0' COMMENT 'TRX balance, in sun',
+		`create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户创建时间',
+		`latest_operation_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户最后操作时间',
+		`is_witness` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否为wintness; 0: 不是，1:是',
+		`frozen` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '冻结金额, 投票权',
+		`create_unix_time` int(32) NOT NULL DEFAULT '0' COMMENT '账户创建时间unix时间戳，用于分区',
+		`allowance` bigint(20) DEFAULT '0',
+		`latest_withdraw_time` bigint(20) DEFAULT '0',
+		`latest_consume_time` bigint(20) DEFAULT '0',
+		`latest_consume_free_time` bigint(20) DEFAULT '0',
+		`votes` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT '',
+	*/
 }
 
 var maxErrCnt = 5
@@ -30,6 +49,7 @@ func (a *account) SetRaw(raw *core.Account) {
 	a.raw = raw
 	a.Name = string(raw.AccountName)
 	a.Addr = utils.Base58EncodeAddr(raw.Address)
+	a.AssetIssueName = string(raw.AssetIssuedName)
 	a.CreateTime = raw.CreateTime
 	if a.CreateTime == 0 {
 		a.CreateTime = beginTime.UnixNano()
@@ -40,6 +60,7 @@ func (a *account) SetRaw(raw *core.Account) {
 	}
 	a.Fronzen = utils.ToJSONStr(raw.Frozen)
 	a.AssetBalance = a.raw.Asset
+	a.Votes = utils.ToJSONStr(raw.Votes)
 }
 
 // getAccount addrs from redis which is the raw []byte, need convert to base58
@@ -83,7 +104,7 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 	}
 
 	if len(restAddr) > 0 {
-		go getAcoountF(addrs[0:len(addrs)-getAccountWorkerLimit], &result, &badAddr, lock, wg)
+		go getAcoountF(restAddr, &result, &badAddr, lock, wg)
 	}
 
 	waitCnt := 3
@@ -171,8 +192,10 @@ func getAcoountF(addrs []string, result *[]*account, badAddr *[]string, lock *sy
 	return
 }
 
-func storeAccount(accountList []*account) bool {
-	dbb := getMysqlDB()
+func storeAccount(accountList []*account, dbb *sql.DB) bool {
+	if nil == dbb {
+		dbb = getMysqlDB()
+	}
 
 	ts := time.Now()
 	txn, err := dbb.Begin()
@@ -185,16 +208,24 @@ func storeAccount(accountList []*account) bool {
 		  `account_name` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Account name',
 		  `address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Base 58 encoding address',
 		  `balance` bigint(20) NOT NULL DEFAULT '0' COMMENT 'TRX balance, in sun',
-		  `create_time` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '账户创建时间',
-		  `latest_operation_time` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '账户最后操作时间',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户创建时间',
+		  `latest_operation_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户最后操作时间',
 		  `is_witness` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否为wintness; 0: 不是，1:是',
-		  `modified_time` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '记录更新时间',
-		  `fronze_amount` bigint(20) NOT NULL DEFAULT '0' COMMENT '冻结金额, 投票权',
-		  `create_unix_time` int(32) NOT NULL DEFAULT '0' COMMENT '账户创建时间unix时间戳，用于分区',
-		  UNIQUE KEY `uniq_account_address` (`address`,`create_unix_time`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		  `asset_issue_name` varchar(100) NOT NULL DEFAULT '' COMMENT '发行代币名称',
+		  `allowance` bigint(20) DEFAULT '0',
+		  `latest_withdraw_time` bigint(20) DEFAULT '0',
+		  `latest_consum_time` bigint(20) DEFAULT '0',
+		  `latest_consume_free_time` bigint(20) DEFAULT '0',
+		  `frozen` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '冻结金额, 投票权',
+		  `votes` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT '',
+		  PRIMARY KEY (`address`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 	*/
-	sqlI := "insert into account (account_name, address, balance, create_time, latest_operation_time, is_witness) values (?, ?, ?, ?, ?, ?)"
+	sqlI := `insert into account 
+		(account_name, address, balance, create_time, latest_operation_time, is_witness, asset_issue_name,
+			frozen, allowance, latest_withdraw_time, latest_consume_time, latest_consume_free_time, votes) values 
+		(?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?)`
 	stmtI, err := txn.Prepare(sqlI)
 	if nil != err {
 		fmt.Printf("prepare insert account SQL failed:%v\n", err)
@@ -202,7 +233,9 @@ func storeAccount(accountList []*account) bool {
 	}
 	defer stmtI.Close()
 
-	sqlU := "update account set account_name = ?, balance = ?, latest_operation_time = ?, is_witness = ? where address = ?"
+	sqlU := `update account set account_name = ?, balance = ?, latest_operation_time = ?, is_witness = ?, asset_issue_name = ?,
+		frozen = ?, allowance = ?, latest_withdraw_time = ?, latest_consume_time = ?, latest_consume_free_time = ?, votes = ?
+		where address = ?`
 	stmtU, err := txn.Prepare(sqlU)
 	if nil != err {
 		fmt.Printf("prepare update account SQL failed:%v\n", err)
@@ -218,6 +251,14 @@ func storeAccount(accountList []*account) bool {
 	}
 	defer stmtBI.Close()
 
+	sqlVI := "insert into account_vote_result (address, to_address, vote) values (?, ?, ?)"
+	stmtVI, err := txn.Prepare(sqlVI)
+	if nil != err {
+		fmt.Printf("prepare insert account_vote_result SQL failed:%v\n", err)
+		return false
+	}
+	defer stmtVI.Close()
+
 	insertCnt := 0
 	updateCnt := 0
 	errCnt := 0
@@ -231,21 +272,34 @@ func storeAccount(accountList []*account) bool {
 			acc.raw.CreateTime,
 			acc.raw.LatestOprationTime,
 			acc.IsWitness,
-		)
+			acc.AssetIssueName,
+			acc.Fronzen,
+			acc.raw.Allowance,
+			acc.raw.LatestWithdrawTime,
+			acc.raw.LatestConsumeTime,
+			acc.raw.LatestConsumeFreeTime,
+			acc.Votes)
 
 		if err != nil {
-			// fmt.Printf("insert into account failed:%v-->[%v]\n", err, acc.Addr)
+			fmt.Printf("insert into account failed:%v-->[%v]\n", err, acc.Addr)
 
 			_, err := stmtU.Exec(
 				acc.Name,
 				acc.raw.Balance,
 				acc.raw.LatestOprationTime,
 				acc.IsWitness,
+				acc.AssetIssueName,
+				acc.Fronzen,
+				acc.raw.Allowance,
+				acc.raw.LatestWithdrawTime,
+				acc.raw.LatestConsumeTime,
+				acc.raw.LatestConsumeFreeTime,
+				acc.Votes,
 				acc.Addr)
 
 			if err != nil {
 				errCnt++
-				// fmt.Printf("update account failed:%v-->[%v]\n", err, acc.Addr)
+				fmt.Printf("update account failed:%v-->[%v]\n", err, acc.Addr)
 			} else {
 				updateCnt++
 				// fmt.Printf("update account ok!!!\n")
@@ -260,6 +314,15 @@ func storeAccount(accountList []*account) bool {
 
 		for k, v := range acc.AssetBalance {
 			_, err := stmtBI.Exec(acc.Addr, k, v)
+			if nil != err {
+				fmt.Printf("insert account_asset_balance failed:%v\n", err)
+			}
+		}
+
+		result, err = txn.Exec("delete from account_vote_result where address = ?", acc.Addr)
+
+		for _, vote := range acc.raw.Votes {
+			_, err := stmtVI.Exec(acc.Addr, utils.Base58EncodeAddr(vote.VoteAddress), vote.VoteCount)
 			if nil != err {
 				fmt.Printf("insert account_asset_balance failed:%v\n", err)
 			}

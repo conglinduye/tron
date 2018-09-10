@@ -22,6 +22,8 @@ func main() {
 
 	initWorkerChan()
 
+	startWintnessDaemon()
+
 	if -1 == *gMaxBlockID {
 		b := *gMinBlockID
 		e := getDBMaxBlockID()
@@ -96,7 +98,7 @@ func analyzeTrx(b, e int64) {
 	accList, restAddr, _ := getAccount(list)
 	fmt.Printf("total account:%v, rest address:%v, cost:%v, synchronize to db .....\n", len(accList), len(restAddr), time.Since(ts))
 	ts = time.Now()
-	storeAccount(accList)
+	storeAccount(accList, nil)
 	fmt.Printf("accList size:%v, restAddr size:%v, synchronze to DB cost:%v\n", len(accList), len(restAddr), time.Since(ts))
 
 }
