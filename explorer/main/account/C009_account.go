@@ -99,6 +99,10 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 		if nil != err || nil == acc || len(acc.Address) == 0 {
 			maxErr++
 			restAddr = append(restAddr, addr)
+			if maxErr >= maxErrCnt {
+				client = grpcclient.GetRandomSolidity()
+				maxErr = 0
+			}
 			continue
 		}
 
