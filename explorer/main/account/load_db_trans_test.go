@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/wlcy/tron/explorer/core/grpcclient"
+	"github.com/wlcy/tron/explorer/core/utils"
 )
 
 func TestLoadTrx(*testing.T) {
@@ -59,11 +60,19 @@ func TestRW(*testing.T) {
 	initDB("tron:tron@tcp(172.16.21.224:3306)/tron")
 
 	client := grpcclient.GetRandomSolidity()
+	client1 := grpcclient.GetRandomWallet()
 
-	acc, _ := client.GetAccount("TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp")
+	addr := "TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp"
+	// addr = "TDGmmTC7xDgQGwH4FYRGuE7SFH2MePHYeH"
+	addr = "TJuRfL3tRdSQvVPKDXi6FRivcbZpsbz7AD"
+	acc, _ := client.GetAccount(addr)
+	accn, _ := client1.GetAccountNet(addr)
 
 	accc := new(account)
 	accc.SetRaw(acc)
+	accc.SetNetRaw(accn)
+
+	fmt.Println(utils.ToJSONStr(accc))
 
 	// storeAccount([]*account{accc}, db)
 	storeAccount([]*account{accc}, nil)
