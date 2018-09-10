@@ -62,6 +62,9 @@ func loadTransFromDB(blockIDs []int64) []*transaction {
 		if err != nil {
 			fmt.Printf("ERROR: load transaction (block_id:%v) failed:%v\n", id, err)
 			failedBlockIDs = append(failedBlockIDs, id)
+			if nil != rows {
+				rows.Close()
+			}
 			continue
 		}
 
@@ -74,7 +77,7 @@ func loadTransFromDB(blockIDs []int64) []*transaction {
 			}
 			trxList = append(trxList, trx)
 		}
-
+		rows.Close()
 	}
 
 	return trxList

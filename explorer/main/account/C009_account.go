@@ -51,8 +51,8 @@ type account struct {
 	*/
 }
 
-var maxErrCnt = 5
-var getAccountWorkerLimit = 100
+var maxErrCnt = 10
+var getAccountWorkerLimit = 1000
 
 var beginTime, _ = time.Parse("2006-01-02 15:03:04.999999", "2018-06-25 00:00:00.000000")
 
@@ -80,6 +80,9 @@ func (a *account) SetRaw(raw *core.Account) {
 }
 
 func (a *account) SetNetRaw(netRaw *api.AccountNetMessage) {
+	if nil == netRaw {
+		return
+	}
 	a.netRaw = netRaw
 	a.AssetNetUsed = utils.ToJSONStr(netRaw.AssetNetUsed)
 	a.AssetNetLimit = utils.ToJSONStr(netRaw.AssetNetLimit)
@@ -93,6 +96,8 @@ func (a *account) SetNetRaw(netRaw *api.AccountNetMessage) {
 // getAccount addrs from redis which is the raw []byte, need convert to base58
 func getAccount(addrs []string) ([]*account, []string, error) {
 	startWorker()
+
+	totalTask := len(addrs)
 	result := make([]*account, 0, len(addrs))
 	badAddr := make([]string, 0, len(addrs))
 	lock := new(sync.Mutex)
@@ -104,7 +109,7 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 	}
 
 	client := grpcclient.GetRandomSolidity()
-	client1 := grpcclient.GetRandomWallet()
+	// client1 := grpcclient.GetRandomWallet()
 
 	errCnt := 0
 
@@ -129,22 +134,21 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 			continue
 		}
 
-		accNet, err := client1.GetAccountNetRawAddr([]byte(addr))
-		if nil != err || nil == accNet {
-			errCnt++
-			restAddr = append(restAddr, addr)
-			if errCnt > maxErrCnt {
-				client1 = grpcclient.GetRandomWallet()
-				errCnt = 0
-			}
-			continue
-		}
+		// accNet, err := client1.GetAccountNetRawAddr([]byte(addr))
+		// if nil != err || nil == accNet {
+		// 	errCnt++
+		// 	restAddr = append(restAddr, addr)
+		// 	if errCnt > maxErrCnt {
+		// 		client1 = grpcclient.GetRandomWallet()
+		// 		errCnt = 0
+		// 	}
+		// 	continue
+		// }
 
 		acct := new(account)
 		acct.SetRaw(acc)
-		acct.SetNetRaw(accNet)
+		// acct.SetNetRaw(accNet)
 		accountList = append(accountList, acct)
-
 	}
 
 	if len(restAddr) > 0 {
@@ -161,7 +165,7 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 	for {
 		workCnt := workingTaskCnt()
 		lock.Lock()
-		fmt.Printf("***** main routine, working task:%v, current account result count:%v, badAddr:%v, waitCnt:%v\n", workCnt, len(result), len(badAddr), waitCnt)
+		fmt.Printf("***** main routine, working task:%v, current account result count:%v (total:%v), badAddr:%v, waitCnt:%v\n", workCnt, len(result), totalTask, len(badAddr), waitCnt)
 		lock.Unlock()
 
 		if workCnt == 1 {
@@ -176,13 +180,125 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 	// storeAccount(accountList)
 
 	stopWorker()
+
+	process := int64(0)
+	getAccountNet(result, &process, lock)
+
 	return result, badAddr, nil
+}
+
+func getAccountNet(accc []*account, process *int64, lock *sync.Mutex) {
+	startWorker()
+	totalTask := len(accc)
+	client := grpcclient.GetRandomWallet()
+	ts := time.Now()
+	errCnt := 0
+
+	addrsLen := len(accc)
+	restLen := addrsLen - getAccountWorkerLimit
+	if restLen > 0 {
+		// fmt.Printf("fork task %v~%v\n", 0, restLen)
+		go getAccountNetF(accc[0:restLen], process, lock)
+		accc = accc[restLen:]
+	}
+
+	restAcc := make([]*account, 0, len(accc))
+	for idx, acc := range accc {
+
+		accNet, err := client.GetAccountNetRawAddr(acc.raw.Address)
+		if nil != err || nil == accNet {
+			errCnt++
+			if errCnt > maxErrCnt {
+				restAcc = append(restAcc, accc[idx:]...)
+				break
+			} else {
+				restAcc = append(restAcc, acc)
+			}
+			continue
+		}
+
+		acc.SetNetRaw(accNet)
+	}
+	if len(restAcc) > 0 {
+		go getAccountNetF(restAcc, process, lock)
+	}
+
+	lock.Lock()
+	*process = *process + int64(len(accc)-len(restAcc))
+	fmt.Printf("submit accountNet count:%v, current account result count:%v, restAddr:%v, error count:%v, cost:%v\n", len(accc)-len(restAcc), *process, len(restAcc), errCnt, time.Since(ts))
+	lock.Unlock()
+
+	waitCnt := 3
+
+	for {
+		workCnt := workingTaskCnt()
+		lock.Lock()
+		fmt.Printf("***** main routine for accountNet, working task:%v, current accountNet result count:%v (total:%v), waitCnt:%v\n", workCnt, *process, totalTask, waitCnt)
+		lock.Unlock()
+
+		if workCnt == 1 {
+			waitCnt--
+		}
+		if waitCnt <= 0 {
+			break
+		}
+		time.Sleep(3 * time.Second)
+	}
+
+	stopWorker()
+	return
+}
+
+func getAccountNetF(accc []*account, process *int64, lock *sync.Mutex) {
+	startWorker()
+	client := grpcclient.GetRandomWallet()
+	ts := time.Now()
+	errCnt := 0
+
+	addrsLen := len(accc)
+	restLen := addrsLen - getAccountWorkerLimit
+	if restLen > 0 {
+		// fmt.Printf("fork task %v~%v\n", 0, restLen)
+		go getAccountNetF(accc[0:restLen], process, lock)
+		accc = accc[restLen:]
+	}
+
+	restAcc := make([]*account, 0, len(accc))
+	for idx, acc := range accc {
+
+		accNet, err := client.GetAccountNetRawAddr(acc.raw.Address)
+		if nil != err || nil == accNet {
+			errCnt++
+			if errCnt > maxErrCnt {
+				restAcc = append(restAcc, accc[idx:]...)
+				break
+			} else {
+				restAcc = append(restAcc, acc)
+			}
+			continue
+		}
+
+		acc.SetNetRaw(accNet)
+	}
+
+	lock.Lock()
+	*process = *process + int64(len(accc)-len(restAcc))
+	fmt.Printf("submit accountNet count:%v, current account result count:%v, restAddr:%v, error count:%v, cost:%v\n", len(accc)-len(restAcc), *process, len(restAcc), errCnt, time.Since(ts))
+	lock.Unlock()
+	if len(restAcc) > 0 {
+		go getAccountNetF(restAcc, process, lock)
+	}
+	// storeAccount(accountList)
+	// fmt.Printf("getaccount handle address count:%v, cost:%v\n", len(accountList), time.Since(ts))
+
+	stopWorker()
+	return
 }
 
 func getAcoountF(addrs []string, result *[]*account, badAddr *[]string, lock *sync.Mutex, wg *sync.WaitGroup) {
 	startWorker()
 	client := grpcclient.GetRandomSolidity()
-	client1 := grpcclient.GetRandomWallet()
+	// client1 := grpcclient.GetRandomWallet()
 	// fmt.Printf("getAccountFork task, address count:%v, client:%v\n", len(addrs), client.Target())
 
 	ts := time.Now()
@@ -209,33 +325,34 @@ func getAcoountF(addrs []string, result *[]*account, badAddr *[]string, lock *sy
 		acc, err := client.GetAccountRawAddr(([]byte(addr)))
 		if nil != err || nil == acc || len(acc.Address) == 0 {
 			errCnt++
-			restAddr = append(restAddr, addr)
 			if errCnt > maxErrCnt {
 				restAddr = append(restAddr, addrs[idx:]...)
 				break
+			} else {
+				restAddr = append(restAddr, addr)
 			}
 			continue
 		}
-		accNet, err := client1.GetAccountNetRawAddr([]byte(addr))
-		if nil != err || nil == accNet {
-			errCnt++
-			restAddr = append(restAddr, addr)
-			if errCnt > maxErrCnt {
-				restAddr = append(restAddr, addrs[idx:]...)
-				break
-			}
-		}
+		// accNet, err := client1.GetAccountNetRawAddr([]byte(addr))
+		// if nil != err || nil == accNet {
+		// 	errCnt++
+		// 	restAddr = append(restAddr, addr)
+		// 	if errCnt > maxErrCnt {
+		// 		restAddr = append(restAddr, addrs[idx:]...)
+		// 		break
+		// 	}
+		// }
 
 		acct := new(account)
 		acct.SetRaw(acc)
-		acct.SetNetRaw(accNet)
+		// acct.SetNetRaw(accNet)
 		accountList = append(accountList, acct)
 	}
 
 	lock.Lock()
 	*result = append(*result, accountList...)
 	*badAddr = append(*badAddr, bad...)
-	fmt.Printf("submit account count:%v, current account result count:%v, badAddr:%v, error count:%v, cost:%v\n", len(accountList), len(*result), len(*badAddr), errCnt, time.Since(ts))
+	fmt.Printf("submit account count:%v, current account result count:%v, badAddr:%v, resetAddr:%v, error count:%v, cost:%v\n", len(accountList), len(*result), len(*badAddr), len(restAddr), errCnt, time.Since(ts))
 	lock.Unlock()
 	if len(restAddr) > 0 {
 		go getAcoountF(restAddr, result, badAddr, lock, wg)
@@ -473,8 +590,12 @@ func getDBMaxBlockID() int64 {
 	row, err := txn.Query("select max(block_id) from blocks")
 	if nil != err {
 		fmt.Printf("getDBMaxBlockID failed:%v, return 10000000 as default!\n", err)
+		if nil != row {
+			row.Close()
+		}
 		return 10000000
 	}
+	defer row.Close()
 
 	for row.Next() {
 		var blockID int64
@@ -484,5 +605,6 @@ func getDBMaxBlockID() int64 {
 		}
 		return 10000000
 	}
+
 	return 10000000
 }

@@ -8,14 +8,18 @@ import (
 
 var gIntMaxWorker = flag.Int("worker", 10, "maximum worker for fetch blocks")
 var gStrMysqlDSN = flag.String("dsn", "tron:tron@tcp(172.16.21.224:3306)/tron", "mysql connection string(DSN)")
-var gInt64MaxWorkload = flag.Int64("workload", 10000, "maximum workload for each worker")
+var gInt64MaxWorkload = flag.Int64("workload", 10000, "maximum workload for read block worker")
 var gMaxBlockID = flag.Int64("max_block_id", 0, "max block num, 0 for current block, -1 will continue latest and do analyze until kill")
 var gMinBlockID = flag.Int64("start_block", 2200000, "block num start to analyze")
+var gMaxErrCntPerNode = flag.Int("max_err_per_node", 20, "max error before we try to other node")
+var gMaxAccountWorkload = flag.Int("max_account_workload", 300, "max account a node need handle not fork new worker")
 
 func main() {
 	flag.Parse()
 
 	trxBulkBlockNum = *gInt64MaxWorkload
+	maxErrCnt = *gMaxErrCntPerNode
+	getAccountWorkerLimit = *gMaxAccountWorkload
 
 	initDB(*gStrMysqlDSN)
 	initRedis([]string{"127.0.0.1:6379"})
