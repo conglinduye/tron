@@ -19,6 +19,8 @@ func Start(address string, objectpool int) {
 	transferRegister(ginRouter)
 	// 注册账户查询路由
 	accountRegister(ginRouter)
+	// 注册投票查询路由
+	voteRegister(ginRouter)
 
 	service := http.Server{
 		Addr:           address,
