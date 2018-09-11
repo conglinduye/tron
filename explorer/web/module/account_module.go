@@ -1,7 +1,6 @@
 package module
 
 import (
-	"adx/module/common"
 	"encoding/json"
 	"fmt"
 
@@ -216,7 +215,7 @@ func InsertSrAccount(address, github string) (int64, error) {
 		address, github)
 
 	log.Debugf(strSQL)
-	instID, _, err := common.ExecuteSQLCommand(strSQL, true)
+	instID, _, err := mysql.ExecuteSQLCommand(strSQL, true)
 	if err != nil {
 		log.Errorf("InsertSrAccount result fail:[%v]  sql:%s", err, strSQL)
 		return instID, err
@@ -230,7 +229,7 @@ func UpdateSrAccount(address, github string) (int64, error) {
 		github, address)
 
 	log.Debugf(strSQL)
-	instID, _, err := common.ExecuteSQLCommand(strSQL, true)
+	instID, _, err := mysql.ExecuteSQLCommand(strSQL, true)
 	if err != nil {
 		log.Errorf("UpdateSrAccount result fail:[%v]  sql:%s", err, strSQL)
 		return instID, err
