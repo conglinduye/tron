@@ -107,6 +107,9 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 }
 
 func getAccountNet(accc []*account, process *int64, lock *sync.Mutex) {
+	if len(accc) == 0 {
+		return
+	}
 	fmt.Printf("start to syncrhonize account net info, total account:%v......\n", len(accc))
 	wc2.startOne()
 	totalTask := len(accc)
