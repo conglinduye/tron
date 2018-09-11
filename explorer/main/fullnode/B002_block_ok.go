@@ -13,8 +13,10 @@ import (
 var bulkFetchLimit = int64(100)
 var maxErrCnt = 60
 
+var wc1 *workerCounter
+
 func getBlock(id int, b, e int64) {
-	startWorker()
+	wc1.startOne()
 
 	ts := time.Now()
 
@@ -28,7 +30,7 @@ func getBlock(id int, b, e int64) {
 
 	le := getLatestNum(dbc)
 	if le == 0 {
-		stopWorker()
+		wc1.stopOne()
 		getBlock(id, b, e)
 		return
 	}
@@ -46,9 +48,8 @@ func getBlock(id int, b, e int64) {
 	tsWriteDB := time.Now()
 
 	for {
-
 		if errCnt >= maxErrCnt {
-			stopWorker()
+			wc1.stopOne()
 			getBlock(id, bb, e) // redo full bulk of block
 			return
 		}
@@ -61,10 +62,13 @@ func getBlock(id int, b, e int64) {
 			time.Sleep(3 * time.Second)
 
 			le = getLatestNum(dbc)
-			runTaskCnt := workingTaskCnt()
-			fmt.Printf("Current working task:[%v]--max task:[%v]\n", runTaskCnt, *gIntMaxWorker)
+			runTaskCnt := wc1.currentWorker()
+			fmt.Printf("Current working task:[%v]--max task:[%v], latest block id handled:%v\n", runTaskCnt, *gIntMaxWorker, newE)
 			if e > 0 && 1 == runTaskCnt {
 				fmt.Printf("Sync all data cost:%v\n", time.Since(ts))
+				break
+			}
+			if needQuit() {
 				break
 			}
 		}
@@ -104,14 +108,14 @@ func getBlock(id int, b, e int64) {
 	if !ret {
 		fmt.Printf("bulk get block(%v, %v) check store failed\n", b, newE)
 		errCnt += maxErrCnt
-		stopWorker()
+		wc1.stopOne()
 		getBlock(id, bb, e)
 		return
 	}
 
 	fmt.Printf("%v Finish work, total cost:%v, total block:%v(%v), begin:%v, end:%v\n", taskID, time.Since(ts), cnt, b-bb, bb, b)
 
-	stopWorker()
+	wc1.stopOne()
 }
 
 func getBlockByIDs(blockIDs []int64, client *grpcclient.Wallet) ([]*core.Block, []int64) {

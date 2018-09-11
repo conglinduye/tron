@@ -2,6 +2,10 @@ package main
 
 import (
 	"flag"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"fmt"
@@ -13,152 +17,72 @@ var gIntMaxWorker = flag.Int("worker", 10, "maximum worker for fetch blocks")
 var gStrMysqlDSN = flag.String("dsn", "tron:tron@tcp(172.16.21.224:3306)/tron", "mysql connection string(DSN)")
 var gInt64MaxWorkload = flag.Int64("workload", 10000, "maximum workload for each worker")
 var gStartBlokcID = flag.Int64("start_block", 0, "block num start to synchronize")
+var gEndBlokcID = flag.Int64("end_block", 0, "block num end to synchronize, default 0 means run as daemon")
+var gRedisDSN = flag.String("redisDSN", "127.0.0.1:6379", "redis DSN")
+var gMaxErrCntPerNode = flag.Int("max_err_per_node", 10, "max error before we try to other node")
+var gMaxAccountWorkload = flag.Int("max_account_workload", 200, "max account a node need handle not fork new worker")
+var gIntHandleAccountInterval = flag.Int("account_handle_interval", 30, "account info synchronize handle minmum interval in seconds")
+
+var quit = make(chan struct{}) // quit signal channel
+var wg sync.WaitGroup
+
+func signalHandle() {
+	sigs := make(chan os.Signal, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigs
+		if !needQuit() {
+			close(quit)
+		}
+	}()
+}
+
+func needQuit() bool {
+	select {
+	case <-quit:
+		return true
+	default:
+		return false
+	}
+}
+
+func startDaemon() {
+	startAssetDaemon()
+	startWintnessDaemon()
+	startRedisAccountRefreshPush()
+	startAccountDaemon()
+}
 
 func main() {
 	flag.Parse()
 
-	initDB(*gStrMysqlDSN)
+	maxErrCnt = *gMaxErrCntPerNode
+	getAccountWorkerLimit = *gMaxAccountWorkload
 
-	initWorkerChan()
+	signalHandle()
+
+	initDB(*gStrMysqlDSN)
+	initRedis([]string{*gRedisDSN})
+	startDaemon()
 
 	getAllBlocks()
-}
-
-func initWorkerChan() {
-	maxWorker = make(chan struct{}, *gIntMaxWorker)
-	for i := 0; i < *gIntMaxWorker; i++ {
-		maxWorker <- struct{}{}
+	if !needQuit() {
+		close(quit)
 	}
-}
+	for wc2.currentWorker() > 0 {
+		time.Sleep(3 * time.Second)
+	}
+	syncAccount() // syn account after getAllBlocks() quit
 
-func startWorker() {
-	<-maxWorker
-}
-
-func stopWorker() {
-	maxWorker <- struct{}{}
-}
-
-func workingTaskCnt() int {
-	return *gIntMaxWorker - len(maxWorker)
+	fmt.Println("Wait other daemon quit .......")
+	wg.Wait()
 }
 
 func getAllBlocks() {
+	wc1 = newWorkerCounter(*gIntMaxWorker)
 	ts := time.Now()
-	getBlock(0, *gStartBlokcID, 0)
+	getBlock(0, *gStartBlokcID, *gEndBlokcID)
 	fmt.Printf("get all blocks cost:%v\n", time.Since(ts))
 }
-
-// var maxWorkload = int64(10000) // getBlock任务最大工作负荷
-
-var maxWorker chan struct{}
-
-// func getBlock(id int, numStart int64, numEnd int64) int64 {
-// 	startWorker()
-
-// 	ts := time.Now()
-
-// 	servAddr := fmt.Sprintf("%s:50051", utils.GetRandFullNode())
-
-// 	taskID := fmt.Sprintf("[%04v|%v~%v|%v]", id, numStart, numEnd, servAddr)
-
-// 	client := grpcclient.NewWallet(servAddr)
-// 	client.Connect()
-// 	dbc := grpcclient.NewDatabase(servAddr)
-// 	dbc.Connect()
-
-// 	blockCnt := int64(0)
-// 	latestNum := int64(0)
-// 	limit := int64(100)
-
-// 	if latestNum == 0 || numStart >= latestNum {
-// 		latestNum = getLatestNum(dbc)
-// 		fmt.Printf("%v latestNum is [%v]\n", taskID, latestNum)
-// 	}
-
-// 	if latestNum == 0 {
-// 		stopWorker()
-// 		return getBlock(id, numStart, numEnd)
-// 	}
-
-// 	numStart = checkForkTask(id, taskID, latestNum, numStart, numEnd)
-// 	taskID = fmt.Sprintf("[%04v|%v~%v|%v]", id, numStart, numEnd, servAddr)
-
-// 	for {
-// 		if latestNum == 0 || numStart >= latestNum {
-// 			latestNum = getLatestNum(dbc)
-// 			fmt.Printf("%v latestNum is [%v]\n", taskID, latestNum)
-// 		}
-
-// 		if numEnd == 0 && id == 0 { // 特殊的任务，不退出，需要读取最新块
-// 			if numStart >= latestNum {
-// 				time.Sleep(10 * time.Second)
-// 				workingTask := workingTaskCnt()
-// 				fmt.Printf("current working task:[%v]--max task:[%v]\n", workingTask, *gIntMaxWorker)
-// 				if workingTask == 1 {
-// 					fmt.Printf("Sync all data cost:%v\n", time.Since(ts))
-// 					break
-// 				}
-// 			}
-// 		} else {
-// 			if numStart >= latestNum || numStart >= numEnd {
-// 				break
-// 			}
-// 		}
-
-// 		numEndNow := numStart + limit
-
-// 		if numEndNow > numEnd && numEnd > 0 {
-// 			numEndNow = numEnd
-// 		}
-// 		if numEnd == 0 && numEndNow > latestNum {
-// 			numEndNow = latestNum
-// 		}
-
-// 		// tss := time.Now()
-// 		blocks, err := client.GetBlockByLimitNext(numStart, numEndNow)
-// 		_ = err
-// 		blockCnt += int64(len(blocks))
-// 		// fmt.Printf("%v get block:[%v ~ %v], got:[%v], err:[%v], cost:[%v]\n", taskID, numStart, numEndNow, len(blocks), err, time.Since(tss))
-
-// 		storeBlocks(blocks)
-// 		numStart += int64(len(blocks))
-// 	}
-
-// 	fmt.Printf("%v Finish work, total cost:%v, total block:%v\n", taskID, time.Since(ts), blockCnt)
-
-// 	stopWorker()
-// 	return blockCnt
-// }
-
-// func getLatestNum(dbc *grpcclient.Database) int64 {
-// 	prop, err := dbc.GetDynamicProperties()
-// 	if nil == err && nil != prop {
-// 		return prop.LastSolidityBlockNum
-// 	}
-// 	return 0
-// }
-
-// func checkForkTask(id int, taskID string, latestE, b, e int64) (newB int64) {
-// 	newB = b
-// 	if e == 0 {
-// 		if id != 0 { // e == 0 only for task id == 0
-// 			return
-// 		}
-
-// 		if latestE-b > *gInt64MaxWorkload {
-// 			newB = latestE - *gInt64MaxWorkload
-// 			forkBlockTask(id+1, b, newB)
-// 		}
-// 	} else {
-// 		if e-b > *gInt64MaxWorkload {
-// 			newB = e - *gInt64MaxWorkload
-// 			forkBlockTask(id+1, b, newB)
-// 		}
-// 	}
-// 	return
-// }
-
-// func forkBlockTask(id int, b, e int64) {
-// 	go getBlock(id, b, e)
-// }

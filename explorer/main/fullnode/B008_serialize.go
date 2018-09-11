@@ -71,12 +71,14 @@ func storeTransactions(trans []*core.Transaction) bool {
 				tran.RawData.Expiration,
 				toAddr,
 			)
+			if err != nil {
+				fmt.Printf("ERROR: store transaction failed!%v, %#v\n", err, utils.ToJSONStr(tran))
+				// return false
+			} else {
+				storeContractDetail(txn, 1, trxHash, tran)
+			}
 		} else {
 			fmt.Println("ERROR: transaction contract is empty!")
-		}
-		if err != nil {
-			fmt.Printf("ERROR: store transaction failed!%v, %#v\n", err, utils.ToJSONStr(tran))
-			// return false
 		}
 	}
 

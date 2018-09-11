@@ -19,7 +19,7 @@ func TestLoadTrx(*testing.T) {
 
 	for _, trx := range trxList { // 27196, 27291
 		trx.ExtractContract()
-		anaylzeTransaction(trx)
+		// anaylzeTransaction(trx)
 	}
 
 	// load 92498 trans cost:23.430238327s  2000000, 2010000
@@ -43,7 +43,7 @@ func TestGetAccount(*testing.T) {
 
 	for _, trx := range trxList { // 27196, 27291
 		trx.ExtractContract()
-		anaylzeTransaction(trx)
+		// anaylzeTransaction(trx)
 	}
 
 	list, err := ClearRefreshAddress()
@@ -61,4 +61,11 @@ func TestRW(*testing.T) {
 	client := grpcclient.GetRandomSolidity()
 
 	utils.VerifyCall(client.GetAccount("123"))
+}
+
+func TestRedisB(*testing.T) {
+	initRedis([]string{"127.0.0.1:6379"})
+	for i := 0; i < 200000; i++ {
+		AddRefreshAddress(i)
+	}
 }
