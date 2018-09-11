@@ -23,6 +23,8 @@ func Start(address string, objectpool int) {
 	voteRegister(ginRouter)
 	// 注册超级代表查询路由
 	srAccountRegister(ginRouter)
+	// 注册超级代表查询路由
+	witnessRegister(ginRouter)
 
 	service := http.Server{
 		Addr:           address,
