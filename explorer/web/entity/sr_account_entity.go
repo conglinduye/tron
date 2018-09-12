@@ -2,8 +2,8 @@ package entity
 
 //SrAccount  查询超级代表的请求参数
 type SrAccount struct {
-	Limit  	string `json:"limit,omitempty"`  	// 每页记录数
 	Start  	string `json:"start,omitempty"`  	// 记录的起始序号
+	Limit  	string `json:"limit,omitempty"`  	// 每页记录数
 	Address	string `json:"address,omitempty"`	// 地址查询
 }
 
