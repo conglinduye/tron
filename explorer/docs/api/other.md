@@ -1,4 +1,4 @@
-## 获得数据同步信息-TODO
+## 获得数据同步信息
 - url:/api/system/status
 - method:get
 
@@ -14,23 +14,40 @@ output:json
         "type":"mainnet"
     },
     "sync":{
-        "progress":99.99988929123896
+        "progress":99.99988929123896//totalProgress
     },
     "database":{
-        "block":2258186,
-        "unconfirmedBlock":2258167
+        "block":2258186,//dbLatestBlock
+        "confirmedBlock":2258167//dbconfirmedBlock
     },
     "full":{
-        "block":2258188
+        "block":2258188//fullNodeBlock
     },
     "solidity":{
-        "block":2258170
+        "block":2258170//solidityBlock
     }
 }
 ```
+数据来源：<br>
+```
+1. network->type: 配置文件中  net.type配置项     
+2. sync->progress：    
+    progress =（ fullNodeProgress + solidityBlockProgress ） / 2    
+> fullNodeProgress = (数据库区块高 / GRPC-fullnode接口getNowBlock返回的块高) * 100      
+> solidityBlockProgress = (数据库已确认区块高 / GRPC-solidity接口getNowBlock返回块高) * 100     
+3. database->block       
+    block = 数据库区块高    
+4. database->confirmedBlock      
+    confirmedBlock = GRPC-solidity接口getNowBlock返回块高    
+5. full->block    
+    block = GRPC-fullnode接口getNowBlock返回的块高    
+6. solidity->block    
+    block = GRPC-solidity接口getNowBlock返回块高
+```
 
 
-## 交易所交易信息-TODO
+
+## 交易所交易信息
 - url:/api/market/markets
 - method:get
 
@@ -176,14 +193,28 @@ output:json
 
 input:json
 ```json
-
+{
+    "address":"TUePpjwtrHtmj2122h74h7R8UqKAV37DhR",
+    "captchaCode":"03AL4dnxo8TLilLfyLINe-Om4GeEnwrTNjIdtg6U4agXHxvKQRTFDtv6TsopZB9dh-CdP-vwaAKpwGi98wgrN_9-8J0W6sR86WA7lh1wZxxi10RcVVHumMQD736APcbt-JJltRpHFi5tDULr-_0GZfLEPAozHjrCufJT_nHdHl7aIFEh_qvrBK508o_CEj9dnok0QSiH7vcx86UN398NjKYimJqURdO-I8G76e29iEZqbG9FH-ugNYvOctYLy86CbxKnllHhYq-jBQj0jdIUSE_JfFMTlYv8EYpA"
+}
 ```
 output:json
 ```json  
-
-
+{
+    "success":false,
+    "amount":10000000000,
+    "code":"TAPOS_ERROR",
+    "message":"Tapos check error"
+}
 ```
-输入输出待确认
+获取机器IP，从trxRequest表中获取最近一小时这个ip的申请记录，如果存在，code提示“ALREADY_REQUESTED_IP”， message提示：“Already requested TRX from IP recently"             
+如果不存在，从trxRequest表根据传入的address查询        
+      如果不存在，校验传入的captchaCode（配置文件中的siteCode，post请求   https://www.google.com/recaptcha/api/siteverify，如果返回success才校验通过）      
+      校验通过后，从配置文件中那账户和数量信息，生成key，      buildTrxTransfer->broadcastTransaction,将ip和address插入trxRequest      
+      校验不通过，code提示“WRONG_CAPTCHA”， message提示：“Wrong Captcha Code"      
+如果存在，code提示“ALREADY_REQUESTED_IP”， message提示：“Already requested TRX from IP recently" 
+
+
 
 ## 验签-TODO
 - url:/api/auth
@@ -191,11 +222,14 @@ output:json
 
 input:json
 ```json
-
+{
+    "transaction":"123213242"
+}
 ```
 output:json
 ```json  
-
-
+{
+    "key":"123213242"
+}
 ```
 输入输出待确认

@@ -81,3 +81,14 @@ func QueryTransaction(req *entity.Transactions) (*entity.TransactionInfo, error)
 	}
 	return module.QueryTransactionRealize(strSQL, filterSQL)
 }
+
+//PostTransaction 创建交易
+/*func PostTransaction(req *entity.PostTransaction) (*entity.TransactionInfo, error) {
+	if req.Transaction == "" {
+		log.Errorf("no transaction received")
+		return nil, util.NewErrorMsg(util.Error_common_request_json_no_data)
+	}
+
+	return module.QueryTransactionRealize(strSQL, filterSQL)
+}
+*/

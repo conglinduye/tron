@@ -52,7 +52,7 @@ func QueryWitnessStatistic() ([]*entity.WitnessStatisticInfo, error) {
     left join (
 	    select witness_address,count(block_id) as blockproduce
         from tron1.blocks blk
-        where 1=1 and blk.create_time>1536667200000 
+        where 1=1 and blk.create_time>%v 
         group by witness_address
     ) blocks on blocks.witness_address=acc.address
     where 1=1 and acc.is_witness=1`, blocks, curMaintenanceTime)

@@ -29,3 +29,8 @@ type TransactionInfo struct {
 	Confirmed    bool   `json:"confirmed"`    //:true
 	ContractData string `json:"contractData"` //:原始交易数据，TODO；需要解析
 }
+
+//PostTransaction  创建交易
+type PostTransaction struct {
+	Transaction string `json:"transaction"` // 总记录数
+}

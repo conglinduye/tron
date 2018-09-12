@@ -41,5 +41,22 @@ func transactionRegister(ginRouter *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, resp)
 	})
-
+	/*
+		ginRouter.POST("/api/transaction", func(c *gin.Context) {
+			req := &entity.PostTransaction{}
+			if c.BindJSON(req) == nil {
+				if req == nil {
+					log.Errorf("parsing request parameter err!")
+					c.JSON(http.StatusInternalServerError, http.ErrBodyNotAllowed)
+				}
+			}
+			log.Debugf("Hello /api/transaction")
+			resp, err := service.PostTransaction(req)
+			if err != nil {
+				errCode, _ := util.GetErrorCode(err)
+				c.JSON(errCode, err)
+			}
+			c.JSON(http.StatusOK, resp)
+		})
+	*/
 }
