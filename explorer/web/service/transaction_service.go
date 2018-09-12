@@ -14,8 +14,8 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 	mutiFilter := false
 
 	strSQL := fmt.Sprintf(`
-			select block_id,owner_address,to_address,amount,
-			token_name,trx_hash,contract_data,result_data,fee
+			select block_id,owner_address,to_address,
+			trx_hash,contract_data,result_data,fee
 			contract_type,confirmed,create_time,expire_time
 			from tron.transactions
 			where 1=1 `)
@@ -62,12 +62,12 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 
-//QueryTransfer 精确查询  	//number=2135998
+//QueryTransaction 精确查询  	//number=2135998
 func QueryTransaction(req *entity.Transactions) (*entity.TransactionInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
-		select block_id,owner_address,to_address,amount,
-		token_name,trx_hash,contract_data,result_data,fee
+		select block_id,owner_address,to_address,
+		trx_hash,contract_data,result_data,fee
 		contract_type,confirmed,create_time,expire_time
 		from tron.transactions
 			where 1=1 `)

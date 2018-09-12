@@ -19,11 +19,11 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	strSQL := fmt.Sprintf(`
 	SELECT trx_hash,block_id,voter_address,candidate_address,vote_num,wit.create_time,
 	       acc.frozen,acc.account_name,wlwit.url,outvoter.outVotes
-	FROM tron1.contract_vote_witness wit
-	left join tron1.account acc on acc.address=wit.candidate_address
-	left join tron1.wlcy_witness_create_info wlwit on wlwit.address=wit.candidate_address
+	FROM tron.contract_vote_witness wit
+	left join tron.tron_account acc on acc.address=wit.candidate_address
+	left join tron.wlcy_witness_create_info wlwit on wlwit.address=wit.candidate_address
 	left join (
-		select address,sum(vote) as outVotes from tron1.account_vote_result  group by address
+		select address,sum(vote) as outVotes from tron.account_vote_result  group by address
 	) outvoter on outvoter.address=wit.voter_address
 	where 1=1 `)
 
@@ -74,11 +74,11 @@ func QueryVoteLive() (*entity.VoteLiveInfo, error) {
 	strSQL := fmt.Sprintf(`
 	SELECT trx_hash,block_id,voter_address,candidate_address,vote_num,wit.create_time,
 	       acc.account_name,wlwit.url,getvoter.getVotes
-	FROM tron1.contract_vote_witness wit
-	left join tron1.account acc on acc.address=wit.candidate_address
-	left join tron1.wlcy_witness_create_info wlwit on wlwit.address=wit.candidate_address
+	FROM tron.contract_vote_witness wit
+	left join tron.tron_account acc on acc.address=wit.candidate_address
+	left join tron.wlcy_witness_create_info wlwit on wlwit.address=wit.candidate_address
 	left join (
-		select address,sum(vote) as getVotes from tron1.account_vote_result  group by address
+		select address,sum(vote) as getVotes from tron.account_vote_result  group by address
 	) getvoter on getvoter.address=wit.candidate_address
 	where 1=1 `)
 

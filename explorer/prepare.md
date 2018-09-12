@@ -11,11 +11,11 @@
         git clone https://github.com/protocolbuffers/protobuf.git
         cd protobuf
         git submodule update --init --recursive
-        ./authgen.sh
+        ./autogen.sh
         ./configure
         make -j8
         make -j8 check
-        sudu make install
+        sudo make install
         sudo ldconfig
         ```
     2. install golang proto buffer

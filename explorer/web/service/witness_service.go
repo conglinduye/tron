@@ -18,7 +18,7 @@ func QueryWitness() ([]*entity.WitnessInfo, error) {
 			witt.total_produced,witt.total_missed,acc.account_name,
 			witt.latest_block_num,witt.latest_slot_num,witt.is_job
 			from tron.witness witt
-			left join tron.account acc on acc.address=witt.address
+			left join tron.tron_account acc on acc.address=witt.address
 			where 1=1 `)
 
 	return module.QueryWitnessRealize(strSQL)
@@ -47,11 +47,11 @@ func QueryWitnessStatistic() ([]*entity.WitnessStatisticInfo, error) {
 	select acc.address, acc.account_name,witt.url
 		   ,ifnull(blocks.blockproduce,0) as blockproduce , 
 		   ifnull(blocks.blockproduce,0)/%v as blockRate
-    from  tron1.account acc
-    left join tron1.witness witt on witt.address=acc.address 
+    from  tron.tron_account acc
+    left join tron.witness witt on witt.address=acc.address 
     left join (
 	    select witness_address,count(block_id) as blockproduce
-        from tron1.blocks blk
+        from tron.blocks blk
         where 1=1 and blk.create_time>%v 
         group by witness_address
     ) blocks on blocks.witness_address=acc.address

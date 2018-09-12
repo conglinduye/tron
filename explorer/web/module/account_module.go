@@ -112,9 +112,12 @@ func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error
 			account.Representative = represent
 			//[{"frozen_balance":4306000000,"expire_time":1534794417000}]
 			frozen := dataPtr.GetField("frozen")
-			if err := json.Unmarshal([]byte(frozen), oldBalance); err != nil {
-				log.Errorf("Unmarshal data failed:[%v]", err)
+			if frozen != "" {
+				if err := json.Unmarshal([]byte(frozen), oldBalance); err != nil {
+					log.Errorf("Unmarshal data failed:[%v]-[%v]", err, frozen)
+				}
 			}
+
 			for _, blanceFrozen := range oldBalance {
 				apiFrozen := &entity.BalanceInfo{}
 				apiFrozen.Amount = blanceFrozen.Amount
@@ -210,8 +213,8 @@ func CheckSrAccountExist(address string) bool {
 
 //InsertSrAccount 插入github地址
 func InsertSrAccount(address, github string) (int64, error) {
-	strSQL := fmt.Sprintf(`insert into tron.wlcy_witness_create_info
-			(address,url) value( '%v','%v')`,
+	strSQL := fmt.Sprintf(`insert into tron.wlcy_sr_account
+			(address,github_link) value( '%v','%v')`,
 		address, github)
 
 	log.Debugf(strSQL)
@@ -225,7 +228,7 @@ func InsertSrAccount(address, github string) (int64, error) {
 
 //UpdateSrAccount 更新github地址
 func UpdateSrAccount(address, github string) (int64, error) {
-	strSQL := fmt.Sprintf(`update from tron.wlcy_witness_create_info set url='%v' where address='%v'`,
+	strSQL := fmt.Sprintf(`update tron.wlcy_sr_account set github_link='%v' where address='%v'`,
 		github, address)
 
 	log.Debugf(strSQL)

@@ -25,6 +25,8 @@ func Start(address string, objectpool int) {
 	witnessRegister(ginRouter)
 	// 注册通证查询路由
 	tokenRegister(ginRouter)
+	// 注册其他查询路由
+	otherRegister(ginRouter)
 
 	service := http.Server{
 		Addr:           address,

@@ -56,6 +56,7 @@ func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 	systemStatusResp.Sync = &entity.Sync{Progress: totalProcess}
 	systemStatusResp.Full = &entity.BlockNode{Block: fullnodeNowBlockID}
 	systemStatusResp.Solidity = &entity.BlockNode{Block: solidityNowBlockID}
+	systemStatusResp.Database = &entity.DataBase{Block: latestBlockIDDb, ConfirmedBlock: solidityNowBlockID}
 
 	return systemStatusResp, nil
 }

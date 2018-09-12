@@ -33,7 +33,7 @@ func transactionRegister(ginRouter *gin.Engine) {
 	ginRouter.GET("/api/transaction/:hash", func(c *gin.Context) {
 		req := &entity.Transactions{}
 		req.Hash = c.Param("hash") //占位符传参
-		log.Debugf("Hello /api/block/:%#v", req.Hash)
+		log.Debugf("Hello /api/transaction/:%#v", req.Hash)
 		resp, err := service.QueryTransaction(req)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)

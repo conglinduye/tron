@@ -1,3 +1,5 @@
 explorer/web/src/explorerService/explorerService
 explorer/web/src/explorerService/appLog*.log
 .idea
+explorer/main/fullnode/fullnode
+explorer/main/fullnode/*.rdb

@@ -15,9 +15,9 @@ func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 
 	strSQL := fmt.Sprintf(`
 			select block_id,owner_address,to_address,amount,
-			token_name,trx_hash,
+			asset_name,trx_hash,
 			contract_type,confirmed,create_time
-			from tron.contract_token_transfer
+			from tron.contract_transfer
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -67,9 +67,9 @@ func QueryTransfer(req *entity.Transfers) (*entity.TransferInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
 		select block_id,owner_address,to_address,amount,
-		token_name,trx_hash,
+		asset_name,trx_hash,
 		contract_type,confirmed,create_time
-		from tron.contract_token_transfer
+		from tron.contract_transfer
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意

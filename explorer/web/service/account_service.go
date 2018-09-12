@@ -15,9 +15,9 @@ func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 	strSQL := fmt.Sprintf(`
 		   select account_name,acc.address,acc.balance as totalBalance,
 		   frozen,create_time,latest_operation_time,votes ,
-	       ass.token_name,ass.creator_address,ass.balance
-	       from tron1.account acc
-	       left join tron1.account_asset_balance ass on ass.address=acc.address
+	       ass.asset_name as token_name,ass.creator_address,ass.balance
+	       from tron.tron_account acc
+	       left join tron.account_asset_balance ass on ass.address=acc.address
 		   where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -51,10 +51,10 @@ func QueryAccount(req *entity.Accounts) (*entity.AccountDetail, error) {
 	strSQL := fmt.Sprintf(`
 	select account_name,acc.address,acc.balance as totalBalance,frozen,create_time,latest_operation_time,votes ,
         wit.url,wit.is_job,acc.allowance,acc.latest_withdraw_time,
-        ass.token_name,ass.creator_address,ass.balance
-    from tron1.account acc
-    left join tron1.account_asset_balance ass on ass.address=acc.address
-    left join tron1.witness wit on wit.address=acc.address
+        ass.asset_name as token_name,ass.creator_address,ass.balance
+    from tron.tron_account acc
+    left join tron.account_asset_balance ass on ass.address=acc.address
+    left join tron.witness wit on wit.address=acc.address
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -69,7 +69,7 @@ func QueryAccountMedia(req *entity.Accounts) (*entity.AccountMediaInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
 	select address,url
-	from wlcy_witness_create_info
+	from tron.wlcy_witness_create_info
 	where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
