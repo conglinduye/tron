@@ -42,7 +42,8 @@ type TokenInfo struct {
 	Frozen				    []TokenFrozenInfo	`json:"frozen"`					// frozen
 	Abbr					string 				`json:"abbr"`					// asset_abbr
 	Participated			int64				`json:"participated"`			// 已筹集资金
-
+	TotalTransactions		int64				`json:"totalTransactions"`		// 总交易数目
+	NrOfTokenHolders		int64				`json:"nrOfTokenHolders"`		// 通证持有者数目
 }
 
 //TokenFrozen 通证冻结信息

@@ -29,4 +29,15 @@ func tokenRegister(ginRouter *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, tokenResp)
 	})
+
+	ginRouter.GET("/api/token/:name", func(c *gin.Context) {
+		name := c.Param("name")
+		log.Debugf("Hello /api/token/:%#v", name)
+		tokenInfo, err := service.QueryToken(name)
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+		}
+		c.JSON(http.StatusOK, tokenInfo)
+	})
 }
