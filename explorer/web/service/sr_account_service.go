@@ -16,7 +16,7 @@ func QuerySrAccounts(req *entity.SrAccount) (*entity.SrAccountResp, error) {
 			where 1=1 `)
 
 	if req.Address != "" {
-		filterSQL = fmt.Sprintf(" and address=%v", req.Address)
+		filterSQL = fmt.Sprintf(" and address='%v'", req.Address)
 	}
 	if req.Limit != "" && req.Start != "" {
 		pageSQL = fmt.Sprintf(" limit %v, %v", req.Start, req.Limit)
