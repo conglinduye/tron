@@ -113,7 +113,7 @@ func getBlock(id int, b, e int64) {
 		return
 	}
 
-	fmt.Printf("%v Finish work, total cost:%v, total block:%v(%v), begin:%v, end:%v\n", taskID, time.Since(ts), cnt, b-bb, bb, b)
+	// fmt.Printf("%v Finish work, total cost:%v, total block:%v(%v), begin:%v, end:%v\n", taskID, time.Since(ts), cnt, b-bb, bb, b)
 
 	wc1.stopOne()
 }
@@ -177,6 +177,8 @@ func verifyStoreBlock(blocks []*core.Block, blockIDCheckList []int64, client *gr
 		return true
 	}
 	_, succCnt, errCnt, blockList := storeBlocks(blocks)
+	_ = succCnt
+	_ = errCnt
 
 	sort.Slice(blockList, func(i, j int) bool { return blockList[i] < blockList[j] })
 
@@ -192,7 +194,7 @@ func verifyStoreBlock(blocks []*core.Block, blockIDCheckList []int64, client *gr
 		}
 	}
 	if len(missingBlockID) > 0 {
-		fmt.Printf("missing %v, try cnt remain:%v raw block size:%v, succ:%v, err:%v \n\tmissing blockIDs(%v):%v\n\tpull blockIDs(%v):%v\n", blockIDCheckList, retryCnt, len(blocks), succCnt, errCnt, len(missingBlockID), missingBlockID, len(blockList), blockList)
+		// fmt.Printf("missing %v, try cnt remain:%v raw block size:%v, succ:%v, err:%v \n\tmissing blockIDs(%v):%v\n\tpull blockIDs(%v):%v\n", blockIDCheckList, retryCnt, len(blocks), succCnt, errCnt, len(missingBlockID), missingBlockID, len(blockList), blockList)
 
 		if retryCnt == 0 {
 			return false

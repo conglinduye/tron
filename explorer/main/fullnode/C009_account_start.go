@@ -40,16 +40,17 @@ func syncAccount() {
 	for wc2.currentWorker() > 0 { // wait
 		time.Sleep(3 * time.Second)
 	}
+	cleanAccountBuffer()
 	list, err := ClearRefreshAddress() // load all address from redis and prepare handle it
-	fmt.Printf("total account:%v, err:%v, start synchronize account info ......\n", len(list), err)
+	fmt.Printf("### total account need to synchronze:%-10v, err:%v, start synchronize account info ......\n", len(list), err)
 
 	ts := time.Now()
 	accList, restAddr, _ := getAccount(list)
-	fmt.Printf("total account:%v, rest address:%v, cost:%v, synchronize to db .....\n", len(accList), len(restAddr), time.Since(ts))
+	fmt.Printf("### total account syncrhonzed:%-10v, bad address:%-10v, cost:%v, synchronize to db .....\n", len(accList), len(restAddr), time.Since(ts))
 
 	ts1 := time.Now()
 	storeAccount(accList, nil)
-	fmt.Printf("accList size:%v, restAddr size:%v, synchronze to DB cost:%v\n", len(accList), len(restAddr), time.Since(ts1))
+	fmt.Printf("### store account size:%-10v to DB cost:%v\n", len(accList), time.Since(ts1))
 }
 
 type account struct {

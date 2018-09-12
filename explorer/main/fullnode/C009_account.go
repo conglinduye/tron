@@ -79,12 +79,12 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 	result = append(result, accountList...)
 	badAddr = append(badAddr, bad...)
 	lock.Unlock()
-	fmt.Printf("***** main routine, working task:%v, current account result count:%v, badAddr:%v, waitCnt:%v\n", wc2.currentWorker(), len(result), len(badAddr), waitCnt)
+	// fmt.Printf("*** account, working task:%-05v, finished:%-06v, badAddr:%-06v, waitCnt:%v\n", wc2.currentWorker(), len(result), len(badAddr), waitCnt)
 
 	for {
 		workCnt := wc2.currentWorker()
 		lock.Lock()
-		fmt.Printf("***** main routine, working task:%v, current account result count:%v (total:%v), badAddr:%v, waitCnt:%v\n", workCnt, len(result), totalTask, len(badAddr), waitCnt)
+		fmt.Printf("*** account, working task:%-5v, finished:%-10v, total:%-10v, badAddr:%-10v, waitCnt:%v\n", workCnt, len(result), totalTask, len(badAddr), waitCnt)
 		lock.Unlock()
 
 		if workCnt == 1 && len(result)+len(badAddr) >= totalTask {
@@ -110,11 +110,11 @@ func getAccountNet(accc []*account, process *int64, lock *sync.Mutex) {
 	if len(accc) == 0 {
 		return
 	}
-	fmt.Printf("start to syncrhonize account net info, total account:%v......\n", len(accc))
+	fmt.Printf("*** accountNet start to syncrhonize accountNet info, total account:%v......\n", len(accc))
 	wc2.startOne()
-	totalTask := len(accc)
+	totalTask := int64(len(accc))
 	client := grpcclient.GetRandomWallet()
-	ts := time.Now()
+	// ts := time.Now()
 	errCnt := 0
 
 	addrsLen := len(accc)
@@ -148,7 +148,7 @@ func getAccountNet(accc []*account, process *int64, lock *sync.Mutex) {
 
 	lock.Lock()
 	*process = *process + int64(len(accc)-len(restAcc))
-	fmt.Printf("submit accountNet count:%v, current account result count:%v, restAddr:%v, error count:%v, cost:%v\n", len(accc)-len(restAcc), *process, len(restAcc), errCnt, time.Since(ts))
+	// fmt.Printf("submit accountNet count:%v, current account result count:%v, restAddr:%v, error count:%v, cost:%v\n", len(accc)-len(restAcc), *process, len(restAcc), errCnt, time.Since(ts))
 	lock.Unlock()
 
 	waitCnt := 3
@@ -156,10 +156,10 @@ func getAccountNet(accc []*account, process *int64, lock *sync.Mutex) {
 	for {
 		workCnt := wc2.currentWorker()
 		lock.Lock()
-		fmt.Printf("***** main routine for accountNet, working task:%v, current accountNet result count:%v (total:%v), waitCnt:%v\n", workCnt, *process, totalTask, waitCnt)
+		fmt.Printf("*** accountNet, working task:%-05v, finished:%-06v, total:%-06v, waitCnt:%v\n", workCnt, *process, totalTask, waitCnt)
 		lock.Unlock()
 
-		if workCnt == 1 {
+		if workCnt == 1 && *process >= totalTask {
 			waitCnt--
 		}
 		if waitCnt <= 0 {
@@ -175,7 +175,7 @@ func getAccountNet(accc []*account, process *int64, lock *sync.Mutex) {
 func getAccountNetF(accc []*account, process *int64, lock *sync.Mutex) {
 	wc2.startOne()
 	client := grpcclient.GetRandomWallet()
-	ts := time.Now()
+	// ts := time.Now()
 	errCnt := 0
 
 	addrsLen := len(accc)
@@ -206,7 +206,7 @@ func getAccountNetF(accc []*account, process *int64, lock *sync.Mutex) {
 
 	lock.Lock()
 	*process = *process + int64(len(accc)-len(restAcc))
-	fmt.Printf("submit accountNet count:%v, current account result count:%v, restAddr:%v, error count:%v, cost:%v\n", len(accc)-len(restAcc), *process, len(restAcc), errCnt, time.Since(ts))
+	// fmt.Printf("submit accountNet count:%v, current account result count:%v, restAddr:%v, error count:%v, cost:%v\n", len(accc)-len(restAcc), *process, len(restAcc), errCnt, time.Since(ts))
 	lock.Unlock()
 	if len(restAcc) > 0 {
 		go getAccountNetF(restAcc, process, lock)
@@ -224,7 +224,7 @@ func getAcoountF(addrs []string, result *[]*account, badAddr *[]string, lock *sy
 	// client1 := grpcclient.GetRandomWallet()
 	// fmt.Printf("getAccountFork task, address count:%v, client:%v\n", len(addrs), client.Target())
 
-	ts := time.Now()
+	// ts := time.Now()
 	errCnt := 0
 
 	restAddr := make([]string, 0, len(addrs))
@@ -275,7 +275,7 @@ func getAcoountF(addrs []string, result *[]*account, badAddr *[]string, lock *sy
 	lock.Lock()
 	*result = append(*result, accountList...)
 	*badAddr = append(*badAddr, bad...)
-	fmt.Printf("submit account count:%v, current account result count:%v, badAddr:%v, resetAddr:%v, error count:%v, cost:%v\n", len(accountList), len(*result), len(*badAddr), len(restAddr), errCnt, time.Since(ts))
+	// fmt.Printf("submit account count:%v, current account result count:%v, badAddr:%v, resetAddr:%v, error count:%v, cost:%v\n", len(accountList), len(*result), len(*badAddr), len(restAddr), errCnt, time.Since(ts))
 	lock.Unlock()
 	if len(restAddr) > 0 {
 		go getAcoountF(restAddr, result, badAddr, lock, wg)

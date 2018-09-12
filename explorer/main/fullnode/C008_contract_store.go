@@ -107,8 +107,8 @@ func storeAccountCreateContract(txn *sql.Tx, confiremd int, trxHash string, trx 
 		  `create_time` bigint(20) NOT NULL DEFAULT '0',
 		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
 		  `confirmed` tinyint not null default 0,
-		  `address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-		  `new_address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+		  `owner_address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+		  `account_address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
 		  `account_type` tinyint(4) NOT NULL DEFAULT '0',
 		  PRIMARY KEY (`trx_hash`,`block_id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -132,7 +132,7 @@ func storeAccountCreateContract(txn *sql.Tx, confiremd int, trxHash string, trx 
 		utils.Base58EncodeAddr(ctx.AccountAddress),
 		ctx.Type)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err) //utils.ToJSONStr(ctx), err)
 	}
 
 	AddRefreshAddress(ctx.OwnerAddress, ctx.AccountAddress)
@@ -155,7 +155,7 @@ func storeTransferContract(txn *sql.Tx, confirmed int, trxHash string, trx *core
 		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
 		  `to_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '接收方地址',
 		  `amount` bigint(20) NOT NULL DEFAULT '0' COMMENT '转账金额。单位sun',
-		  `token_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'token名称',
+		  `asset_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'token名称',
 		  PRIMARY KEY (`trx_hash`,`block_id`),
 		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -164,7 +164,7 @@ func storeTransferContract(txn *sql.Tx, confirmed int, trxHash string, trx *core
 	/**/
 	_, err = txn.Exec(`insert into contract_transfer 
 		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
-			owner_address, to_address, amount, token_name) 
+			owner_address, to_address, amount, asset_name) 
 		values 
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?)`,
@@ -179,7 +179,7 @@ func storeTransferContract(txn *sql.Tx, confirmed int, trxHash string, trx *core
 		ctx.Amount,
 		"")
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ToAddress)
 
@@ -201,7 +201,7 @@ func storeTransferAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
 		  `to_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '接收方地址',
 		  `amount` bigint(20) NOT NULL DEFAULT '0' COMMENT '转账金额。单位sun',
-		  `token_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'token名称',
+		  `asset_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'token名称',
 		  PRIMARY KEY (`trx_hash`,`block_id`),
 		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -210,7 +210,7 @@ func storeTransferAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 	/**/
 	_, err = txn.Exec(`insert into contract_transfer 
 		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
-			owner_address, to_address, amount, token_name) 
+			owner_address, to_address, amount, asset_name) 
 		values 
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?)`,
@@ -225,12 +225,12 @@ func storeTransferAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		ctx.Amount,
 		string(ctx.AssetName))
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 
 	_, err = txn.Exec(`insert into contract_asset_transfer 
 	(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
-		owner_address, to_address, amount, token_name) 
+		owner_address, to_address, amount, asset_name) 
 	values 
 	(?, ?, ?, ?, ?, ?,
 		 ?, ?, ?, ?)`,
@@ -245,7 +245,7 @@ func storeTransferAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		ctx.Amount,
 		string(ctx.AssetName))
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ToAddress)
 
@@ -289,7 +289,7 @@ func storeVoteWitnessContract(txn *sql.Tx, confirmed int, trxHash string, trx *c
 		utils.ToJSONStr(ctx.Votes),
 		ctx.Support)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 
 	AddRefreshAddress(ctx.OwnerAddress)
@@ -331,7 +331,7 @@ func storeWitnessCreateContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		string(ctx.Url))
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 	return
@@ -406,7 +406,7 @@ func storeAssetIssueContract(txn *sql.Tx, confirmed int, trxHash string, trx *co
 		ctx.PublicFreeAssetNetUsage,
 		ctx.PublicLatestFreeNetTime)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 	return
@@ -451,7 +451,7 @@ func storeParticipateAssetIssueContract(txn *sql.Tx, confirmed int, trxHash stri
 		string(ctx.AssetName),
 		ctx.Amount)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ToAddress)
 	return
@@ -496,7 +496,7 @@ func storeFreezeBalanceContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		ctx.FrozenDuration,
 		ctx.Resource)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -538,7 +538,7 @@ func storeUnfreezeBalanceContract(txn *sql.Tx, confirmed int, trxHash string, tr
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		ctx.Resource)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -578,7 +578,7 @@ func storeWithdrawBalanceContract(txn *sql.Tx, confirmed int, trxHash string, tr
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress))
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -618,7 +618,7 @@ func storeUnfreezeAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress))
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 	return
@@ -659,7 +659,7 @@ func storeAccountUpdateContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		string(ctx.AccountName))
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -701,7 +701,7 @@ func storeSetAccountIDContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		string(ctx.AccountId))
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 	return
@@ -746,7 +746,7 @@ func storeVoteAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx *cor
 		ctx.Support,
 		ctx.Count)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -790,7 +790,7 @@ func storeUpdateSettingContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		utils.Base58EncodeAddr(ctx.ContractAddress),
 		ctx.ConsumeUserResourcePercent)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ContractAddress)
 
@@ -832,7 +832,7 @@ func storeWitnessUpdateContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		string(ctx.UpdateUrl))
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -880,7 +880,7 @@ func storeUpdateAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx *c
 		ctx.NewLimit,
 		ctx.NewPublicLimit)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -932,7 +932,7 @@ func storeCreateSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *c
 		ctx.NewContract.ConsumeUserResourcePercent,
 		ctx.NewContract.Name)
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.NewContract.ContractAddress)
 	return
@@ -977,7 +977,7 @@ func storeTriggerSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 		ctx.CallValue,
 		string(ctx.Data))
 	if nil != err {
-		fmt.Printf("insert contract [%v] failed:%v\n", utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ContractAddress)
 
