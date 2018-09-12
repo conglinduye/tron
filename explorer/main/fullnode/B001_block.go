@@ -71,13 +71,13 @@ func main() {
 	if !needQuit() {
 		close(quit)
 	}
-	for wc2.currentWorker() > 0 {
-		time.Sleep(3 * time.Second)
-	}
+
 	syncAccount() // syn account after getAllBlocks() quit
 
 	fmt.Println("Wait other daemon quit .......")
 	wg.Wait()
+
+	fmt.Println("fullnode QUIT")
 }
 
 func getAllBlocks() {

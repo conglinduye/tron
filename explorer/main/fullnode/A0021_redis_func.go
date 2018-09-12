@@ -31,7 +31,12 @@ func AddRefreshAddress(addrs ...interface{}) (newLen int, err error) {
 		if bufLen+newLen > _bufCap {
 			// fmt.Printf("%v\n%v-->%v\n\n", _refresgAddrBuffer, bufLen, cap(_refresgAddrBuffer))
 			curAddrs, err := redisSADD(_refresgAddrBuffer)
-			fmt.Printf("push %v address to redis for later synchronize, address count:%v, err:%v\n", bufLen, curAddrs, err)
+			if nil != err {
+				_ = curAddrs
+				fmt.Printf("push account address to redis failed:%v\n", err)
+			}
+
+			// fmt.Printf("push %v address to redis for later synchronize, address count:%v, err:%v\n", bufLen, curAddrs, err)
 			_refresgAddrBuffer = _refresgAddrBuffer[:0]
 			_latestPushTS = time.Now()
 		}
@@ -50,10 +55,15 @@ func startRedisAccountRefreshPush() {
 			_refBufLock.Lock()
 			if time.Since(_latestPushTS) > time.Duration(30)*time.Second {
 				// fmt.Printf("%v\n%v-->%v\n\n", _refresgAddrBuffer, bufLen, cap(_refresgAddrBuffer))
-				bufLen := len(_refresgAddrBuffer)
+				// bufLen := len(_refresgAddrBuffer)
 				curAddrs, err := redisSADD(_refresgAddrBuffer)
-				fmt.Printf("push %v address to redis for later synchronize, address count:%v, err:%v\n", bufLen, curAddrs, err)
-				_refresgAddrBuffer = _refresgAddrBuffer[:0]
+				// fmt.Printf("push %v address to redis for later synchronize, address count:%v, err:%v\n", bufLen, curAddrs, err)
+				if nil != err {
+					_ = curAddrs
+					fmt.Printf("push account address to redis failed:%v\n", err)
+				} else {
+					_refresgAddrBuffer = _refresgAddrBuffer[:0]
+				}
 				_latestPushTS = time.Now()
 			}
 			_refBufLock.Unlock()
@@ -63,15 +73,25 @@ func startRedisAccountRefreshPush() {
 				break
 			}
 		}
-		_refBufLock.Lock()
-		bufLen := len(_refresgAddrBuffer)
-		curAddrs, err := redisSADD(_refresgAddrBuffer)
-		fmt.Printf("push %v address to redis for later synchronize, address count:%v, err:%v\n", bufLen, curAddrs, err)
-		_refresgAddrBuffer = _refresgAddrBuffer[:0]
-		_latestPushTS = time.Now()
-		_refBufLock.Unlock()
+		cleanAccountBuffer()
 		fmt.Printf("Redis Account Refresh Push Daemon QUIT\n")
 	}()
+}
+
+func cleanAccountBuffer() {
+	_refBufLock.Lock()
+	bufLen := len(_refresgAddrBuffer)
+	curAddrs, err := redisSADD(_refresgAddrBuffer)
+
+	_ = bufLen
+	_ = curAddrs
+	_ = err
+	// fmt.Printf("push %v address to redis for later synchronize, address count:%v, err:%v\n", bufLen, curAddrs, err)
+
+	_refresgAddrBuffer = _refresgAddrBuffer[:0]
+	_latestPushTS = time.Now()
+
+	_refBufLock.Unlock()
 }
 
 func redisSADD(val []interface{}) (int64, error) {

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/tronprotocol/grpc-gateway/api"
 	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/utils"
 
@@ -54,7 +53,10 @@ func storeTransactions(trans []*core.Transaction) bool {
 			continue
 		}
 		if len(tran.RawData.Contract) > 0 {
-			trxHash := utils.HexEncode(utils.CalcTransactionHash(tran))
+			blockID := tran.RawData.RefBlockNum
+			tran.RawData.RefBlockNum = 0
+			trxHash := utils.HexEncode(utils.CalcTransactionHash(tran)) // calc trx hash need reset RefBlockNum as main net do not fill this field
+			tran.RawData.RefBlockNum = blockID                          // set it back as store contract need this value
 			trxRetData := []byte{}
 			if len(tran.Ret) > 0 {
 				trxRetData, _ = proto.Marshal(tran.Ret[0])
@@ -62,7 +64,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 			toAddr, _ := utils.GetContractInfoStr(tran.RawData.Contract[0])
 			_, err = stmt.Exec(
 				trxHash,
-				tran.RawData.RefBlockNum,
+				blockID, // tran.RawData.RefBlockNum,
 				tran.RawData.Contract[0].Type,
 				utils.HexEncode(tran.RawData.Contract[0].Parameter.Value),
 				utils.HexEncode(trxRetData),
@@ -72,9 +74,10 @@ func storeTransactions(trans []*core.Transaction) bool {
 				toAddr,
 			)
 			if err != nil {
-				fmt.Printf("ERROR: store transaction failed!%v, %#v\n", err, utils.ToJSONStr(tran))
+				fmt.Printf("ERROR: store transaction failed!%v, trx_hash:%v, blockID:%v\n", err, trxHash, blockID) //,utils.ToJSONStr(tran))
 				// return false
 			} else {
+
 				storeContractDetail(txn, 1, trxHash, tran)
 			}
 		} else {
@@ -138,14 +141,14 @@ func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 		if true {
 			blockHash := utils.HexEncode(utils.CalcBlockHash(block))
 			blockIDList = append(blockIDList, block.BlockHeader.RawData.Number)
-			data, _ := proto.Marshal(&api.TransactionList{Transaction: block.Transactions})
+			blockSize, _ := proto.Marshal(block)
 			_, err = stmt.Exec(
 				block.BlockHeader.RawData.Number,
 				blockHash,
 				utils.HexEncode(block.BlockHeader.RawData.ParentHash),
 				1,
 				len(block.Transactions),
-				len(data),
+				len(blockSize),
 				utils.Base58EncodeAddr(block.BlockHeader.RawData.WitnessAddress),
 				block.BlockHeader.RawData.Timestamp,
 				utils.HexEncode(block.BlockHeader.RawData.TxTrieRoot))
@@ -153,7 +156,7 @@ func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 			fmt.Println("transaction contract is empty!")
 		}
 		if err != nil {
-			fmt.Printf("insert into block failed:%v-->%v\n", err, utils.ToJSONStr(block))
+			fmt.Printf("insert into block failed:%v-->blockID:%v\n", err, block.BlockHeader.RawData.Number) // utils.ToJSONStr(block))
 			// return false
 			errCnt++
 		} else {
