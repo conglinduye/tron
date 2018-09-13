@@ -62,7 +62,7 @@ func QueryReport() (*entity.ReportResp, error) {
 		}
 
 	} else {
-		if err := json.Unmarshal([]byte(totalOverviewValue), reportOverviewsList); err != nil {
+		if err := json.Unmarshal([]byte(totalOverviewValue), &reportOverviewsList); err != nil {
 			log.Errorf("syncReportJob json unmarshal err:[%v]", err)
 		}
 	}
