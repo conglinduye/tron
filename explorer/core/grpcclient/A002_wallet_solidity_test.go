@@ -2,9 +2,10 @@ package grpcclient
 
 import (
 	"fmt"
-	"sync"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/utils"
 )
 
@@ -111,22 +112,93 @@ func TestRW(*testing.T) {
 
 func TestBlock(*testing.T) {
 
-	client := GetRandomSolidity()
+	// client := GetRandomSolidity()
 
 	client1 := GetRandomWallet()
 
-	utils.VerifyCall(client.GetBlockByNum(2224654))
+	// utils.VerifyCall(client.GetBlockByNum(2224654))
 
-	wg := sync.WaitGroup{}
+	ttt, err := client1.GetNextMaintenanceTime()
 
-	wg.Add(1)
-	go func() {
-		block, _ := client.GetNowBlock()
-		fmt.Printf("solidity now block:%v\n", block.BlockHeader.RawData.Number)
-		wg.Done()
-	}()
-	block1, _ := client1.GetNowBlock()
-	fmt.Printf("full now block:%v\n", block1.BlockHeader.RawData.Number)
-	utils.VerifyCall(client.GetBlockByNum(block1.BlockHeader.RawData.Number))
-	wg.Wait()
+	fmt.Printf("%v\n%v\n%v\n", err, ttt, utils.ConverTimestampStr(ttt))
+	// wg := sync.WaitGroup{}
+
+	// wg.Add(1)
+	// go func() {
+	// 	block, _ := client.GetNowBlock()
+	// 	fmt.Printf("solidity now block:%v\n", block.BlockHeader.RawData.Number)
+	// 	wg.Done()
+	// }()
+	// block1, _ := client1.GetNowBlock()
+	// fmt.Printf("full now block:%v\n", block1.BlockHeader.RawData.Number)
+	// utils.VerifyCall(client.GetBlockByNum(block1.BlockHeader.RawData.Number))
+	// wg.Wait()
 }
+
+func TestGetBlock(*testing.T) {
+	var num int64 = 2270833 // 2270833 2271567
+
+	getBlockSolidity(num)
+	getBlockFull(num)
+}
+
+func getBlockSolidity(num int64) {
+	client := GetRandomSolidity()
+
+	block, err := client.GetBlockByNum(num)
+
+	if nil != err || nil == block {
+		fmt.Println(err)
+		return
+	}
+
+	data, _ := proto.Marshal(block)
+	fmt.Printf("solidity block:[%v], hash:%v, size:%v\n", num, utils.HexEncode(utils.CalcBlockHash(block)), len(data))
+	showBlockTrx(block)
+	fmt.Printf("\n\n")
+}
+
+func getBlockFull(num int64) {
+	client := GetRandomWallet()
+
+	// block, err := client.GetBlockByNum(num)
+	blocks, err := client.GetBlockByLimitNext(num, num+1)
+
+	if nil != err || nil == blocks {
+		fmt.Println(err)
+		return
+	}
+
+	data, _ := proto.Marshal(blocks[0])
+	fmt.Printf("fullnode block:[%v], hash:%v, size:%v\n", num, utils.HexEncode(utils.CalcBlockHash(blocks[0])), len(data))
+	showBlockTrx(blocks[0])
+	fmt.Printf("\n\n")
+}
+
+func showBlockTrx(block *core.Block) {
+	if nil == block {
+		return
+	}
+	for _, trx := range block.Transactions {
+		ctxOwner, _ := utils.GetContractInfoStr(trx.RawData.Contract[0])
+		fmt.Printf("trx_hash:%64v\ttype:%-30v\towner_address:%v\ttimestamp:%30v\texpire:%30v\n",
+			utils.HexEncode(utils.CalcTransactionHash(trx)), trx.RawData.Contract[0].Type, ctxOwner,
+			utils.ConverTimestampStr(trx.RawData.Timestamp), utils.ConverTimestampStr(trx.RawData.Expiration))
+	}
+}
+
+/*
+mysql> select * from blocks where block_id = 2271567\G
+*************************** 1. row ***************************
+       block_id: 2271567
+     block_hash: 000000000022a94f5868c99d3c430559876adc5b028dda1c78c9b694a2d93ed6
+    parent_hash: 000000000022a94efee06aeb9f3708740690f7fa8ee5465bf7209412b107fc19
+witness_address: TSzoLaVCdSNDpNxgChcFt9rSRF5wWAZiR4
+   tx_trie_hash: 058cf1f0c18d992538789c9e156c3cd21d01fbcb776c35230d55cb086a6899e5
+     block_size: 1928
+transaction_num: 9
+      confirmed: 1
+    create_time: 1536722433000
+  modified_time: 2018-09-12 03:21:42.449452
+
+*/

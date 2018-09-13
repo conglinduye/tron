@@ -30,3 +30,12 @@ func CalcBlockHash(block *core.Block) (ret []byte) {
 	binary.BigEndian.PutUint64(hash0[:], uint64(block.BlockHeader.RawData.Number))
 	return hash0[:]
 }
+
+// CalcBlockSize 计算Block的size
+func CalcBlockSize(block *core.Block) int64 {
+	if nil == block || nil == block.BlockHeader || nil == block.BlockHeader.RawData {
+		return 0
+	}
+	rawByte, _ := proto.Marshal(block) // get block header raw bytes
+	return int64(len(rawByte))
+}
