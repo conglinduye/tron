@@ -16,11 +16,17 @@ import (
 	"github.com/wlcy/tron/explorer/lib/redis"
 	"github.com/wlcy/tron/explorer/lib/util"
 
-	toml "github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml"
 )
 
 //配置信息
 var redisCli *redis.TronRedis
+
+var DefaultPath string
+var TokenTemplate string
+var ImgURL string
+var Address string
+var TokenTemplateFile string
 
 // LoadConfig read config from file and init dspFrontServer run environment variable
 //  call before Start pool.Server()
@@ -41,6 +47,12 @@ func LoadConfig(confFile string) error {
 		log.Errorf("get db config failed:[%v]!", err)
 		return err
 	}
+
+	if err = initToken(config); nil != err {
+		log.Errorf("get token config failed:[%v]!", err)
+		return err
+	}
+
 
 	return nil
 }
@@ -76,6 +88,18 @@ func initDB(config *toml.TomlTree) error {
 	log.Debugf("host:%v, port:%v, schema:%v, user:%v, passwd:%v", host, port, schema, user, passwd)
 
 	mysql.Initialize(host, port, schema, user, passwd)
+
+	return nil
+}
+
+//initToken 初始化token参数
+func initToken(config *toml.TomlTree) error {
+	const NodeName = "token"
+	DefaultPath = config.GetDefault(fmt.Sprintf("%v.defaultPath", NodeName), "/data/images/tokenLogo").(string)
+	TokenTemplate = config.GetDefault(fmt.Sprintf("%v.tokenTemplate", NodeName), "/data/images/tokenTemplate/").(string)
+	ImgURL = config.GetDefault(fmt.Sprintf("%v.imgURL", NodeName), "http://coin.top/tokenLogo").(string)
+	TokenTemplateFile = config.GetDefault(fmt.Sprintf("%v.tokenTemplateFile", NodeName), "http://coin.top/tokenTemplate/TronscanTokenInformationSubmissionTemplate.xlsx").(string)
+	log.Printf("defaultPath:[%v], tokenTemplate:[%v],imgURL:[%v],tokenTemplateFile:[%v]", DefaultPath, TokenTemplate, ImgURL, TokenTemplateFile)
 
 	return nil
 }
