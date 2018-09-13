@@ -31,16 +31,6 @@ func otherRegister(ginRouter *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, resp)
 	})
-	//图表信息所用接口
-	ginRouter.GET("/api/stats/overview", func(c *gin.Context) {
-		log.Debugf("Hello /api/stats/overview")
-		resp, err := service.QueryStatsOverview()
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
-		}
-		c.JSON(http.StatusOK, resp)
-	})
 	//验签
 	/*ginRouter.GET("/api/auth", func(c *gin.Context) {
 		log.Debugf("Hello /api/auth")

@@ -141,7 +141,7 @@ output:json
 ]
 ```
 
-## 图表信息所用接口-TODO
+## 图表信息所用接口
 - url:/api/stats/overview
 - method:get
 

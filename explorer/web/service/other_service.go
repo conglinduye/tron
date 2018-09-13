@@ -102,12 +102,6 @@ func QueryMarkets() ([]*entity.MarketInfo, error) {
 	return marketInfos, nil
 }
 
-//QueryStatsOverview ...
-func QueryStatsOverview() (*entity.TransfersResp, error) {
-
-	return nil, nil
-}
-
 //QueryAuth ...
 func QueryAuth() (*entity.TransfersResp, error) {
 
