@@ -3,5 +3,5 @@ package log
 import "log"
 
 func init() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
+	log.SetFlags(log.LstdFlags | log.Llongfile | log.Lmicroseconds)
 }

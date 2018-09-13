@@ -20,7 +20,7 @@ import (
 )
 
 //配置信息
-var redisCli *redis.TronRedis
+var RedisCli *redis.TronRedis
 
 var DefaultPath string
 var TokenTemplate string
@@ -37,12 +37,12 @@ func LoadConfig(confFile string) error {
 		log.Errorf("open config file [%v] failed[%v]!", confFile, err)
 		return err
 	}
-	/*
-		if err = initRedis(config); nil != err {
-			log.Errorf("get Redis config failed[%v]!", err)
-			return err
-		}
-	*/
+
+	if err = initRedis(config); nil != err {
+		log.Errorf("get Redis config failed[%v]!", err)
+		return err
+	}
+
 	if err = initDB(config); nil != err {
 		log.Errorf("get db config failed:[%v]!", err)
 		return err
@@ -71,7 +71,7 @@ func initRedis(config *toml.TomlTree) error {
 	redisInfo.Db = int(util.ToInt64(config.GetDefault("Redis.index", 0)))
 	redisInfo.PoolSize = int(util.ToInt64(config.GetDefault("Redis.poolSize", 10)))
 
-	redisCli = redis.NewClient(redisInfo.Addr, redisInfo.Password, redisInfo.Db, redisInfo.PoolSize)
+	RedisCli = redis.NewClient(redisInfo.Addr, redisInfo.Password, redisInfo.Db, redisInfo.PoolSize)
 
 	return nil
 }

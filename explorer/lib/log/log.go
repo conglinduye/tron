@@ -82,6 +82,7 @@ func ChangeLogLevel(level Level) bool {
 		var oldLevel = currentlogLevel
 		currentlogLevel = level
 		Infof("change log level from [%v] to [%v] ", oldLevel, currentlogLevel)
+
 		return true
 	}
 	return false
