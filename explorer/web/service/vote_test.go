@@ -8,11 +8,11 @@ import (
 	"github.com/wlcy/tron/explorer/web/entity"
 )
 
-//false
+//true
 func TestVotes(t *testing.T) {
 	Init()
 	req := &entity.Votes{}
-	req.Sort = "-number"
+	req.Sort = "-votes"
 	req.Limit = "5"
 	req.Start = "0"
 
@@ -31,7 +31,7 @@ func TestVotes(t *testing.T) {
 
 }
 
-//false
+//true
 func TestVoteLivefff(t *testing.T) {
 	Init()
 
@@ -44,7 +44,7 @@ func TestVoteLivefff(t *testing.T) {
 
 }
 
-//false
+//true
 func TestQueryVoteCurrentCycle(t *testing.T) {
 	Init()
 

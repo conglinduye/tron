@@ -46,7 +46,7 @@ type LiveInfo struct {
 
 //VoteCurrentCycleResp 上轮投票信息
 type VoteCurrentCycleResp struct {
-	TotalVotes string              `json:"total_votes"` //:"TFuC2Qge4GxA2U9abKxk1pw3YZvGM5XRir",
+	TotalVotes int64               `json:"total_votes"` //:"TFuC2Qge4GxA2U9abKxk1pw3YZvGM5XRir",
 	Candidates []*VoteCurrentCycle `json:"candidates"`  //:"trongalaxy",
 }
 

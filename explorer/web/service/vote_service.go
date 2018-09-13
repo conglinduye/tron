@@ -15,42 +15,45 @@ import (
 func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	var filterSQL, sortSQL, pageSQL, sortTemp string
 	mutiFilter := false
-
-	strSQL := fmt.Sprintf(`
-	SELECT trx_hash,block_id,voter_address,candidate_address,vote_num,wit.create_time,
-	       acc.frozen,acc.account_name,wlwit.url,outvoter.outVotes
-	FROM tron.contract_vote_witness wit
-	left join tron.tron_account acc on acc.address=wit.candidate_address
-	left join tron.wlcy_witness_create_info wlwit on wlwit.address=wit.candidate_address
+	//默认查询得票列表
+	reportSQL := fmt.Sprint(`
 	left join (
-		select address,sum(vote) as outVotes from tron.account_vote_result  group by address
-	) outvoter on outvoter.address=wit.voter_address
-	where 1=1 `)
+		select to_address,sum(vote) as votes from tron.account_vote_result 
+		 group by to_address
+	) outvoter on outvoter.to_address=acc.address`)
 
-	//按传入条件拼接sql，很容易错误，需要注意
-	if req.Candidate != "" {
-		filterSQL = fmt.Sprintf(" and wit.candidate_address='%v'", req.Candidate)
-	}
+	//按照Voter过滤，获取该Voter投给别的人列表
 	if req.Voter != "" {
-		filterSQL = fmt.Sprintf(" and wit.voter_address='%v'", req.Voter)
+		reportSQL = fmt.Sprintf(`
+	left join (
+		select to_address,sum(vote) as votes from tron.account_vote_result 
+		where 1=1 and address='%v'
+		 group by to_address
+	) outvoter on outvoter.to_address=acc.address`, req.Voter)
 	}
-	for _, v := range strings.Split(req.Sort, ",") {
-		if strings.Index(v, "timestamp") > 0 {
-			if mutiFilter {
-				sortTemp = fmt.Sprintf("%v ,", sortTemp)
-			}
-			sortTemp = fmt.Sprintf("%v wit.create_time", sortTemp)
-			if strings.Index(v, "-") == 0 {
-				sortTemp = fmt.Sprintf("%v desc", sortTemp)
-			}
-			mutiFilter = true
-		}
+	//按照Candidate过滤，获取谁投给Candidate的列表
+	if req.Candidate != "" {
+		reportSQL = fmt.Sprintf(`
+	left join (
+		select address,sum(vote) as votes from tron.account_vote_result  
+		where 1=1 and to_address='%v'
+		group by address
+	) outvoter on outvoter.address=acc.address`, req.Candidate)
+	}
+	strSQL := fmt.Sprintf(`
+	SELECT acc.address as voteraddress,outvoter.votes,
+	       acc.frozen,acc.account_name,wlwit.url
+	FROM tron.tron_account acc 
+	left join tron.wlcy_witness_create_info wlwit on wlwit.address=acc.address
+	%v
+     where 1=1 and outvoter.votes>0 `, reportSQL)
 
-		if strings.Index(v, "number") > 0 {
+	for _, v := range strings.Split(req.Sort, ",") {
+		if strings.Index(v, "votes") > 0 {
 			if mutiFilter {
 				sortTemp = fmt.Sprintf("%v ,", sortTemp)
 			}
-			sortTemp = fmt.Sprintf("%v wit.block_id", sortTemp)
+			sortTemp = fmt.Sprintf("%v outvoter.votes", sortTemp)
 			if strings.Index(v, "-") == 0 {
 				sortTemp = fmt.Sprintf("%v desc", sortTemp)
 			}
@@ -72,30 +75,34 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 //QueryVoteLive 实时投票数据
 func QueryVoteLive() (*entity.VoteLiveInfo, error) {
 	strSQL := fmt.Sprintf(`
-	SELECT trx_hash,block_id,voter_address,candidate_address,vote_num,wit.create_time,
-	       acc.account_name,wlwit.url,getvoter.getVotes
-	FROM tron.contract_vote_witness wit
-	left join tron.tron_account acc on acc.address=wit.candidate_address
-	left join tron.wlcy_witness_create_info wlwit on wlwit.address=wit.candidate_address
+	SELECT acc.address as voteraddress,outvoter.votes,
+	       acc.frozen,acc.account_name,wlwit.url
+	FROM tron.tron_account acc 
+	left join tron.wlcy_witness_create_info wlwit on wlwit.address=acc.address
 	left join (
-		select address,sum(vote) as getVotes from tron.account_vote_result  group by address
-	) getvoter on getvoter.address=wit.candidate_address
-	where 1=1 `)
+		select to_address,sum(vote) as votes from tron.account_vote_result 
+		 group by to_address
+	) outvoter on outvoter.to_address=acc.address
+     where 1=1 and outvoter.votes>0 `)
 
 	return module.QueryVoteLiveRealize(strSQL)
 }
 
 //QueryVoteCurrentCycle 上轮投票数据
 func QueryVoteCurrentCycle() (*entity.VoteCurrentCycleResp, error) {
-	/*var filterSQL string
 	strSQL := fmt.Sprintf(`
-		select block_id,owner_address,to_address,amount,
-		token_name,trx_hash,
-		contract_type,confirmed,create_time
-		from tron.contract_token_transfer
-			where 1=1 `)
-	*/
-	return nil, nil
+	SELECT acc.address as voteraddress,outvoter.votes,
+	acc.frozen,acc.account_name,wlwit.url,srcc.github_link
+FROM tron.tron_account acc 
+left join tron.wlcy_witness_create_info wlwit on wlwit.address=acc.address
+left join tron.wlcy_sr_account srcc on srcc.address=acc.address
+left join (
+ select address,sum(vote_count) as votes from tron.witness 
+  group by address
+) outvoter on outvoter.address=acc.address
+where 1=1 and outvoter.votes>0   order by votes desc `)
+
+	return module.QueryVoteCurrentCycleRealize(strSQL, "", "", "")
 }
 
 //QueryVoteNextCycle 本轮投票剩余时长
