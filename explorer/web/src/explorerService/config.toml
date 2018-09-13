@@ -14,6 +14,12 @@ protocol = "tcp"
 schema = "tron"
 charset = "utf8"
 
+[token]
+defaultPath   = "/data/images/tokenLogo"
+tokenTemplate = "/data/images/tokenTemplate/"
+imgURL        = "http://coin.top/tokenLogo"
+tokenTemplateFile = "http://coin.top/tokenTemplate/TronscanTokenInformationSubmissionTemplate.xlsx"
+
 [Redis]
 host = "127.0.0.1:6378"
 pass = ""

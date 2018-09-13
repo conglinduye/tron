@@ -263,3 +263,58 @@ func InitTokenExtInfos() []*entity.TokenExtInfo {
 	tokenExtInfos = append(tokenExtInfos, tokenExtInfo)
 	return tokenExtInfos
 }
+
+//InsertLogoInfo
+func InsertLogoInfo(address, url string) error {
+	strSQL := fmt.Sprintf(`
+		insert into wlcy_asset_logo 
+		(address,logo_url)
+		values('%v','%v')`,
+		address, url)
+	insID, _, err := mysql.ExecuteSQLCommand(strSQL, true)
+	if err != nil {
+		log.Errorf("insert logo url fail:[%v]  sql:%s", err, strSQL)
+		return err
+	}
+	log.Debugf("insert logo url success, insert id: [%v]", insID)
+	return nil
+}
+
+//UpdateLogoInfo 更新
+func UpdateLogoInfo(address, url string) error {
+	strSQL := fmt.Sprintf(`
+	update wlcy_asset_logo
+	set logo_url='%v' where address='%v'`,
+		url, address)
+	_, _, err := mysql.ExecuteSQLCommand(strSQL, true)
+	if err != nil {
+		log.Errorf("update logoInfo result fail:[%v]  sql:%s", err, strSQL)
+		return err
+	}
+	log.Debugf("update logoInfo result success  sql:%s", strSQL)
+	return nil
+}
+
+//IsAddressExist
+func IsAddressExist(address string) (bool, error) {
+	isExist := false
+	strSQL := fmt.Sprintf(`
+	select address,logo_url from wlcy_asset_logo
+	where 1=1 and address='%v' limit 1 `, address)
+	//查询结果
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("isAddressNotExist error :[%v]\n", err)
+		return isExist, err
+	}
+	if dataPtr == nil {
+		log.Error("dataPtr is nil")
+		return isExist, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr.ResNum() > 0 {
+		isExist = true
+	}
+	return isExist, nil
+}
+

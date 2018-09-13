@@ -9,6 +9,17 @@ import (
 	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/lib/mysql"
 	"sync/atomic"
+	"encoding/base64"
+	"bytes"
+	"time"
+	"os"
+	"image"
+	"github.com/nfnt/resize"
+	"image/jpeg"
+	"image/png"
+	"image/gif"
+	"io"
+	"errors"
 )
 
 //QueryTokens
@@ -214,4 +225,92 @@ func calculateToken(token *entity.TokenInfo) {
 	token.FrozenTotal = frozenSupply
 	token.FrozenPercentage = frozenSupplyPercentage
 
+}
+
+//UploadTokenLogo 保存图片
+func UploadTokenLogo(defaultPath, imgURL, imageData, address string) (string, error) {
+	imgData, err := base64.StdEncoding.DecodeString(imageData)
+	if nil != err {
+		return "", err
+	}
+	buffer := bytes.NewBuffer(imgData)
+	tempFileName := fmt.Sprintf("tokenLogo_%v.jpeg", time.Now().Format("20060102150405.000000"))
+
+	dist, err := os.Create(defaultPath + "/" + tempFileName)
+	if err != nil {
+		log.Error(err)
+	}
+	defer dist.Close()
+
+	err = scale(buffer, dist, 0, 0, 0)
+	if err != nil {
+		log.Error(err)
+	}
+	log.Debugf("save file %v ", dist)
+	dst := fmt.Sprintf("%v/%v", imgURL, tempFileName)
+	err = InsertOrUpdateLogo(address, dst)
+
+	return dst, err
+}
+
+
+/*
+* 缩略图生成
+* 入参:
+* 规则: 如果width 或 hight其中有一个为0，则大小不变 如果精度为0则精度保持不变
+* 矩形坐标系起点是左上
+* 返回:error
+ */
+func scale(in io.Reader, out io.Writer, width, height, quality int) error {
+	origin, fm, err := image.Decode(in)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	if width == 0 || height == 0 {
+		width = origin.Bounds().Max.X
+		height = origin.Bounds().Max.Y
+	}
+	if quality == 0 {
+		quality = 100
+	}
+	canvas := resize.Resize(uint(width), uint(height), origin, resize.Lanczos3)
+
+	//return jpeg.Encode(out, canvas, &jpeg.Options{quality})
+	log.Debugf("fm:%v", fm)
+	switch fm {
+	case "jpeg":
+		return jpeg.Encode(out, canvas, &jpeg.Options{quality})
+	case "png":
+		return png.Encode(out, canvas)
+	case "gif":
+		return gif.Encode(out, canvas, &gif.Options{})
+		/*case "bmp":
+		return bmp.Encode(out, canvas)*/
+	default:
+		return errors.New("ERROR FORMAT")
+	}
+	return nil
+}
+
+
+//InsertOrUpdateLogo 更新或插入logo
+func InsertOrUpdateLogo(address, url string) error {
+	if address == "" || url == "" {
+		log.Error("address or url is nil")
+		return util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	addressInfo, err := module.IsAddressExist(address)
+	if err != nil {
+		log.Errorf("check address:[%v] isExist err:[%v]", address, err)
+		return err
+	}
+	log.Errorf("addressInfo:[%#v] ", addressInfo)
+	if addressInfo {
+		err = module.UpdateLogoInfo(address, url)
+	} else {
+		err = module.InsertLogoInfo(address, url)
+	}
+	return err
 }

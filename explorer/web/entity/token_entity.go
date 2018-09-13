@@ -3,17 +3,17 @@ package entity
 
 //Token		查询token的请求参数
 type Token struct {
-	Start  	string `json:"start,omitempty"`  	// 记录的起始序号
-	Limit  	string `json:"limit,omitempty"`  	// 每页记录数
-	Owner 	string `json:"owner,omitempty"`     // creator_address
-	Name 	string `json:"name,omitempty"`		// token_name
-	Status  string `json:"status,omitempty"`		// status
+	Start  					string 				`json:"start,omitempty"`  		// 记录的起始序号
+	Limit  					string 				`json:"limit,omitempty"`  		// 每页记录数
+	Owner 					string 				`json:"owner,omitempty"`     	// creator_address
+	Name 					string 				`json:"name,omitempty"`			// token_name
+	Status  				string 				`json:"status,omitempty"`		// status
 }
 
 //TokenResp	查询token的结果
 type TokenResp struct {
-	Total	int64				`json:"total"` 	// 总记录数
-	Data    []*TokenInfo		`json:"data"`   // 数据
+	Total	int64								`json:"total"` 					// 总记录数
+	Data    []*TokenInfo						`json:"data"`   				// 数据
 }
 
 // Token 	通证信息
@@ -80,8 +80,8 @@ type TokenExtInfo struct {
 
 //TokenFrozen 通证冻结信息
 type TokenFrozenInfo struct {
-	Days 					int64				`json:"days"`				  	//冻结天数
-	Amount  				int64				`json:"amount"`					//冻结金额
+	Days 					int64				`json:"days"`				  	//	冻结天数
+	Amount  				int64				`json:"amount"`					//	冻结金额
 }
 
 //TokenBalance	通证余额
@@ -92,3 +92,14 @@ type TokenBalanceInfo struct {
 	Balance					int64				`json:"balance"`				// 余额
 }
 
+//UploadLogoReq
+type UploadLogoReq struct {
+	Address   				string 				`json:"owner_address"` 			//	Address
+	ImageData 				string 				`json:"imageData"`     			//	ImageData
+}
+
+//UploadLogo
+type UploadLogo struct {
+	Address 				string 				`json:"address,omitempty"` 		// Address
+	LogoURL 				string 				`json:"logoUrl,omitempty"` 		// LogoURL
+}
