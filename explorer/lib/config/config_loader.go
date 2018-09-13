@@ -22,7 +22,11 @@ import (
 //配置信息
 var redisCli *redis.TronRedis
 
-var DefaultPath, TokenTemplate, ImgURL, Address, TokenTemplateFile string
+var DefaultPath string
+var TokenTemplate string
+var ImgURL string
+var Address string
+var TokenTemplateFile string
 
 // LoadConfig read config from file and init dspFrontServer run environment variable
 //  call before Start pool.Server()
@@ -43,6 +47,12 @@ func LoadConfig(confFile string) error {
 		log.Errorf("get db config failed:[%v]!", err)
 		return err
 	}
+
+	if err = initToken(config); nil != err {
+		log.Errorf("get token config failed:[%v]!", err)
+		return err
+	}
+
 
 	return nil
 }
