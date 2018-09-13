@@ -28,4 +28,5 @@ type BlockInfo struct {
 	WitnessAddress string `json:"witnessAddress"` //:"TSNbzxac4WhxN91XvaUfPTKP2jNT18mP6T",
 	NrOfTrx        int64  `json:"nrOfTrx"`        //:11,
 	Confirmed      bool   `json:"confirmed"`      //:true
+	WitnessName    string `json:"witnessName"`    // witness name
 }
