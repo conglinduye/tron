@@ -18,6 +18,7 @@ type TokenResp struct {
 
 // Token 	通证信息
 type TokenInfo struct {
+	Index               	int32         		`json:"index"`					// index
 	Price 					int64				`json:"price"` 					// 价格
 	Issued  				int64				`json:"issued"`					// 流通数量
 	IssuedPercentage		float64  			`json:"issuedPercentage"`  		// 流通数量占比
@@ -42,8 +43,39 @@ type TokenInfo struct {
 	Frozen				    []TokenFrozenInfo	`json:"frozen"`					// frozen
 	Abbr					string 				`json:"abbr"`					// asset_abbr
 	Participated			int64				`json:"participated"`			// 已筹集资金
+
 	TotalTransactions		int64				`json:"totalTransactions"`		// 总交易数目
 	NrOfTokenHolders		int64				`json:"nrOfTokenHolders"`		// 通证持有者数目
+
+
+	TokenID     			string             `json:"tokenID"`    				//
+	Reputation  			string             `json:"reputation"` 				// 信用评级
+	ImgURL      			string             `json:"imgUrl"`
+	WebSite     			string             `json:"website"`     			// 官网地址
+	WhitePaper  			string             `json:"white_paper"` 			// 白皮书链接
+	GitHub      			string             `json:"github"`     	 			// github链接
+	Country    	 			string             `json:"country"`     			// 国家
+	SocialMedia 			[]*SocialMediaInfo `json:"social_media"`			//
+}
+
+//SocialMediaInfo
+type SocialMediaInfo struct {
+	Name 					string 				`json:"name"`					//
+	URL  					string 				`json:"url"`					//
+}
+
+//TokenExtInfo
+type TokenExtInfo struct {
+	OwnerAddress 			string             `json:"ownerAddress"` 			//
+	TokenID      			string             `json:"tokenID"`      			//
+	Index        			string             `json:"index"`        			//
+	Reputation   			string             `json:"reputation"`   			// 信用评级
+	ImgURL       			string             `json:"imgUrl"`
+	WebSite      			string             `json:"website"`     			// 官网地址
+	WhitePaper   			string             `json:"white_paper"` 			// 白皮书链接
+	GitHub       			string             `json:"github"`      			// github链接
+	Country      			string             `json:"country"`     			// 国家
+	SocialMedia  			[]*SocialMediaInfo `json:"social_media"`
 }
 
 //TokenFrozen 通证冻结信息

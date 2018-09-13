@@ -7,6 +7,7 @@ import (
 	"github.com/wlcy/tron/explorer/lib/util"
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
 )
 
 //QueryTokens
@@ -169,4 +170,96 @@ func QueryTotalTokenHolders(tokenName string) (int64, error) {
 	}
 	return totalTokenHolders, nil
 
+}
+
+// QueryTokenExtInfo
+func QueryTokenExtInfo(addressList []string) ([]*entity.TokenExtInfo, error) {
+	filterSQL := mysql.GenSQLPartInStrList("logo.address", addressList, true)
+	strSQL := fmt.Sprintf(`
+	SELECT logo.address,token_id,token_name,brief, website, white_paper,logo.logo_url,
+    	github,country, credit, reddit,twitter,facebook, telegram,steam,
+    	medium, webchat,Weibo,review
+	FROM wlcy_asset_logo logo
+	left join wlcy_asset_info info on logo.address=info.address and info.status=1
+	where 1=1 and %v order by info.address `, filterSQL)
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("queryTokenExtInfo error :[%v]\n", err)
+		return nil, err
+	}
+	if dataPtr == nil {
+		log.Error("dataPtr is nil")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	var index int32
+
+	var tokenExtInfos = make([]*entity.TokenExtInfo, 0)
+	var socialMediaInfos = make([]*entity.SocialMediaInfo, 0)
+	if dataPtr.ResNum() == 0 {
+		tokenExtInfos = InitTokenExtInfos()
+	}
+
+	for dataPtr.NextT() {
+		atomic.AddInt32(&index, 1)
+		tokenExtInfo := &entity.TokenExtInfo{}
+		tokenExtInfo.OwnerAddress = dataPtr.GetField("address")
+		tokenExtInfo.Country = mysql.SetDefaultVal(dataPtr.GetField("country"), "no_message")
+		tokenExtInfo.GitHub = mysql.SetDefaultVal(dataPtr.GetField("github"), "no_message")
+		tokenExtInfo.ImgURL = mysql.SetDefaultVal(dataPtr.GetField("logo_url"), "")
+		tokenExtInfo.Index = fmt.Sprintf("%v", index)
+		//转换信用评级  0-Pending，1-Ok ，2-Neutral ，3-insufficient_message，4-Fake
+		var reputation = "insufficient_message"
+		credit := dataPtr.GetField("credit")
+		if credit == "0" {
+			reputation = "Pending"
+		} else if credit == "1" {
+			reputation = "Ok"
+		} else if credit == "2" {
+			reputation = "Neutral"
+		} else if credit == "4" {
+			reputation = "Fake"
+		}
+		tokenExtInfo.Reputation = reputation
+		tokenExtInfo.TokenID = dataPtr.GetField("token_id")
+		tokenExtInfo.WebSite = mysql.SetDefaultVal(dataPtr.GetField("website"), "no_message")
+		tokenExtInfo.WhitePaper = mysql.SetDefaultVal(dataPtr.GetField("white_paper"), "no_message")
+		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Reddit", URL: dataPtr.GetField("reddit")})
+		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Twitter", URL: dataPtr.GetField("twitter")})
+		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Facebook", URL: dataPtr.GetField("facebook")})
+		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Telegram", URL: dataPtr.GetField("telegram")})
+		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Steem", URL: dataPtr.GetField("steam")})
+		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Medium", URL: dataPtr.GetField("medium")})
+		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Wechat", URL: dataPtr.GetField("webchat")})
+		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Weibo", URL: dataPtr.GetField("Weibo")})
+
+		tokenExtInfo.SocialMedia = socialMediaInfos
+		tokenExtInfos = append(tokenExtInfos, tokenExtInfo)
+	}
+	return tokenExtInfos, nil
+}
+
+// InitTokenExtInfos
+func InitTokenExtInfos() []*entity.TokenExtInfo {
+	var tokenExtInfos = make([]*entity.TokenExtInfo, 0)
+	var socialMediaInfos = make([]*entity.SocialMediaInfo, 0)
+	tokenExtInfo := &entity.TokenExtInfo{}
+	tokenExtInfo.Country = "no_message"
+	tokenExtInfo.GitHub = "no_message"
+	tokenExtInfo.Reputation = "insufficient_message"
+	tokenExtInfo.WebSite = "no_message"
+	tokenExtInfo.WhitePaper = "no_message"
+	socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Reddit", URL: ""})
+	socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Twitter", URL: ""})
+	socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Facebook", URL: ""})
+	socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Telegram", URL: ""})
+	socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Steem", URL: ""})
+	socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Medium", URL: ""})
+	socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Wechat", URL: ""})
+	socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Weibo", URL: ""})
+
+	tokenExtInfo.SocialMedia = socialMediaInfos
+
+	tokenExtInfos = append(tokenExtInfos, tokenExtInfo)
+	return tokenExtInfos
 }

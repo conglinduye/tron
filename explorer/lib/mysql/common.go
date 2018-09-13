@@ -879,3 +879,11 @@ func Distinct(value []string) (retData []string, distinct map[string]int) {
 	}
 	return retData, distinct
 }
+
+//SetDefaultVal 如果src为空，则返回defaultVal
+func SetDefaultVal(src, defaultVal string) string {
+	if src == "" {
+		src = defaultVal
+	}
+	return src
+}

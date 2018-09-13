@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"github.com/wlcy/tron/explorer/web/module"
 	"strings"
+	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/util"
+	"github.com/wlcy/tron/explorer/lib/mysql"
+	"sync/atomic"
 )
 
 //QueryTokens
@@ -36,12 +40,67 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 
 	tokenResp, err := module.QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL)
 	if err != nil {
-		return tokenResp, err
+		log.Errorf("queryTokens list is nil or err:[%v]", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 	// calculateTokens
 	calculateTokens(tokenResp)
 
-	return tokenResp, nil
+	tokenAddressList := make([]string, 0)
+	for _, tokenInfo := range tokenResp.Data {
+		if tokenInfo.OwnerAddress != "" {
+			tokenAddressList = append(tokenAddressList, tokenInfo.OwnerAddress)
+		}
+	}
+
+	tokenExtList, err := module.QueryTokenExtInfo(tokenAddressList)
+	if err != nil {
+		log.Errorf("queryTokenExtInfo list is nil or err:[%v]", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	var tokenListResp = &entity.TokenResp{}
+	tokenList := make([]*entity.TokenInfo, 0)
+	var index = mysql.ConvertStringToInt32(req.Start, 0)
+	tokenExtEmptyInfoList := module.InitTokenExtInfos()
+
+	for _, tokenInfo := range tokenResp.Data {
+		atomic.AddInt32(&index, 1)
+		tokenInfo.Index = index
+
+		for _, tokenExtInfo := range tokenExtList {
+
+			if tokenInfo.OwnerAddress == tokenExtInfo.OwnerAddress {
+				//tokenInfo.TokenExtInfo = tokenExtInfo
+				tokenInfo.Country = tokenExtInfo.Country
+				tokenInfo.GitHub = tokenExtInfo.GitHub
+				tokenInfo.ImgURL = tokenExtInfo.ImgURL
+				tokenInfo.Reputation = tokenExtInfo.Reputation
+				tokenInfo.TokenID = tokenExtInfo.TokenID
+				tokenInfo.WebSite = tokenExtInfo.WebSite
+				tokenInfo.WhitePaper = tokenExtInfo.WhitePaper
+				tokenInfo.SocialMedia = tokenExtInfo.SocialMedia
+				break
+			} else {
+				tokenInfo.ImgURL = tokenExtEmptyInfoList[0].ImgURL
+				tokenInfo.Country = tokenExtEmptyInfoList[0].Country
+				tokenInfo.GitHub = tokenExtEmptyInfoList[0].GitHub
+				tokenInfo.Reputation = tokenExtEmptyInfoList[0].Reputation
+				tokenInfo.TokenID = tokenExtEmptyInfoList[0].TokenID
+				tokenInfo.WebSite = tokenExtEmptyInfoList[0].WebSite
+				tokenInfo.WhitePaper = tokenExtEmptyInfoList[0].WhitePaper
+				tokenInfo.SocialMedia = tokenExtEmptyInfoList[0].SocialMedia
+			}
+		}
+		tokenList = append(tokenList, tokenInfo)
+
+		if len(tokenList) > 0 {
+			tokenListResp.Data = tokenList
+			tokenListResp.Total = tokenResp.Total
+		}
+	}
+
+	return tokenListResp, nil
 }
 
 //QueryTokens
@@ -58,11 +117,11 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 
 	token, err := module.QueryTokenRealize(strSQL, filterSQL)
 	if err != nil {
-		return token, err
+		log.Errorf("queryToken list is nil or err:[%v]", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 	// calculateToken
 	calculateToken(token)
-
 
 	// QueryTotalTokenTransfers
 	totalTokenTransfers, _ := module.QueryTotalTokenTransfers(name)
@@ -71,6 +130,25 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 	totalTokenHolders, _ := module.QueryTotalTokenHolders(name)
 	token.NrOfTokenHolders = totalTokenHolders
 
+	tokenAddressList := make([]string, 0)
+	tokenAddressList = append(tokenAddressList, token.OwnerAddress)
+	tokenExtList, err := module.QueryTokenExtInfo(tokenAddressList)
+	if err != nil {
+		log.Errorf("queryTokenExtInfo list is nil or err:[%v]", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	for _, tokenExtInfo := range tokenExtList {
+		token.Country = tokenExtInfo.Country
+		token.GitHub = tokenExtInfo.GitHub
+		token.ImgURL = tokenExtInfo.ImgURL
+		token.Reputation = tokenExtInfo.Reputation
+		token.TokenID = tokenExtInfo.TokenID
+		token.WebSite = tokenExtInfo.WebSite
+		token.WhitePaper = tokenExtInfo.WhitePaper
+		token.SocialMedia = tokenExtInfo.SocialMedia
+		break
+	}
 
 	return token, nil
 }

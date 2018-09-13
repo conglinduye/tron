@@ -40,4 +40,28 @@ func tokenRegister(ginRouter *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, tokenInfo)
 	})
+
+	ginRouter.GET("/api/mytoken", func(c *gin.Context) {
+		tokenReq := &entity.Token{}
+		tokenReq.Owner = c.Query("owner")
+		log.Debugf("Hello /api/mytoken?%#v", tokenReq)
+		log.Debugf("owner_address=%v", tokenReq.Owner)
+		if tokenReq.Owner == "" {
+			err := util.NewErrorMsg(util.Error_common_internal_error)
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+			c.JSON(http.StatusOK, nil)
+		}
+
+		if tokenReq.Start == "" || tokenReq.Limit == "" {
+			tokenReq.Start = "0"
+			tokenReq.Limit = "40"
+		}
+		tokenResp, err := service.QueryTokens(tokenReq)
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+		}
+		c.JSON(http.StatusOK, tokenResp)
+	})
 }
