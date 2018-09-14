@@ -17,14 +17,32 @@ const TodayOverviewKey = "org.tron.explorer.report.today.overview"
 func QueryReport() (*entity.ReportResp, error) {
 	reportResp := &entity.ReportResp{}
 
-	historyOverviewValue, _ := config.RedisCli.Get(HistoryOverviewKey).Result()
-	if historyOverviewValue == "" {
-		SyncCacheHistoryReport()
-		historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
+	historyOverviewValue, err := config.RedisCli.Get(HistoryOverviewKey).Result()
+	if err != nil {
+		log.Errorf("QueryReport historyOverviewValue redis get value error :[%v]\n", err)
+		return nil, err
 	}
 
+	if historyOverviewValue == "" {
+		SyncCacheHistoryReport()
+		historyOverviewValue, err = config.RedisCli.Get(HistoryOverviewKey).Result()
+		if err != nil {
+			log.Errorf("QueryReport historyOverviewValue redis get value error :[%v]\n", err)
+			return nil, err
+		}
+	}
+	log.Infof("QueryReport historyOverviewValue %v\n", historyOverviewValue)
 	totalReportOverviews := make([]*entity.ReportOverview, 0)
-	json.Unmarshal([]byte(historyOverviewValue), &totalReportOverviews)
+	err = json.Unmarshal([]byte(historyOverviewValue), &totalReportOverviews)
+	if err != nil {
+		log.Errorf("QueryReport json.Unmarshal totalReportOverviews error :[%v]\n", err)
+		return nil, err
+	}
+
+	if len(totalReportOverviews) < 1 {
+		log.Error("QueryReport len(totalReportOverviews) < 1\n")
+		return nil, err
+	}
 
 	last := totalReportOverviews[len(totalReportOverviews) - 1]
 	t := time.Now()
@@ -34,13 +52,25 @@ func QueryReport() (*entity.ReportResp, error) {
 		SyncPersistYesterdayReport()
 	}
 
-	todayOverviewValue, _ := config.RedisCli.Get(TodayOverviewKey).Result()
+	todayOverviewValue, err := config.RedisCli.Get(TodayOverviewKey).Result()
+	if err != nil {
+		log.Errorf("QueryReport todayOverviewValue redis get value error :[%v]\n", err)
+		return nil, err
+	}
 	if todayOverviewValue == "" {
 		SyncCacheTodayReport()
-		todayOverviewValue, _ = config.RedisCli.Get(TodayOverviewKey).Result()
+		todayOverviewValue, err = config.RedisCli.Get(TodayOverviewKey).Result()
+		if err != nil {
+			log.Errorf("QueryReport todayOverviewValue redis get value error :[%v]\n", err)
+			return nil, err
+		}
 	}
 	todayReportOverview := &entity.ReportOverview{}
-	json.Unmarshal([]byte(todayOverviewValue), &todayReportOverview)
+	err = json.Unmarshal([]byte(todayOverviewValue), &todayReportOverview)
+	if err != nil {
+		log.Errorf("QueryReport json.Unmarshal todayReportOverview error :[%v]\n", err)
+		return nil, err
+	}
 
 	totalReportOverviews = append(totalReportOverviews, todayReportOverview)
 
@@ -104,8 +134,11 @@ func SyncInitReport() {
 			endTime = t2.UnixNano() / 1e6
 			fmt.Printf("startTime:%v, endTime:%v\n", startTime, endTime)
 		}
-
 	}
+
+	SyncCacheHistoryReport()
+
+	SyncCacheTodayReport()
 }
 
 func SyncPersistYesterdayReport() {
@@ -144,7 +177,7 @@ func SyncPersistYesterdayReport() {
 		value, _ := json.Marshal(reportOverviews)
 		err := config.RedisCli.Set(HistoryOverviewKey, string(value), 0).Err()
 		if err != nil {
-			log.Errorf("SyncPersistYesterdayReport set err:[%v]", err)
+			log.Errorf("SyncPersistYesterdayReport redis set err:[%v]", err)
 		}
 	}
 	log.Info("SyncPersistYesterdayReport handle done")
@@ -156,10 +189,16 @@ func SyncCacheHistoryReport() {
 			select date, avg_block_time, avg_block_size, new_block_seen, new_transaction_seen, 
 			new_address_seen, total_block_count, total_transaction, total_address, blockchain_size
 			from wlcy_statistics order by date asc `)
-	reportOverviews, _:= module.QueryStatistics(strSQL)
+	reportOverviews, err := module.QueryStatistics(strSQL)
+	if err != nil {
+		log.Errorf("SyncCacheHistoryReport set err:[%v]", err)
+	}
 
-	value, _ := json.Marshal(reportOverviews)
-	err := config.RedisCli.Set(HistoryOverviewKey, string(value), 0).Err()
+	value, err := json.Marshal(reportOverviews)
+	if err != nil {
+		log.Errorf("SyncCacheHistoryReport redis set err:[%v]", err)
+	}
+	err = config.RedisCli.Set(HistoryOverviewKey, string(value), 0).Err()
 	if err != nil {
 		log.Errorf("SyncCacheHistoryReport set err:[%v]", err)
 	}
@@ -179,8 +218,12 @@ func SyncCacheTodayReport() {
 	syncReportByTime(endTime, reportOverview)
 	reportOverview.Date = startTime
 
-	value, _ := json.Marshal(reportOverview)
-	err := config.RedisCli.Set(TodayOverviewKey, string(value), 0).Err()
+	value, err := json.Marshal(reportOverview)
+	if err != nil {
+		log.Errorf("SyncCacheTodayReport json.Marshal reportOverview err:[%v]", err)
+	}
+
+	err = config.RedisCli.Set(TodayOverviewKey, string(value), 0).Err()
 	if err != nil {
 		log.Errorf("SyncCacheTodayReport set err:[%v]", err)
 	}
