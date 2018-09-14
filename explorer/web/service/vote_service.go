@@ -69,7 +69,7 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
-	return module.QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL)
+	return module.QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL, req)
 }
 
 //QueryVoteLiveBuffer 从buffer中获取实时投票数据

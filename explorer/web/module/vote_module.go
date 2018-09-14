@@ -11,7 +11,7 @@ import (
 )
 
 //QueryVotesRealize 操作数据库
-func QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.VotesResp, error) {
+func QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL string, req *entity.Votes) (*entity.VotesResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
 	log.Debug(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
@@ -35,8 +35,15 @@ func QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Vote
 		vote.Block = mysql.ConvertDBValueToInt64(dataPtr.GetField("block_id"))
 		vote.Transaction = dataPtr.GetField("trx_hash")
 		vote.VoterAddress = dataPtr.GetField("voteraddress")
-		//vote.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
 		vote.CandidateAddress = dataPtr.GetField("voteraddress")
+		if req.Candidate != "" {
+			vote.CandidateAddress = req.Candidate
+		}
+		//vote.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
+		if req.Voter != "" {
+			vote.VoterAddress = req.Voter
+		}
+
 		vote.CandidateName = dataPtr.GetField("account_name")
 		vv := dataPtr.GetField("votes")
 		log.Debug(vv)
