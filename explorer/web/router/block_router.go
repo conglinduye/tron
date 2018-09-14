@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/service"
@@ -16,9 +17,9 @@ func blockRegister(ginRouter *gin.Engine) {
 	ginRouter.GET("/api/block", func(c *gin.Context) {
 		blockReq := &entity.Blocks{}
 		blockReq.Sort = c.Query("sort")
-		blockReq.Limit = c.Query("limit")
+		blockReq.Limit = mysql.ConvertStringToInt64(c.Query("limit"), 40)
 		blockReq.Count = c.Query("count")
-		blockReq.Start = c.Query("start")
+		blockReq.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
 		blockReq.Order = c.Query("order")
 		blockReq.Number = c.Query("number")
 		log.Debugf("Hello /api/block?%#v", blockReq)

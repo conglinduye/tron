@@ -64,6 +64,11 @@ func (b *blockBuffer) GetUnConfirmedBlockID() int64 {
 	return atomic.LoadInt64(&b.maxBlockID)
 }
 
+// GetMaxBlockTimestamp 获取最大块的时间戳
+func (b *blockBuffer) GetMaxBlockTimestamp() int64 {
+	return atomic.LoadInt64(&b.maxBlockTimeStamp)
+}
+
 // GetBlocks 从缓存批量读取blocks
 //	startID: blockID start to get, -1 mean get from maxBlockID, if startID == -1, use offset to decide which is the max block_id in the buffer
 //	offset: 从最新块开始的偏移量，返回的blocks max(block_id) = 缓存的currentMaxBlockID - startNum), if startID >= 0, ignore offset

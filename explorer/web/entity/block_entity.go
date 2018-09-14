@@ -3,9 +3,9 @@ package entity
 //Blocks 查询区块列表的请求参数
 type Blocks struct {
 	Sort   string `json:"sort,omitempty"`   // 按照区块高度倒序
-	Limit  string `json:"limit,omitempty"`  // 每页记录数
+	Limit  int64  `json:"limit,omitempty"`  // 每页记录数
 	Count  string `json:"count,omitempty"`  // 是否返回总数
-	Start  string `json:"start,omitempty"`  // 记录的起始序号
+	Start  int64  `json:"start,omitempty"`  // 记录的起始序号
 	Order  string `json:"order,omitempty"`  // 按时间戳倒序
 	Number string `json:"number,omitempty"` // 按照区块高度精确查询
 }
