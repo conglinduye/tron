@@ -4,12 +4,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/wlcy/tron/explorer/core/grpcclient"
 	"github.com/wlcy/tron/explorer/lib/mysql"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/parnurzeal/gorequest"
-	"github.com/wlcy/tron/explorer/core/grpcclient"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 )
 
@@ -18,8 +19,11 @@ func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 	var systemStatusResp = &entity.SystemStatusResp{}
 	var latestBlockIDDb int64
 	netType := &entity.Network{Type: "mainnet"} //TODO 从配置文件中获取
+
+	blockBuffer := buffer.GetBlockBuffer()
+
 	// 查询数据库按时间倒序排列的最近区块高度
-	latestBlockDb, err := QueryBlocks(&entity.Blocks{Order: "-timestamp", Limit: "1", Start: "0"})
+	/*latestBlockDb, err := QueryBlocks(&entity.Blocks{Order: "-timestamp", Limit: "1", Start: "0"})
 	if err != nil {
 		log.Errorf("QueryBlocks in QuerySystemStatus err:%v", err)
 		return nil, err
@@ -27,28 +31,37 @@ func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 	for _, blockinfo := range latestBlockDb.Data {
 		latestBlockIDDb = blockinfo.Number
 		break
-	}
-
+	}*/
 	//查询soliditynode最近的区块高度
 	solidityClient := grpcclient.GetRandomSolidity()
 	solidityBlock, err := solidityClient.GetNowBlock()
-	if err != nil {
+	if nil != err || nil == solidityBlock || nil == solidityBlock.BlockHeader || nil == solidityBlock.BlockHeader.RawData {
+		solidityClient = grpcclient.GetRandomSolidity()
+		log.Errorf("reset wallet connection, new client:%v!!!\n", solidityClient.Target())
 		log.Errorf("getNowBlock from solidity in QuerySystemStatus err:%v", err)
 		return nil, err
 	}
+
 	solidityNowBlockID := solidityBlock.BlockHeader.RawData.Number
 
 	//查询fullnode最近的区块高度
 	fullnodeClient := grpcclient.GetRandomWallet()
 	fullnodeBlock, err := fullnodeClient.GetNowBlock()
-	if err != nil {
+	if nil != err || nil == fullnodeBlock || nil == fullnodeBlock.BlockHeader || nil == fullnodeBlock.BlockHeader.RawData {
+		fullnodeClient = grpcclient.GetRandomWallet()
+		log.Errorf("reset wallet connection, new client:%v!!!\n", fullnodeClient.Target())
 		log.Errorf("getNowBlock from fullnode in QuerySystemStatus err:%v", err)
 		return nil, err
 	}
 	fullnodeNowBlockID := fullnodeBlock.BlockHeader.RawData.Number
 
+	//从buffer中获取fullnode块高
+	latestBlockIDDb = blockBuffer.GetMaxBlockID()
+	//从buffer中获取数据库中的确认过的块高
+	comfirmedBlockIDDb := blockBuffer.GetMaxConfirmedBlockID()
+
 	//计算总进度
-	solidityProcess := float64(latestBlockIDDb) / float64(solidityNowBlockID) * 100
+	solidityProcess := float64(comfirmedBlockIDDb) / float64(solidityNowBlockID) * 100
 	fullnodeProcess := float64(latestBlockIDDb) / float64(fullnodeNowBlockID) * 100
 	totalProcess := (solidityProcess + fullnodeProcess) / 2
 	//拼接返回数据

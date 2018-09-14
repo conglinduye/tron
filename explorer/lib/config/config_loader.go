@@ -53,12 +53,11 @@ func LoadConfig(confFile string) error {
 		return err
 	}
 
-
 	return nil
 }
 
 // initRedis 初始化Redis连接
-func initRedis(config *toml.TomlTree) error {
+func initRedis(config *toml.Tree) error {
 
 	redisInfo := struct {
 		Addr     string
@@ -77,7 +76,7 @@ func initRedis(config *toml.TomlTree) error {
 }
 
 //initDB 初始化DB baseAdapter.loadAdxTemplateData use
-func initDB(config *toml.TomlTree) error {
+func initDB(config *toml.Tree) error {
 	const NodeName = "mysql"
 	host := config.GetDefault(fmt.Sprintf("%v.host", NodeName), "127.0.0.1").(string)
 	port := config.GetDefault(fmt.Sprintf("%v.port", NodeName), "3306").(string)
@@ -93,7 +92,7 @@ func initDB(config *toml.TomlTree) error {
 }
 
 //initToken 初始化token参数
-func initToken(config *toml.TomlTree) error {
+func initToken(config *toml.Tree) error {
 	const NodeName = "token"
 	DefaultPath = config.GetDefault(fmt.Sprintf("%v.defaultPath", NodeName), "/data/images/tokenLogo").(string)
 	TokenTemplate = config.GetDefault(fmt.Sprintf("%v.tokenTemplate", NodeName), "/data/images/tokenTemplate/").(string)

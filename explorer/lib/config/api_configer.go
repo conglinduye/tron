@@ -16,7 +16,7 @@ type (
 		Mysql      ConfigMysql //mysql连接信息
 		Redis      ConfigRedis //redis连接信息
 
-		confTree *toml.TomlTree
+		confTree *toml.Tree
 	}
 
 	//ConfigMysql MYSQL的连接信息
@@ -191,7 +191,7 @@ func (conf *ConfigServer) GetValueByKey(configItem string) (string, error) {
 }
 
 //getValueAsString 返回string类型的配置值
-func (conf *ConfigServer) getValueAsString(tree *toml.TomlTree, configItem string) (string, error) {
+func (conf *ConfigServer) getValueAsString(tree *toml.Tree, configItem string) (string, error) {
 	if false == conf.isExist(tree, configItem) {
 		return "", conf.genNotExistError(configItem)
 	}
@@ -199,7 +199,7 @@ func (conf *ConfigServer) getValueAsString(tree *toml.TomlTree, configItem strin
 }
 
 //getValueAsInt64 返回int64类型的配置值
-func (conf *ConfigServer) getValueAsInt64(tree *toml.TomlTree, configItem string) (int64, error) {
+func (conf *ConfigServer) getValueAsInt64(tree *toml.Tree, configItem string) (int64, error) {
 	if false == conf.isExist(tree, configItem) {
 		return 0, conf.genNotExistError(configItem)
 	}
@@ -207,7 +207,7 @@ func (conf *ConfigServer) getValueAsInt64(tree *toml.TomlTree, configItem string
 }
 
 //getValueAsInt 返回int类型的配置值
-func (conf *ConfigServer) getValueAsInt(tree *toml.TomlTree, configItem string) (int, error) {
+func (conf *ConfigServer) getValueAsInt(tree *toml.Tree, configItem string) (int, error) {
 	if false == conf.isExist(tree, configItem) {
 		return 0, conf.genNotExistError(configItem)
 	}
@@ -215,7 +215,7 @@ func (conf *ConfigServer) getValueAsInt(tree *toml.TomlTree, configItem string) 
 }
 
 //isExist 检查某个配置项是否存在
-func (conf *ConfigServer) isExist(tree *toml.TomlTree, configItem string) bool {
+func (conf *ConfigServer) isExist(tree *toml.Tree, configItem string) bool {
 	var value = tree.Get(configItem)
 	if nil == value {
 		fmt.Printf("can not load config :[%v] from [%v]\n", configItem, conf.configFile)

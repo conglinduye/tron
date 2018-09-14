@@ -140,6 +140,8 @@ output:json
     },...
 ]
 ```
+所有数据均从https://coinmarketcap.com/currencies/tron/爬取
+
 
 ## 图表信息所用接口
 - url:/api/stats/overview
