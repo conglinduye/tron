@@ -24,7 +24,8 @@ func otherRegister(ginRouter *gin.Engine) {
 	//交易所交易信息
 	ginRouter.GET("/api/market/markets", func(c *gin.Context) {
 		log.Debugf("Hello /api/market/markets")
-		resp, err := service.QueryMarkets()
+		//resp, err := service.QueryMarkets()
+		resp, err := service.QueryMarketsBuffer()
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
