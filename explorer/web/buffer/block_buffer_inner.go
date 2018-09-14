@@ -1,4 +1,4 @@
-package module
+package buffer
 
 import (
 	"encoding/json"
@@ -15,6 +15,7 @@ import (
 	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/entity"
+	"github.com/wlcy/tron/explorer/web/module"
 )
 
 type blockBuffer struct {
@@ -106,7 +107,7 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 		limit = "limit 100"
 	}
 
-	blocks, err := QueryBlocksRealize(strSQL, filter, orderBy, limit)
+	blocks, err := module.QueryBlocksRealize(strSQL, filter, orderBy, limit)
 	if nil != err || nil == blocks || 0 == len(blocks.Data) {
 		return nil
 	}
@@ -192,6 +193,9 @@ func (b *blockBuffer) readBuffer(numStart int64, numEnd int64) []*entity.BlockIn
 	sort.SliceStable(ret, func(i, j int) bool { return ret[i].Number > ret[j].Number })
 
 	return ret
+}
+func (b *blockBuffer) BackgroundWorker() {
+	b.backgroundWorker()
 }
 
 func (b *blockBuffer) backgroundWorker() {
@@ -347,7 +351,7 @@ func (b *blockBuffer) getBlocksStableB(blockIDs []string) []*entity.BlockInfo {
 	where 1=1`)
 	// fmt.Printf("read buffer from db filter:[%v]", filter)
 
-	retRaw, _ := QueryBlocksRealize(strSQL, filter, "", "")
+	retRaw, _ := module.QueryBlocksRealize(strSQL, filter, "", "")
 	return retRaw.Data
 
 	// ret := make([]*entity.BlockInfo, 0, len(blockIDs))

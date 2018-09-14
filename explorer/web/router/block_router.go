@@ -22,7 +22,8 @@ func blockRegister(ginRouter *gin.Engine) {
 		blockReq.Order = c.Query("order")
 		blockReq.Number = c.Query("number")
 		log.Debugf("Hello /api/block?%#v", blockReq)
-		blockResp, err := service.QueryBlocks(blockReq)
+		//blockResp, err := service.QueryBlocks(blockReq)
+		blockResp, err := service.QueryBlocksBuffer(blockReq)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
@@ -34,7 +35,8 @@ func blockRegister(ginRouter *gin.Engine) {
 		blockReq := &entity.Blocks{}
 		blockReq.Number = c.Param("number") //占位符传参
 		log.Debugf("Hello /api/block/:%#v", blockReq.Number)
-		blockResp, err := service.QueryBlock(blockReq)
+		//blockResp, err := service.QueryBlock(blockReq)
+		blockResp, err := service.QueryBlockBuffer(blockReq)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)

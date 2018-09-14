@@ -1,4 +1,4 @@
-package module
+package buffer
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/entity"
+	"github.com/wlcy/tron/explorer/web/module"
 )
 
 /*
@@ -67,7 +68,7 @@ func (w *witnessBuffer) load() {
 			left join tron_account acc on acc.address=witt.address
 			where 1=1 `)
 
-	witnessList, err := QueryWitnessRealize(strSQL)
+	witnessList, err := module.QueryWitnessRealize(strSQL)
 	if nil != err {
 		log.Errorf("load witness from db failed:%v\n", err)
 		return

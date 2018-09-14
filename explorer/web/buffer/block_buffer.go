@@ -1,4 +1,4 @@
-package module
+package buffer
 
 import (
 	"sync"
@@ -37,7 +37,7 @@ if we can't find block in redis, load it from db and write to redis
 
 var _redisCli *redis.Client
 
-// GetMaxBlockID 获取最大的可用块ID
+// GetMaxBlockID 获取最大的可用块ID 从fullnode获取，在缓存中可用的最大blockID
 func (b *blockBuffer) GetMaxBlockID() int64 {
 
 	blockIDUnconfirmed := atomic.LoadInt64(&b.maxBlockID)
@@ -92,6 +92,11 @@ func (b *blockBuffer) GetBlock(blockID int64) (block *entity.BlockInfo) {
 		return ret[0]
 	}
 	return nil
+}
+
+//GetBlockBuffer ...
+func GetBlockBuffer() *blockBuffer {
+	return getBlockBuffer()
 }
 
 func getBlockBuffer() *blockBuffer {
