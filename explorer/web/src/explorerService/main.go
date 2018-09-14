@@ -16,6 +16,7 @@ import (
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/router"
+	"github.com/wlcy/tron/explorer/web/task"
 )
 
 // config file
@@ -47,6 +48,14 @@ func main() {
 	mysql.Initialize(conf.Mysql.Host, conf.Mysql.Port, conf.Mysql.Schema,
 		conf.Mysql.User, conf.Mysql.Pass)
 	*/
+
+	go func() {
+		task.SyncCacheTodayReportTask()
+	}()
+
+	go func() {
+		task.SyncCacheHistoryReportTask()
+	}()
 
 	router.Start(conf.Address, conf.Objectpool)
 
