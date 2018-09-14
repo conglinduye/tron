@@ -14,8 +14,9 @@ func startAssetDaemon() {
 	go func() {
 		defer wg.Done()
 		for {
-			if witnessList, ok := getWitness(); ok {
-				storeWitness(witnessList)
+			if assets, ok := getAssets(); ok {
+				icnt, ucnt, ecnt, err := storeAsset(assets)
+				fmt.Printf("asset daemon work result:(%v, %v, %v, %v)\n", icnt, ucnt, ecnt, err)
 				time.Sleep(30 * time.Second)
 			} else {
 				time.Sleep(1 * time.Second)
@@ -124,7 +125,7 @@ func storeAsset(assetList []*core.AssetIssueContract) (iCnt int64, uCnt int64, e
 			asset.PublicFreeAssetNetUsage,
 			asset.PublicLatestFreeNetTime)
 		if nil != err {
-			fmt.Printf("insert contract [%#v] failed:%v\n", asset, err)
+			// fmt.Printf("insert asset_issue [%T] failed:%v\n", asset, err)
 
 			_, err = stmtU.Exec(
 				string(asset.Abbr),
@@ -136,7 +137,7 @@ func storeAsset(assetList []*core.AssetIssueContract) (iCnt int64, uCnt int64, e
 				asset.EndTime,
 				asset.Order,
 				asset.VoteScore,
-				string(asset.Description),
+				utils.HexEncode(asset.Description),
 				string(asset.Url),
 				asset.FreeAssetNetLimit,
 				asset.PublicFreeAssetNetLimit,
@@ -146,7 +147,7 @@ func storeAsset(assetList []*core.AssetIssueContract) (iCnt int64, uCnt int64, e
 				string(asset.Name))
 			if nil != err {
 				eCnt++
-				fmt.Printf("update asset failed:%v --->%v\n", err, utils.ToJSONStr(asset))
+				// fmt.Printf("update asset_issue failed:%v --->%v\n", err, utils.ToJSONStr(asset))
 			} else {
 				uCnt++
 			}

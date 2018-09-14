@@ -74,7 +74,7 @@ func TestRedisB(*testing.T) {
 
 func TestBlockInfo(*testing.T) {
 	initDB("tron:tron@tcp(172.16.21.224:3306)/tron")
-	getBlockFull(2270833)
+	getBlockFull(2237300)
 
 }
 

@@ -15,7 +15,8 @@ func startWintnessDaemon() {
 		defer wg.Done()
 		for {
 			if witnessList, ok := getWitness(); ok {
-				storeWitness(witnessList)
+				icnt, ucnt, ecnt, err := storeWitness(witnessList)
+				fmt.Printf("witness work result:(%v,%v,%v,%v)\n", icnt, ucnt, ecnt, err)
 				time.Sleep(30 * time.Second)
 			} else {
 				time.Sleep(1 * time.Second)

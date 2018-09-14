@@ -175,7 +175,7 @@ func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 	// fmt.Printf("store %v blocks cost:%v\n", len(blocks), time.Since(ts))
 
 	ts = time.Now()
-	storeTransactions(tranList)
+	blukStoreTransactions(tranList)
 	fmt.Printf("store %v transactions cost:%v\n", len(tranList), time.Since(ts))
 
 	if err != nil {
@@ -183,4 +183,23 @@ func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 		return false, succCnt, errCnt, blockIDList
 	}
 	return true, succCnt, errCnt, blockIDList
+}
+
+// ERROR: store transaction failed!Error 1205: Lock wait timeout exceeded; try restarting transaction, trx_hash:bdc4b78f1da1eca46a95214f0389e931b4fcb0be047483b5dda0fac79a0eafa5, blockID:1963173
+var maxTransPerTxn = 1000
+
+func blukStoreTransactions(trxList []*core.Transaction) {
+	pos := 0
+	remain := len(trxList)
+	for remain > 0 {
+		if remain >= maxTransPerTxn {
+			storeTransactions(trxList[pos : pos+maxTransPerTxn])
+			pos += maxTransPerTxn
+			remain -= maxTransPerTxn
+			continue
+		}
+		storeTransactions(trxList[pos : pos+remain])
+		pos += remain
+		remain -= remain
+	}
 }
