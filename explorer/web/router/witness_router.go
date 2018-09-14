@@ -25,7 +25,7 @@ func witnessRegister(ginRouter *gin.Engine) {
 	ginRouter.GET("/api/witness/maintenance-statistic", func(c *gin.Context) {
 		log.Debugf("Hello /api/witness/maintenance-statistic")
 		//resp, err := service.QueryWitnessStatistic()
-		resp, err := service.QueryWitnessBuffer()
+		resp, err := service.QueryWitnessStatisticBuffer()
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)

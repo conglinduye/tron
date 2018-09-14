@@ -40,6 +40,7 @@ func main() {
 	//初始化buffer
 	buffer.GetBlockBufferInstance()
 	buffer.GetWitnessBuffer()
+	buffer.GetMarketBuffer()
 
 	/* 数据库和redis初始化也可以用这种方式， but i don't like it
 	redisCli = redis.NewClient(conf.Redis.Host, conf.Redis.Pass, conf.Redis.Index, conf.Redis.Poolsize)
