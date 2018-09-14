@@ -110,3 +110,8 @@ func GetContractInfoStr2(ctxType int32, val []byte) (ownerAddr string, contractD
 type OwnerAddressIF interface {
 	GetOwnerAddress() []byte
 }
+
+// ToAddressIF ...
+type ToAddressIF interface {
+	GetToAddress() []byte
+}
