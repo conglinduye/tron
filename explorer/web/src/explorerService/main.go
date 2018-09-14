@@ -11,6 +11,8 @@ package main
 import (
 	"flag"
 
+	"github.com/wlcy/tron/explorer/web/buffer"
+
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/router"
@@ -35,6 +37,10 @@ func main() {
 	if 0 != conf.Populate(*configfile) {
 		return
 	}
+	//初始化buffer
+	buffer.GetBlockBufferInstance()
+	buffer.GetWitnessBuffer()
+	buffer.GetMarketBuffer()
 
 	/* 数据库和redis初始化也可以用这种方式， but i don't like it
 	redisCli = redis.NewClient(conf.Redis.Host, conf.Redis.Pass, conf.Redis.Index, conf.Redis.Poolsize)

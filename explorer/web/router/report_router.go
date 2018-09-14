@@ -17,4 +17,11 @@ func reportRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, reportResp)
 	})
 
+
+	ginRouter.GET("/api/stats/overview/init", func(c *gin.Context) {
+		service.SyncInitReport()
+
+		c.JSON(http.StatusOK, "handle done")
+	})
+
 }
