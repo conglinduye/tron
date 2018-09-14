@@ -1,6 +1,7 @@
-package module
+package buffer
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -36,8 +37,10 @@ if we can't find block in redis, load it from db and write to redis
 */
 
 var _redisCli *redis.Client
+var blockBF *blockBuffer
+var once sync.Once
 
-// GetMaxBlockID 获取最大的可用块ID
+// GetMaxBlockID 获取最大的可用块ID 从fullnode获取，在缓存中可用的最大blockID
 func (b *blockBuffer) GetMaxBlockID() int64 {
 
 	blockIDUnconfirmed := atomic.LoadInt64(&b.maxBlockID)
@@ -54,6 +57,11 @@ func (b *blockBuffer) GetMaxConfirmedBlockID() int64 {
 	blockID := atomic.LoadInt64(&b.maxConfirmedBlockID)
 
 	return blockID
+}
+
+// GetUnConfirmedBlockID 从fullnode获取最大的块ID
+func (b *blockBuffer) GetUnConfirmedBlockID() int64 {
+	return atomic.LoadInt64(&b.maxBlockID)
 }
 
 // GetBlocks 从缓存批量读取blocks
@@ -94,8 +102,18 @@ func (b *blockBuffer) GetBlock(blockID int64) (block *entity.BlockInfo) {
 	return nil
 }
 
+//GetBlockBufferInstance 初始化buffer
+func GetBlockBufferInstance() *blockBuffer {
+	once.Do(func() {
+		blockBF = getBlockBuffer()
+	})
+	return blockBF
+}
+
 func getBlockBuffer() *blockBuffer {
 	_onceBlockBuffer.Do(func() {
+		initRedis([]string{"127.0.0.1:6379"})
+
 		_blockBuffer = &blockBuffer{}
 
 		_blockBuffer.solidityClient = grpcclient.GetRandomSolidity()
@@ -106,8 +124,21 @@ func getBlockBuffer() *blockBuffer {
 
 		go _blockBuffer.backgroundWorker()
 		go _blockBuffer.backgroundSwaper()
+
 	})
 	return _blockBuffer
+}
+
+func initRedis(redisAddr []string) {
+	redisOpt := &redis.Options{
+		Addr:     redisAddr[0],
+		Password: "",
+		DB:       0,
+	}
+	_redisCli = redis.NewClient(redisOpt)
+
+	pong, err := _redisCli.Ping().Result()
+	fmt.Println(pong, err)
 }
 
 var _blockBuffer *blockBuffer

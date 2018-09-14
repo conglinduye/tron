@@ -8,10 +8,13 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 
 	"github.com/wlcy/tron/explorer/web/entity"
+	"github.com/wlcy/tron/explorer/web/module"
 )
 
 func Init() {
 	mysql.Initialize("127.0.0.1", "3306", "tron", "budev", "tron**1")
+	blockBuffer := module.GetBlockBuffer()
+	go blockBuffer.BackgroundWorker()
 }
 
 func TestBlockList(t *testing.T) {
@@ -20,17 +23,15 @@ func TestBlockList(t *testing.T) {
 	req.Sort = "-number"
 	req.Limit = "5"
 	req.Start = "0"
-
 	//req.Number = "2287351"
 
-	resp, err := QueryBlocks(req)
+	//resp, err := QueryBlocks(req)
+	resp, err := QueryBlocksBuffer(req)
 	if err != nil {
 		log.Error(err)
 	}
-	log.Printf("total:%v", resp.Total)
-	for _, value := range resp.Data {
-		log.Printf("data:%#v", value)
-	}
+	ss, _ := mysql.JSONObjectToString(resp)
+	log.Printf("total:%v", ss)
 
 }
 
@@ -43,10 +44,7 @@ func TestBlock(t *testing.T) {
 	*/
 	req.Number = "2287351"
 
-	resp, err := QueryBlock(req)
-	if err != nil {
-		log.Error(err)
-	}
-	log.Printf("total:%#v", resp)
-
+	resp, _ := QueryBlock(req)
+	ss, _ := mysql.JSONObjectToString(resp)
+	log.Printf("total:%v", ss)
 }

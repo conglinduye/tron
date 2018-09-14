@@ -1,4 +1,4 @@
-package module
+package buffer
 
 import (
 	"encoding/json"
@@ -15,6 +15,7 @@ import (
 	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/entity"
+	"github.com/wlcy/tron/explorer/web/module"
 )
 
 type blockBuffer struct {
@@ -106,7 +107,7 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 		limit = "limit 100"
 	}
 
-	blocks, err := QueryBlocksRealize(strSQL, filter, orderBy, limit)
+	blocks, err := module.QueryBlocksRealize(strSQL, filter, orderBy, limit)
 	if nil != err || nil == blocks || 0 == len(blocks.Data) {
 		return nil
 	}
@@ -193,6 +194,9 @@ func (b *blockBuffer) readBuffer(numStart int64, numEnd int64) []*entity.BlockIn
 
 	return ret
 }
+func (b *blockBuffer) BackgroundWorker() {
+	b.backgroundWorker()
+}
 
 func (b *blockBuffer) backgroundWorker() {
 	minInterval := time.Duration(10) * time.Second
@@ -271,8 +275,10 @@ func (b *blockBuffer) syncBlockToRedisWitoutExpire(blocks []*entity.BlockInfo) b
 func (b *blockBuffer) syncBlockToRedis(blocks []*entity.BlockInfo) bool {
 	tmp := make([]interface{}, 0, len(blocks)*2)
 	for _, block := range blocks {
-		tmp = append(tmp, getRedisBlockKey(block.Number), utils.ToJSONStr(block))
-		_redisCli.Set(getRedisBlockKey(block.Number), utils.ToJSONStr(block), 6*time.Hour)
+		if block != nil {
+			tmp = append(tmp, getRedisBlockKey(block.Number), utils.ToJSONStr(block))
+			_redisCli.Set(getRedisBlockKey(block.Number), utils.ToJSONStr(block), 6*time.Hour)
+		}
 	}
 	return true
 }
@@ -347,7 +353,7 @@ func (b *blockBuffer) getBlocksStableB(blockIDs []string) []*entity.BlockInfo {
 	where 1=1`)
 	// fmt.Printf("read buffer from db filter:[%v]", filter)
 
-	retRaw, _ := QueryBlocksRealize(strSQL, filter, "", "")
+	retRaw, _ := module.QueryBlocksRealize(strSQL, filter, "", "")
 	return retRaw.Data
 
 	// ret := make([]*entity.BlockInfo, 0, len(blockIDs))

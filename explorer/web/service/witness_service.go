@@ -4,11 +4,27 @@ import (
 	"fmt"
 
 	"github.com/wlcy/tron/explorer/core/grpcclient"
-	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 )
+
+//QueryWitnessBuffer 从QueryWitnessBuffer中获取witness信息
+func QueryWitnessBuffer() ([]*entity.WitnessInfo, error) {
+	var witnessList = make([]*entity.WitnessInfo, 0)
+	var err error
+	witnessBuffer := buffer.GetWitnessBuffer()
+	if witnessBuffer == nil {
+		witnessList, err = QueryWitness()
+	} else {
+		witnessList = witnessBuffer.GetWitness()
+		if witnessList == nil {
+			witnessList, err = QueryWitness()
+		}
+	}
+	return witnessList, err
+}
 
 //QueryWitness ...
 func QueryWitness() ([]*entity.WitnessInfo, error) {
@@ -22,6 +38,18 @@ func QueryWitness() ([]*entity.WitnessInfo, error) {
 			where 1=1 `)
 
 	return module.QueryWitnessRealize(strSQL)
+}
+
+//QueryWitnessStatisticBuffer  从buffer获取
+func QueryWitnessStatisticBuffer() ([]*entity.WitnessStatisticInfo, error) {
+	var err error
+	witnessBuffer := buffer.GetWitnessBuffer()
+	witnessInfo := witnessBuffer.GetWitnessStatistic()
+	if witnessInfo == nil {
+		log.Debug("no buffer for witness StatisticBuffer, get them form db")
+		witnessInfo, err = QueryWitnessStatistic()
+	}
+	return witnessInfo, err
 }
 
 //QueryWitnessStatistic  ...
@@ -62,12 +90,9 @@ func QueryWitnessStatistic() ([]*entity.WitnessStatisticInfo, error) {
 
 //获取当前轮开始时间戳
 func getMaintenanceTimeStamp() (int64, error) {
-	client := grpcclient.NewWallet(fmt.Sprintf("%s:50051", utils.GetRandFullNodeAddr()))
-	err := client.Connect()
-	if nil != err {
-		log.Error(err)
-		return 0, err
-	}
+
+	client := grpcclient.GetRandomWallet()
+
 	nextMaintenanceTime, err := client.GetNextMaintenanceTime()
 	if err != nil {
 		log.Error(err)

@@ -4,9 +4,33 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/wlcy/tron/explorer/web/buffer"
+
+	"github.com/wlcy/tron/explorer/lib/mysql"
+
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 )
+
+//QueryBlocksBuffer  从缓存中查询
+func QueryBlocksBuffer(req *entity.Blocks) (*entity.BlocksResp, error) {
+	var err error
+	blockResp := &entity.BlocksResp{}
+	blocks := make([]*entity.BlockInfo, 0)
+	blockBuffer := buffer.GetBlockBufferInstance()
+	blockResp.Total = blockBuffer.GetMaxBlockID()
+	if req.Number != "" {
+		block := blockBuffer.GetBlock(mysql.ConvertStringToInt64(req.Number, 0))
+		blocks = append(blocks, block)
+	} else {
+		blocks, err = blockBuffer.GetBlocks(-1, mysql.ConvertStringToInt64(req.Start, 0), mysql.ConvertStringToInt64(req.Limit, 40))
+		if err != nil {
+			return nil, err
+		}
+	}
+	blockResp.Data = blocks
+	return blockResp, nil
+}
 
 //QueryBlocks 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
 func QueryBlocks(req *entity.Blocks) (*entity.BlocksResp, error) {
@@ -66,4 +90,14 @@ func QueryBlock(req *entity.Blocks) (*entity.BlockInfo, error) {
 		filterSQL = fmt.Sprintf(" and block_id=%v", req.Number)
 	}
 	return module.QueryBlockRealize(strSQL, filterSQL)
+}
+
+//QueryBlockBuffer 精确查询  	//number=2135998
+func QueryBlockBuffer(req *entity.Blocks) (*entity.BlockInfo, error) {
+	block := &entity.BlockInfo{}
+	blockBuffer := buffer.GetBlockBufferInstance()
+	if req.Number != "" {
+		block = blockBuffer.GetBlock(mysql.ConvertStringToInt64(req.Number, 0))
+	}
+	return block, nil
 }
