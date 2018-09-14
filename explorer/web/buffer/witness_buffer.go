@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wlcy/tron/explorer/core/grpcclient"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
@@ -70,14 +69,20 @@ func (w *witnessBuffer) GetWitnessByAddr(addr string) (witness *entity.WitnessIn
 }
 
 func (w *witnessBuffer) GetWitness() (witness []*entity.WitnessInfo) {
+	if len(w.sortList) == 0 {
+		w.load()
+	}
 	return w.sortList
 }
 
 func (w *witnessBuffer) GetWitnessStatistic() (witness []*entity.WitnessStatisticInfo) {
+	if len(w.statisticList) == 0 {
+		w.loadStatistic()
+	}
 	return w.statisticList
 }
 
-func (w *witnessBuffer) load() {
+func (w *witnessBuffer) load() { //QueryWitness()
 	strSQL := fmt.Sprintf(`
 			select witt.address,witt.vote_count,witt.public_key,witt.url,
 			witt.total_produced,witt.total_missed,acc.account_name,
@@ -107,7 +112,7 @@ func (w *witnessBuffer) load() {
 	w.Unlock()
 }
 
-func (w *witnessBuffer) loadStatistic() {
+func (w *witnessBuffer) loadStatistic() { //QueryWitnessStatistic()
 	var blocks int64
 	curMaintenanceTime, err := getMaintenanceTimeStamp()
 	if err != nil {
@@ -151,14 +156,8 @@ func (w *witnessBuffer) loadStatistic() {
 
 //获取当前轮开始时间戳
 func getMaintenanceTimeStamp() (int64, error) {
+	nextMaintenanceTime := GetVoteBuffer().GetNextMaintenanceTime()
 
-	client := grpcclient.GetRandomWallet()
-
-	nextMaintenanceTime, err := client.GetNextMaintenanceTime()
-	if err != nil {
-		log.Error(err)
-		return 0, err
-	}
 	curMaintenanceTime := nextMaintenanceTime - 6*60*60*1000 //6小时
 	return curMaintenanceTime, nil
 }

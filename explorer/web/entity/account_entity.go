@@ -3,9 +3,9 @@ package entity
 //Accounts 查询账户列表的请求参数
 type Accounts struct {
 	Sort    string `json:"sort,omitempty"`    // 按照区块高度倒序
-	Limit   string `json:"limit,omitempty"`   // 每页记录数
+	Limit   int64  `json:"limit,omitempty"`   // 每页记录数
 	Count   string `json:"count,omitempty"`   // 是否返回总数
-	Start   string `json:"start,omitempty"`   // 记录的起始序号
+	Start   int64  `json:"start,omitempty"`   // 记录的起始序号
 	Address string `json:"address,omitempty"` // 按照地址精确查询
 }
 

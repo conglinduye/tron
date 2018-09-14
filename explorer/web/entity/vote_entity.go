@@ -3,9 +3,9 @@ package entity
 //Votes 查询投票列表的请求参数
 type Votes struct {
 	Sort      string `json:"sort,omitempty"`      // 按时间戳倒序
-	Limit     string `json:"limit,omitempty"`     // 每页记录数
+	Limit     int64  `json:"limit,omitempty"`     // 每页记录数
 	Count     string `json:"count,omitempty"`     // 是否返回总数
-	Start     string `json:"start,omitempty"`     // 记录的起始序号
+	Start     int64  `json:"start,omitempty"`     // 记录的起始序号
 	Candidate string `json:"candidate,omitempty"` // 按照候选人精确查询
 	Voter     string `json:"voter,omitempty"`     // 按照投票人精确查询
 }

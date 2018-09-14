@@ -56,9 +56,9 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 		}
 		sortTemp = fmt.Sprintf("order by %v", sortTemp)
 	}
-	if req.Limit != "" && req.Start != "" {
-		pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
-	}
+
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
 	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 

@@ -33,7 +33,7 @@ func getMarketBuffer() *marketBuffer {
 		_marketBuffer.load()
 
 		go func() {
-			time.Sleep(30 * time.Second)
+			time.Sleep(5 * time.Second)
 			_marketBuffer.load()
 		}()
 	})
@@ -49,6 +49,9 @@ type marketBuffer struct {
 }
 
 func (w *marketBuffer) GetMarket() (witness []*entity.MarketInfo) {
+	if len(w.marketInfoList) == 0 {
+		w.load()
+	}
 	log.Debugf("get market info from buffer, buffer data updated at :[%v]", w.updateTime)
 	return w.marketInfoList
 }

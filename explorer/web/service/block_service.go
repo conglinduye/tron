@@ -23,7 +23,7 @@ func QueryBlocksBuffer(req *entity.Blocks) (*entity.BlocksResp, error) {
 		block := blockBuffer.GetBlock(mysql.ConvertStringToInt64(req.Number, 0))
 		blocks = append(blocks, block)
 	} else {
-		blocks, err = blockBuffer.GetBlocks(-1, mysql.ConvertStringToInt64(req.Start, 0), mysql.ConvertStringToInt64(req.Limit, 40))
+		blocks, err = blockBuffer.GetBlocks(-1, req.Start, req.Limit)
 		if err != nil {
 			return nil, err
 		}
@@ -69,9 +69,8 @@ func QueryBlocks(req *entity.Blocks) (*entity.BlocksResp, error) {
 	if sortTemp != "order by" {
 		sortSQL = sortTemp
 	}
-	if req.Limit != "" && req.Start != "" {
-		pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
-	}
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
 	return module.QueryBlocksRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/service"
@@ -16,9 +17,9 @@ func transactionRegister(ginRouter *gin.Engine) {
 	ginRouter.GET("/api/transaction", func(c *gin.Context) {
 		req := &entity.Transactions{}
 		req.Sort = c.Query("sort")
-		req.Limit = c.Query("limit")
+		req.Limit = mysql.ConvertStringToInt64(c.Query("limit"), 40)
 		req.Count = c.Query("count")
-		req.Start = c.Query("start")
+		req.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
 		req.Hash = c.Query("hash")
 		req.Number = c.Query("number")
 		log.Debugf("Hello /api/transaction?%#v", req)

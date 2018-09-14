@@ -39,9 +39,9 @@ func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 		}
 		sortTemp = fmt.Sprintf("order by %v", sortTemp)
 	}
-	if req.Limit != "" && req.Start != "" {
-		pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
-	}
+
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
 	return module.QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 

@@ -34,6 +34,7 @@ type blockBuffer struct {
 	maxNodeErr              int   // 3                 // 单个node连接允许的最大错误数
 	maxUnconfirmedBlockRead int64 //  = int64(50) // 需要缓存的最新的unconfirmed block的数量
 	maxBlockInMemory        int64 // max number of confirmed block in memory
+	maxBlockTimeStamp       int64 //max timestamp for confirmed block
 }
 
 // getNowBlock 获取最新的未确认块并存入redis，更新 maxBlockID 字段
@@ -54,7 +55,7 @@ func (b *blockBuffer) getNowBlock() bool {
 
 	blockInfo := coreBlockConvert(block)
 	nowBlockID := blockInfo.Number
-
+	b.maxBlockTimeStamp = blockInfo.CreateTime
 	numEnd := nowBlockID
 	numStart := b.GetMaxConfirmedBlockID() + 1
 

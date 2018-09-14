@@ -3,6 +3,8 @@ package router
 import (
 	"net/http"
 
+	"github.com/wlcy/tron/explorer/lib/mysql"
+
 	"github.com/gin-gonic/gin"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/util"
@@ -16,9 +18,9 @@ func accountRegister(ginRouter *gin.Engine) {
 	ginRouter.GET("/api/account", func(c *gin.Context) {
 		req := &entity.Accounts{}
 		req.Sort = c.Query("sort")
-		req.Limit = c.Query("limit")
+		req.Limit = mysql.ConvertStringToInt64(c.Query("limit"), 40)
 		req.Count = c.Query("count")
-		req.Start = c.Query("start")
+		req.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
 		req.Address = c.Query("address")
 		log.Debugf("Hello /api/account?%#v", req)
 		resp, err := service.QueryAccounts(req)
