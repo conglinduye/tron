@@ -17,7 +17,7 @@ func QueryBlocksBuffer(req *entity.Blocks) (*entity.BlocksResp, error) {
 	var err error
 	blockResp := &entity.BlocksResp{}
 	blocks := make([]*entity.BlockInfo, 0)
-	blockBuffer := buffer.GetBlockBuffer()
+	blockBuffer := buffer.GetBlockBufferInstance()
 	blockResp.Total = blockBuffer.GetMaxBlockID()
 	if req.Number != "" {
 		block := blockBuffer.GetBlock(mysql.ConvertStringToInt64(req.Number, 0))
@@ -95,7 +95,7 @@ func QueryBlock(req *entity.Blocks) (*entity.BlockInfo, error) {
 //QueryBlockBuffer 精确查询  	//number=2135998
 func QueryBlockBuffer(req *entity.Blocks) (*entity.BlockInfo, error) {
 	block := &entity.BlockInfo{}
-	blockBuffer := buffer.GetBlockBuffer()
+	blockBuffer := buffer.GetBlockBufferInstance()
 	if req.Number != "" {
 		block = blockBuffer.GetBlock(mysql.ConvertStringToInt64(req.Number, 0))
 	}

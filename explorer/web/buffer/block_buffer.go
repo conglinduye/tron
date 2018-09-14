@@ -36,6 +36,8 @@ if we can't find block in redis, load it from db and write to redis
 */
 
 var _redisCli *redis.Client
+var blockBF *blockBuffer
+var once sync.Once
 
 // GetMaxBlockID 获取最大的可用块ID 从fullnode获取，在缓存中可用的最大blockID
 func (b *blockBuffer) GetMaxBlockID() int64 {
@@ -54,6 +56,11 @@ func (b *blockBuffer) GetMaxConfirmedBlockID() int64 {
 	blockID := atomic.LoadInt64(&b.maxConfirmedBlockID)
 
 	return blockID
+}
+
+// GetUnConfirmedBlockID 从fullnode获取最大的块ID
+func (b *blockBuffer) GetUnConfirmedBlockID() int64 {
+	return atomic.LoadInt64(&b.maxBlockID)
 }
 
 // GetBlocks 从缓存批量读取blocks
@@ -94,9 +101,12 @@ func (b *blockBuffer) GetBlock(blockID int64) (block *entity.BlockInfo) {
 	return nil
 }
 
-//GetBlockBuffer ...
-func GetBlockBuffer() *blockBuffer {
-	return getBlockBuffer()
+//GetBlockBufferInstance 初始化buffer
+func GetBlockBufferInstance() *blockBuffer {
+	once.Do(func() {
+		blockBF = getBlockBuffer()
+	})
+	return blockBF
 }
 
 func getBlockBuffer() *blockBuffer {

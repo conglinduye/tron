@@ -9,6 +9,7 @@ import (
 	"github.com/wlcy/tron/explorer/web/entity"
 )
 
+//true
 func TestQueryAccounts(t *testing.T) {
 	Init()
 	req := &entity.Accounts{}
@@ -27,6 +28,7 @@ func TestQueryAccounts(t *testing.T) {
 
 }
 
+//true//true
 func TestQueryAccount(t *testing.T) {
 	Init()
 	req := &entity.Accounts{}
@@ -45,6 +47,7 @@ func TestQueryAccount(t *testing.T) {
 
 }
 
+//true
 func TestQueryAccountMedia(t *testing.T) {
 	Init()
 	req := &entity.Accounts{}
