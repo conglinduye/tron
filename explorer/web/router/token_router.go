@@ -94,7 +94,6 @@ func tokenRegister(ginRouter *gin.Engine) {
 		if tokenFile == "" {
 			tokenFile = "http://coin.top/tokenTemplate/TronscanTokenInformationSubmissionTemplate.xlsx"
 		}
-
 		c.JSON(http.StatusOK, tokenFile)
 	})
 }
