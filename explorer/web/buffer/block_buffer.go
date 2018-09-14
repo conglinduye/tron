@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -101,6 +102,8 @@ func GetBlockBuffer() *blockBuffer {
 
 func getBlockBuffer() *blockBuffer {
 	_onceBlockBuffer.Do(func() {
+		initRedis([]string{"127.0.0.1:6379"})
+
 		_blockBuffer = &blockBuffer{}
 
 		_blockBuffer.solidityClient = grpcclient.GetRandomSolidity()
@@ -111,8 +114,21 @@ func getBlockBuffer() *blockBuffer {
 
 		go _blockBuffer.backgroundWorker()
 		go _blockBuffer.backgroundSwaper()
+
 	})
 	return _blockBuffer
+}
+
+func initRedis(redisAddr []string) {
+	redisOpt := &redis.Options{
+		Addr:     redisAddr[0],
+		Password: "",
+		DB:       0,
+	}
+	_redisCli = redis.NewClient(redisOpt)
+
+	pong, err := _redisCli.Ping().Result()
+	fmt.Println(pong, err)
 }
 
 var _blockBuffer *blockBuffer
