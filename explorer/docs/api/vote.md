@@ -10,6 +10,13 @@ input:param
 &sort=-votes       //按照投票数量倒序排列
 &candidate=12 //按候选人地址查询
 &voter=13 //按投票人地址查询
+
+eg:
+http://18.216.57.65:20110/api/vote?sort=-number&limit=40&start=0
+
+http://18.216.57.65:20110/api/vote?candidate=TAEw4zwwYMiDcWFC9xQrLP9moMi34YAZbz
+
+http://18.216.57.65:20110/api/vote?voter=TAEw4zwwYMiDcWFC9xQrLP9moMi34YAZbz
 ```
 output:json
 ```json
@@ -53,7 +60,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/vote/live
 ```
 output:json
 ```json
@@ -86,7 +93,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/vote/current-cycle
 ```
 output:json
 ```json
@@ -130,7 +137,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/vote/next-cycle
 ```
 output:json
 ```json

@@ -4,7 +4,7 @@
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/system/status
 ```
 output:json
 ```json
@@ -53,7 +53,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/market/markets
 ```
 output:json
 ```json
@@ -140,7 +140,7 @@ output:json
     },...
 ]
 ```
-所有数据均从https://coinmarketcap.com/currencies/tron/爬取
+所有数据均从https://coinmarketcap.com/currencies/tron/爬取 每5s获取一次并加载缓存
 
 
 ## 图表信息所用接口
@@ -149,7 +149,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/stats/overview
 ```
 output:json
 ```json  

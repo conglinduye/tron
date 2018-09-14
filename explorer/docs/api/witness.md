@@ -4,7 +4,7 @@
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/witness
 ```
 output:json
 ```json
@@ -55,7 +55,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/witness/maintenance-statistic
 ```
 output:json
 ```json
