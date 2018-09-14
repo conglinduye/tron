@@ -275,8 +275,10 @@ func (b *blockBuffer) syncBlockToRedisWitoutExpire(blocks []*entity.BlockInfo) b
 func (b *blockBuffer) syncBlockToRedis(blocks []*entity.BlockInfo) bool {
 	tmp := make([]interface{}, 0, len(blocks)*2)
 	for _, block := range blocks {
-		tmp = append(tmp, getRedisBlockKey(block.Number), utils.ToJSONStr(block))
-		_redisCli.Set(getRedisBlockKey(block.Number), utils.ToJSONStr(block), 6*time.Hour)
+		if block != nil {
+			tmp = append(tmp, getRedisBlockKey(block.Number), utils.ToJSONStr(block))
+			_redisCli.Set(getRedisBlockKey(block.Number), utils.ToJSONStr(block), 6*time.Hour)
+		}
 	}
 	return true
 }
