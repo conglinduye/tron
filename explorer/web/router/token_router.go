@@ -48,9 +48,10 @@ func tokenRegister(ginRouter *gin.Engine) {
 		tokenReq.Owner = c.Query("owner")
 		log.Debugf("Hello /api/mytoken?%#v", tokenReq)
 		log.Debugf("owner_address=%v", tokenReq.Owner)
-		if tokenReq.Owner == "" {
-			c.JSON(http.StatusBadRequest, nil)
-		}
+		/*if tokenReq.Owner == "" {
+			c.JSON(http.StatusBadRequest, "")
+			return
+		}*/
 
 		if tokenReq.Start == "" || tokenReq.Limit == "" {
 			tokenReq.Start = "0"
@@ -66,13 +67,13 @@ func tokenRegister(ginRouter *gin.Engine) {
 
 	ginRouter.POST("/api/uploadLogo", func(c *gin.Context) {
 		var uploadLogoReq entity.UploadLogoReq
-		if err := c.Bind(&uploadLogoReq); err != nil {
+		/*if err := c.Bind(&uploadLogoReq); err != nil {
 			c.JSON(http.StatusBadRequest, nil)
 		}
 
 		if uploadLogoReq.ImageData == "" || uploadLogoReq.Address == "" {
 			c.JSON(http.StatusBadRequest, nil)
-		}
+		}*/
 		//传入data格式：data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYA...
 		if len(strings.Split(uploadLogoReq.ImageData, ",")) > 1 {
 			uploadLogoReq.ImageData = strings.Split(uploadLogoReq.ImageData, ",")[1]
