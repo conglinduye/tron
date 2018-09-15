@@ -129,7 +129,7 @@ func QueryTotalTokenTransfers(tokenName string) (int64, error) {
 	strSQL := fmt.Sprintf(`
     select count(1) as totalTokenTransfers
 	from contract_asset_transfer
-	where token_name = '%v' `, tokenName)
+	where asset_name = '%v' `, tokenName)
 	log.Debug(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
