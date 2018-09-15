@@ -12,14 +12,19 @@ import (
 func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 	var filterSQL, sortSQL, pageSQL string
 
-	strSQL := fmt.Sprintf(`
+	/*strSQL := fmt.Sprintf(`
 		   select account_name,acc.address,acc.balance as totalBalance,
 		   frozen,create_time,latest_operation_time,votes ,
 	       ass.asset_name as token_name,ass.creator_address,ass.balance
 	       from tron.tron_account acc
 	       left join tron.account_asset_balance ass on ass.address=acc.address
 		   where 1=1 `)
-
+	*/
+	strSQL := fmt.Sprintf(`
+		   select account_name,address,balance as totalBalance,
+		   frozen,create_time,latest_operation_time,votes
+	       from tron.tron_account acc
+		   where 1=1 `)
 	//按传入条件拼接sql，很容易错误，需要注意
 	if req.Address != "" {
 		filterSQL = fmt.Sprintf(" and acc.address='%v'", req.Address)

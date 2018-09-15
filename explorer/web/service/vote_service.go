@@ -23,6 +23,7 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	) outvoter on outvoter.to_address=acc.address`)
 
 	//按照Voter过滤，获取该Voter投给别的人列表
+	//TODO  计票问题《此处应该取我的冻结信息》
 	if req.Voter != "" {
 		reportSQL = fmt.Sprintf(`
 	left join (

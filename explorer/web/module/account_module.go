@@ -25,19 +25,19 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 	}
 	accountsResp := &entity.AccountsResp{}
 	accountInfos := make([]*entity.AccountInfo, 0)
-	accountTokenMap := make(map[string]map[string]int64, 0)   //保存每个账户的token信息
-	accountListMap := make(map[string]*entity.AccountInfo, 0) //保存每个账户信息，用于去重
-	var oldBalance = make([]*entity.BalanceInfoDB, 0)         //解析冻结信息
-	var totalFrozen = int64(0)                                //power信息
+	//accountListMap := make(map[string]*entity.AccountInfo, 0) //保存每个账户信息，用于去重
+	var oldBalance = make([]*entity.BalanceInfoDB, 0) //解析冻结信息
+	var totalFrozen = int64(0)                        //power信息
 
 	//填充数据
+	//ass.asset_name as token_name,ass.creator_address,ass.balance
 	for dataPtr.NextT() {
 		var account = &entity.AccountInfo{}
-		account.Power = 0
 		frozen := dataPtr.GetField("frozen")
 		if frozen != "" {
 			if err := json.Unmarshal([]byte(frozen), oldBalance); err != nil {
 				log.Errorf("Unmarshal data failed:[%v]-[%v]", err, frozen)
+				return nil, util.NewErrorMsg(util.Error_common_request_json_convert_error)
 			}
 		}
 		for _, blanceFrozen := range oldBalance {
@@ -49,30 +49,12 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 		account.UpdateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("latest_operation_time"))
 		account.Name = dataPtr.GetField("account_name")
 		account.Balance = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalBalance"))
-		tokenName := dataPtr.GetField("token_name")
-		balance := mysql.ConvertDBValueToInt64(dataPtr.GetField("balance"))
-		if account.Address != "" {
-			if tokenInfo, ok := accountTokenMap[account.Address]; ok {
-				tokenInfo[tokenName] = balance
-				accountTokenMap[account.Address] = tokenInfo
-			} else {
-				tokenMap := make(map[string]int64, 0)
-				tokenMap[tokenName] = balance
-				accountTokenMap[account.Address] = tokenMap
-			}
+		tokenInfo, err := querytokenBalanceInfo(account.Address)
+		if err != nil {
+			log.Errorf("get token balance info err:[%v] by adderss:[%v]", err, account.Address)
+			return nil, err
 		}
-		if _, ok := accountListMap[account.Address]; !ok {
-			accountInfos = append(accountInfos, account)
-			accountListMap[account.Address] = account
-		}
-
-	}
-
-	//拼接tokeninfo列表
-	for _, accountInfo := range accountInfos {
-		if tokenInfo, ok := accountTokenMap[accountInfo.Address]; ok {
-			accountInfo.TokenBalances = tokenInfo
-		}
+		account.TokenBalances = tokenInfo
 	}
 
 	//查询该语句所查到的数据集合
@@ -86,6 +68,35 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 
 	return accountsResp, nil
 
+}
+
+//查询某个地址下的token信息
+func querytokenBalanceInfo(address string) (map[string]int64, error) {
+	strSQL := fmt.Sprintf(`
+	select acc.address,acc.asset_name as token_name,acc.creator_address,acc.balance
+	from tron.account_asset_balance acc
+	where 1=1 order by `)
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("querytokenBalanceInfo error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("querytokenBalanceInfo dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	accountTokenMap := make(map[string]int64, 0)
+	for dataPtr.NextT() {
+		tokenName := dataPtr.GetField("token_name")
+		balance := mysql.ConvertDBValueToInt64(dataPtr.GetField("balance"))
+		if tokenName != "" {
+			if _, ok := accountTokenMap[tokenName]; !ok {
+				accountTokenMap[tokenName] = balance
+			}
+		}
+	}
+	return accountTokenMap, nil
 }
 
 //QueryAccountRealize 操作数据库
