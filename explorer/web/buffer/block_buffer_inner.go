@@ -244,7 +244,9 @@ func (b *blockBuffer) backgroundWorker() {
 	for {
 		ts := time.Now()
 		b.getNowConfirmedBlock()
-		for {
+		b.getSolidityNodeMaxBlockID()
+		b.getNowBlock()
+		/*for {
 			if b.getSolidityNodeMaxBlockID() {
 				break
 			}
@@ -253,7 +255,7 @@ func (b *blockBuffer) backgroundWorker() {
 			if b.getNowBlock() {
 				break
 			}
-		}
+		}*/
 
 		tsc := time.Since(ts)
 		if tsc < minInterval {
