@@ -52,10 +52,20 @@ func TestA(*testing.T) {
 }
 
 func TestRedis(*testing.T) {
-	bb := getBlockBuffer()
-	bbb := bb.GetBlock(0)
-	fmt.Println(bbb)
+	// // bb := getBlockBuffer()
+	// bbb := bb.GetBlock(0)
+	// fmt.Println(bbb)
 
-	fmt.Println(_redisCli.Get("asdfasdf"))
+	// fmt.Println(_redisCli.Get("asdfasdf"))
+
+	a := make([]int, 10, 10)
+	b := make([]int, 100, 100)
+
+	for i := 0; i < 100; i++ {
+		b[i] = i
+	}
+
+	copy(a, b[0:30])
+	fmt.Println(a)
 
 }
