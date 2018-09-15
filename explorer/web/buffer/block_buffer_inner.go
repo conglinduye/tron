@@ -158,11 +158,11 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 
 	if b.bufferBlock(blocks.Data) {
 		atomic.StoreInt64(&b.maxConfirmedBlockID, maxBlockID)
-		b.bufferConfiremdTransaction(filter, "")
-		b.cleanConfirmedTrxBufferFromUncTrxList() // clean unconfirmed block transaction
+		//b.bufferConfiremdTransaction(filter, "")
+		//b.cleanConfirmedTrxBufferFromUncTrxList() // clean unconfirmed block transaction
 	}
 	//加载 并缓存 交易总数
-	b.loadTransactionCountFromDB()
+	//b.loadTransactionCountFromDB()
 
 	return blocks.Data
 }
