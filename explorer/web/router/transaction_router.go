@@ -26,7 +26,8 @@ func transactionRegister(ginRouter *gin.Engine) {
 			req.Number = c.Query("block")
 		}
 		log.Debugf("Hello /api/transaction?%#v", req)
-		resp, err := service.QueryTransactions(req)
+		//resp, err := service.QueryTransactions(req)
+		resp, err := service.QueryTransactionsBuffer(req)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
@@ -38,7 +39,10 @@ func transactionRegister(ginRouter *gin.Engine) {
 		req := &entity.Transactions{}
 		req.Hash = c.Param("hash") //占位符传参
 		log.Debugf("Hello /api/transaction/:%#v", req.Hash)
-		resp, err := service.QueryTransaction(req)
+		resp, err := service.QueryTransactionByHashFromBuffer(req)
+		if resp == nil {
+			resp, err = service.QueryTransaction(req)
+		}
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)

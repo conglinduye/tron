@@ -46,6 +46,8 @@ type blockBuffer struct {
 	trxHash sync.Map // trx_hash -> entity.TransactionInfo
 
 	ownerAddrTrx sync.Map // owner_addr -> entity.TransactionInfo, not use yet
+
+	transactionCount int64 //total transaction record
 }
 
 func (b *blockBuffer) getSolidityNodeMaxBlockID() bool {
@@ -158,6 +160,8 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 		b.bufferConfiremdTransaction(filter, "")
 		b.cleanConfirmedTrxBufferFromUncTrxList() // clean unconfirmed block transaction
 	}
+	//加载 并缓存 交易总数
+	b.loadTransactionCountFromDB()
 
 	return blocks.Data
 }
@@ -233,10 +237,6 @@ func (b *blockBuffer) readBuffer(numStart int64, numEnd int64) []*entity.BlockIn
 	sort.SliceStable(ret, func(i, j int) bool { return ret[i].Number > ret[j].Number })
 
 	return ret
-}
-
-func (b *blockBuffer) BackgroundWorker() {
-	b.backgroundWorker()
 }
 
 func (b *blockBuffer) backgroundWorker() {

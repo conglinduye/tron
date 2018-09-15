@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"sync/atomic"
 	"time"
 
 	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/utils"
+	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 )
@@ -32,11 +35,32 @@ func (b *blockBuffer) getConfirmedBlockTransaction(blockID int64) []*entity.Tran
 
 	return ret
 }
+func (b *blockBuffer) loadTransactionCountFromDB() {
+	strSQL := fmt.Sprintf(`select count(1) as totalNum from tron.transactions`)
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("loadTransactionCountFromDB error :[%v]\n", err)
+		return
+	}
+	if dataPtr == nil {
+		log.Errorf("loadTransactionCountFromDB dataPtr is nil ")
+		return
+	}
+	//填充数据
+	for dataPtr.NextT() {
+		totalNum := mysql.ConvertDBValueToInt64(dataPtr.GetField("totalNum"))
+		if totalNum > 0 {
+			atomic.StoreInt64(&b.transactionCount, totalNum+int64(len(b.trxListUnconfirmed)))
+		}
+	}
+	return
+}
 
 func (b *blockBuffer) loadTransactionFromDBFilter(filter string) []*entity.TransactionInfo {
 	strSQL := fmt.Sprintf(`
 	select block_id,owner_address,to_address,
-	trx_hash,contract_data,result_data,fee
+	trx_hash,contract_data,result_data,fee,
 	contract_type,confirmed,create_time,expire_time
 	from tron.transactions
 	where 1=1 `)
@@ -114,7 +138,7 @@ func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 func (b *blockBuffer) loadTransactionFromDB(filter string, limit string) []*entity.TransactionInfo {
 	strSQL := fmt.Sprintf(`
 			select block_id,owner_address,to_address,
-			trx_hash,contract_data,result_data,fee
+			trx_hash,contract_data,result_data,fee,
 			contract_type,confirmed,create_time,expire_time
 			from tron.transactions
 			where 1=1 `)

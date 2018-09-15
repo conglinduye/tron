@@ -4,9 +4,25 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/wlcy/tron/explorer/lib/mysql"
+
+	"github.com/wlcy/tron/explorer/web/buffer"
+
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 )
+
+//QueryTransactionsBuffer ...
+func QueryTransactionsBuffer(req *entity.Transactions) (*entity.TransactionsResp, error) {
+	transactions := &entity.TransactionsResp{}
+	if req.Number != "" {
+		transactions.Data = buffer.GetBlockBuffer().GetTransactionByBlockID(mysql.ConvertStringToInt64(req.Number, 0))
+	} else {
+		transactions.Data = buffer.GetBlockBuffer().GetTransactions(req.Start, req.Limit)
+	}
+	transactions.Total = buffer.GetBlockBuffer().GetTotalTransactions()
+	return transactions, nil
+}
 
 //QueryTransactions 条件查询  	//?sort=-number&limit=1&count=true&number=2135998 TODO: cache
 func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, error) {
@@ -60,6 +76,11 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
 	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL)
+}
+
+//QueryTransactionByHashFromBuffer 精确查询
+func QueryTransactionByHashFromBuffer(req *entity.Transactions) (*entity.TransactionInfo, error) {
+	return buffer.GetBlockBuffer().GetTransactionByHash(req.Hash), nil
 }
 
 //QueryTransaction 精确查询  	//number=2135998   TODO: cache

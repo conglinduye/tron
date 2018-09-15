@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"fmt"
+	"sync/atomic"
 
 	"github.com/wlcy/tron/explorer/web/entity"
 )
@@ -54,10 +55,23 @@ func (b *blockBuffer) GetTransactionByBlockID(blockID int64) []*entity.Transacti
 	return b.getConfirmedBlockTransaction(blockID)
 }
 
-func (b *blockBuffer) GetTransactionByHash(hash string) []*entity.TransactionInfo {
+func (b *blockBuffer) GetTransactionByHash(hash string) *entity.TransactionInfo {
+
+	if trans, ok := b.trxHash.Load(hash); ok {
+		transactionInfo := trans.(*entity.TransactionInfo)
+		if transactionInfo == nil {
+			//TODO loda db
+		}
+		return transactionInfo
+	}
 	return nil
 }
 
 func (b *blockBuffer) GetTransactionByOwnerAddr(addr string) []*entity.TransactionInfo {
 	return nil
+}
+
+// GetTotalTransactions 获取缓存中交易总数
+func (b *blockBuffer) GetTotalTransactions() int64 {
+	return atomic.LoadInt64(&b.transactionCount)
 }
