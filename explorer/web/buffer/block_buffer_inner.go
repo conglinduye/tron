@@ -244,22 +244,22 @@ func (b *blockBuffer) backgroundWorker() {
 	minInterval := time.Duration(10) * time.Second
 	for {
 		ts := time.Now()
-		fmt.Printf("000")
+		//fmt.Printf("000")
 		b.getNowConfirmedBlock()
-		fmt.Printf("111-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
+		//fmt.Printf("111-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 		for {
 			if b.getSolidityNodeMaxBlockID() {
-				fmt.Printf("222-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
+				//fmt.Printf("222-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 				break
 			}
-			fmt.Printf("333-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
+			//fmt.Printf("333-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 		}
 		for {
 			if b.getNowBlock() {
-				fmt.Printf("444-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
+				//fmt.Printf("444-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 				break
 			}
-			fmt.Printf("555-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
+			//fmt.Printf("555-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 		}
 
 		tsc := time.Since(ts)

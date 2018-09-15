@@ -37,6 +37,7 @@ func main() {
 	if 0 != conf.Populate(*configfile) {
 		return
 	}
+	go router.Start(conf.Address, conf.Objectpool)
 	//初始化buffer
 	go buffer.GetBlockBuffer()
 	buffer.GetWitnessBuffer()
@@ -55,7 +56,5 @@ func main() {
 	go task.SyncPersistYesterdayReport()
 
 	go task.SyncAssetIssueParticipated()
-
-	router.Start(conf.Address, conf.Objectpool)
 
 }
