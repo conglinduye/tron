@@ -2,12 +2,8 @@ package buffer
 
 import (
 	"fmt"
-	"sync"
 	"sync/atomic"
 
-	"github.com/wlcy/tron/explorer/core/utils"
-
-	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/grpcclient"
 
 	"github.com/go-redis/redis"
@@ -37,6 +33,11 @@ if we can't find block in redis, load it from db and write to redis
 */
 
 var _redisCli *redis.Client
+
+//GetBlockBuffer ...
+func GetBlockBuffer() *blockBuffer {
+	return getBlockBuffer()
+}
 
 // GetMaxBlockID 获取最大的可用块ID 从fullnode获取，在缓存中可用的最大blockID
 func (b *blockBuffer) GetMaxBlockID() int64 {
@@ -95,11 +96,6 @@ func (b *blockBuffer) GetBlock(blockID int64) (block *entity.BlockInfo) {
 	return nil
 }
 
-//GetBlockBuffer ...
-func GetBlockBuffer() *blockBuffer {
-	return getBlockBuffer()
-}
-
 func getBlockBuffer() *blockBuffer {
 	_onceBlockBuffer.Do(func() {
 		initRedis([]string{"127.0.0.1:6379"})
@@ -111,6 +107,7 @@ func getBlockBuffer() *blockBuffer {
 		_blockBuffer.maxNodeErr = 3
 		_blockBuffer.maxUnconfirmedBlockRead = 100
 		_blockBuffer.maxBlockInMemory = 1000
+		_blockBuffer.maxConfirmedTrx = 3000
 
 		go _blockBuffer.backgroundWorker()
 		go _blockBuffer.backgroundSwaper()
@@ -129,29 +126,4 @@ func initRedis(redisAddr []string) {
 
 	pong, err := _redisCli.Ping().Result()
 	fmt.Println(pong, err)
-}
-
-var _blockBuffer *blockBuffer
-var _onceBlockBuffer sync.Once
-
-func coreBlockConvert(inblock *core.Block) *entity.BlockInfo {
-	if nil == inblock || nil == inblock.BlockHeader || nil == inblock.BlockHeader.RawData {
-		return nil
-	}
-
-	ret := &entity.BlockInfo{
-		Number:         inblock.BlockHeader.RawData.Number,
-		Hash:           utils.HexEncode(utils.CalcBlockHash(inblock)),
-		Size:           utils.CalcBlockSize(inblock),
-		CreateTime:     inblock.BlockHeader.RawData.Timestamp,
-		TxTrieRoot:     utils.HexEncode(inblock.BlockHeader.RawData.TxTrieRoot),
-		ParentHash:     utils.HexEncode(inblock.BlockHeader.RawData.ParentHash),
-		WitnessID:      int32(inblock.BlockHeader.RawData.WitnessId),
-		WitnessAddress: utils.Base58EncodeAddr(inblock.BlockHeader.RawData.WitnessAddress),
-		NrOfTrx:        int64(len(inblock.Transactions)),
-		Confirmed:      false,
-	}
-	ret.WitnessName, _ = getWitnessBuffer().GetWitnessNameByAddr(ret.WitnessAddress)
-
-	return ret
 }

@@ -29,7 +29,10 @@ type blockBuffer struct {
 	walletClient   *grpcclient.Wallet
 	walletErrCnt   int
 
-	buffer sync.Map // blockID, blockInfo
+	buffer             sync.Map                  // blockID, blockInfo
+	trxListUnconfirmed []*entity.TransactionInfo // tranx 列表，最新开始, unconfirmed
+	trxList            []*entity.TransactionInfo // tranx 列表，最新开始, confirmed
+	maxConfirmedTrx    int                       // 内存中最大的confirmed transaction 数量
 
 	maxNodeErr              int   // 3                 // 单个node连接允许的最大错误数
 	maxUnconfirmedBlockRead int64 //  = int64(50) // 需要缓存的最新的unconfirmed block的数量
@@ -73,16 +76,20 @@ func (b *blockBuffer) getNowBlock() bool {
 	rawBlocks := b.getBlocksStable(numStart, numEnd)
 	fmt.Printf("get blockStable cost:%v, get block count:%v, need load:%v, gap:%v\n", time.Since(ts), len(rawBlocks), blockInfo.Number-b.maxConfirmedBlockID, blockInfo.Number-b.maxConfirmedBlockID-int64(len(rawBlocks)))
 
+	trxList := make([]*entity.TransactionInfo, 0, 300)
 	blocks := make([]*entity.BlockInfo, 0, len(rawBlocks)+1)
 	for _, rawBlock := range rawBlocks {
 		bi := coreBlockConvert(rawBlock)
 		if nil != bi {
 			blocks = append(blocks, bi)
 		}
+		trxList = append(trxList, parseBlockTransaction(rawBlock, false)...)
+
 	}
 	blocks = append(blocks, blockInfo)
 
 	if b.bufferBlock(blocks) {
+
 		atomic.StoreInt64(&b.maxBlockID, numEnd)
 	}
 
@@ -373,4 +380,29 @@ func (b *blockBuffer) getBlocksStableB(blockIDs []string) []*entity.BlockInfo {
 	// 	}
 	// }
 	// return ret
+}
+
+var _blockBuffer *blockBuffer
+var _onceBlockBuffer sync.Once
+
+func coreBlockConvert(inblock *core.Block) *entity.BlockInfo {
+	if nil == inblock || nil == inblock.BlockHeader || nil == inblock.BlockHeader.RawData {
+		return nil
+	}
+
+	ret := &entity.BlockInfo{
+		Number:         inblock.BlockHeader.RawData.Number,
+		Hash:           utils.HexEncode(utils.CalcBlockHash(inblock)),
+		Size:           utils.CalcBlockSize(inblock),
+		CreateTime:     inblock.BlockHeader.RawData.Timestamp,
+		TxTrieRoot:     utils.HexEncode(inblock.BlockHeader.RawData.TxTrieRoot),
+		ParentHash:     utils.HexEncode(inblock.BlockHeader.RawData.ParentHash),
+		WitnessID:      int32(inblock.BlockHeader.RawData.WitnessId),
+		WitnessAddress: utils.Base58EncodeAddr(inblock.BlockHeader.RawData.WitnessAddress),
+		NrOfTrx:        int64(len(inblock.Transactions)),
+		Confirmed:      false,
+	}
+	ret.WitnessName, _ = getWitnessBuffer().GetWitnessNameByAddr(ret.WitnessAddress)
+
+	return ret
 }
