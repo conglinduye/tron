@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/wlcy/tron/explorer/lib/log"
 )
@@ -29,6 +30,8 @@ func Start(address string, objectpool int) {
 	reportRegister(ginRouter)
 	// 注册其他查询路由
 	otherRegister(ginRouter)
+
+	ginRouter.Use(cors.Default())
 
 	service := http.Server{
 		Addr:           address,
