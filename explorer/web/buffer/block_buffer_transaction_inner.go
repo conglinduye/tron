@@ -91,7 +91,7 @@ func (b *blockBuffer) bufferUnconfirmTransactions(blockID int64, trxList []*enti
 	// buffer to trx list
 	sort.SliceStable(trxList, func(i, j int) bool { return trxList[i].Block > trxList[j].Block })
 	b.trxListUnconfirmed = append(trxList, b.trxListUnconfirmed...)
-	fmt.Printf("### buffer uncTrx, len:%v, total len:%v\n", len(trxList), len(b.trxListUnconfirmed))
+	//fmt.Printf("### buffer uncTrx, len:%v, total len:%v\n", len(trxList), len(b.trxListUnconfirmed))
 
 	// buffer to block id map
 	b.uncBlockTrx.Store(blockID, trxList)
@@ -117,7 +117,7 @@ func (b *blockBuffer) cleanConfirmedTrxBufferFromUncTrxList() {
 		}
 	}
 	b.trxListUnconfirmed = b.trxListUnconfirmed[0 : uncTrxIdx+1] // +1 mean include index of uncTrxLen
-	fmt.Printf("### clean uncTrx, uncTrxIdx:%v, uncTrx len:%v\n", uncTrxIdx, len(b.trxListUnconfirmed))
+	//	fmt.Printf("### clean uncTrx, uncTrxIdx:%v, uncTrx len:%v\n", uncTrxIdx, len(b.trxListUnconfirmed))
 
 }
 
@@ -157,7 +157,7 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 		return nil
 	}
 
-	fmt.Printf("### raw block:%v, trans count:%v\n", block.BlockHeader.RawData.Number, len(block.Transactions))
+	///	fmt.Printf("### raw block:%v, trans count:%v\n", block.BlockHeader.RawData.Number, len(block.Transactions))
 
 	blockID := block.BlockHeader.RawData.Number
 	ret = make([]*entity.TransactionInfo, 0, len(block.Transactions))
