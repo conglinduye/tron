@@ -161,7 +161,7 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 		b.cleanConfirmedTrxBufferFromUncTrxList() // clean unconfirmed block transaction
 	}
 	//加载 并缓存 交易总数
-	//b.loadTransactionCountFromDB()
+	b.loadTransactionCountFromDB()
 
 	return blocks.Data
 }
@@ -244,18 +244,21 @@ func (b *blockBuffer) backgroundWorker() {
 	for {
 		ts := time.Now()
 		b.getNowConfirmedBlock()
-		b.getSolidityNodeMaxBlockID()
-		b.getNowBlock()
-		/*for {
+		fmt.Printf("111-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
+		for {
 			if b.getSolidityNodeMaxBlockID() {
+				fmt.Printf("222-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 				break
 			}
+			fmt.Printf("333-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 		}
 		for {
 			if b.getNowBlock() {
+				fmt.Printf("444-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 				break
 			}
-		}*/
+			fmt.Printf("555-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
+		}
 
 		tsc := time.Since(ts)
 		if tsc < minInterval {
