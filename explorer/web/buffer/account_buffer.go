@@ -58,7 +58,7 @@ func (w *accountTokenBuffer) getAccountTokenBuffer() {
 	strSQL := fmt.Sprintf(`
 	select acc.address,acc.asset_name as token_name,acc.creator_address,acc.balance
 	from tron.account_asset_balance acc
-	where 1=1 order by `)
+	where 1=1 order by address,asset_name`)
 	log.Debug(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
