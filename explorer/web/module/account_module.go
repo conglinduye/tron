@@ -25,12 +25,25 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 	}
 	accountsResp := &entity.AccountsResp{}
 	accountInfos := make([]*entity.AccountInfo, 0)
-	accountTokenMap := make(map[string]map[string]int64, 0) //保存每个账户的token信息
+	accountTokenMap := make(map[string]map[string]int64, 0)   //保存每个账户的token信息
+	accountListMap := make(map[string]*entity.AccountInfo, 0) //保存每个账户信息，用于去重
+	var oldBalance = make([]*entity.BalanceInfoDB, 0)         //解析冻结信息
+	var totalFrozen = int64(0)                                //power信息
 
 	//填充数据
 	for dataPtr.NextT() {
 		var account = &entity.AccountInfo{}
-		account.Power = dataPtr.GetField("votes") //TODO
+		account.Power = 0
+		frozen := dataPtr.GetField("frozen")
+		if frozen != "" {
+			if err := json.Unmarshal([]byte(frozen), oldBalance); err != nil {
+				log.Errorf("Unmarshal data failed:[%v]-[%v]", err, frozen)
+			}
+		}
+		for _, blanceFrozen := range oldBalance {
+			totalFrozen += blanceFrozen.Amount
+		}
+		account.Power = totalFrozen
 		account.Address = dataPtr.GetField("address")
 		account.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
 		account.UpdateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("latest_operation_time"))
@@ -48,8 +61,11 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 				accountTokenMap[account.Address] = tokenMap
 			}
 		}
+		if _, ok := accountListMap[account.Address]; !ok {
+			accountInfos = append(accountInfos, account)
+			accountListMap[account.Address] = account
+		}
 
-		accountInfos = append(accountInfos, account)
 	}
 
 	//拼接tokeninfo列表
@@ -171,7 +187,7 @@ func QueryAccountMediaRealize(strSQL, filterSQL string) (*entity.AccountMediaInf
 	//填充数据
 	for dataPtr.NextT() {
 		mediaInfo.Success = false
-		mediaInfo.Image = dataPtr.GetField("url") //TODO
+		mediaInfo.Image = dataPtr.GetField("url") //TODO 需要从表中配置的url里面扣logo图片
 		mediaInfo.Reason = "Could not retrieve file"
 	}
 

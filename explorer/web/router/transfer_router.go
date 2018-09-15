@@ -22,6 +22,9 @@ func transferRegister(ginRouter *gin.Engine) {
 		req.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
 		req.Hash = c.Query("hash")
 		req.Number = c.Query("number")
+		if c.Query("block") != "" { //也能用block过滤
+			req.Number = c.Query("block")
+		}
 		log.Debugf("Hello /api/transfer?%#v", req)
 		resp, err := service.QueryTransfers(req)
 		if err != nil {

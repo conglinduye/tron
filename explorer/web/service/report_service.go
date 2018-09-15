@@ -163,8 +163,14 @@ func SyncPersistYesterdayReport() {
 		reportOverview.Date = startTime
 		module.InsertStatistics(reportOverview)
 
-		historyOverviewValue, _ := config.RedisCli.Get(HistoryOverviewKey).Result()
-		log.Infof("historyOverviewValue %v\n", historyOverviewValue)
+		historyOverviewValue, err := config.RedisCli.Get(HistoryOverviewKey).Result()
+		if err == redis.Nil {
+			SyncCacheHistoryReport()
+			historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
+		} else {
+			log.Errorf("SyncPersistYesterdayReport historyOverviewValue redis get value error :[%v]\n", err)
+			return
+		}
 		if historyOverviewValue == "" {
 			SyncCacheHistoryReport()
 			historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
@@ -173,7 +179,7 @@ func SyncPersistYesterdayReport() {
 		json.Unmarshal([]byte(historyOverviewValue), &reportOverviews)
 		reportOverviews = append(reportOverviews, reportOverview)
 		value, _ := json.Marshal(reportOverviews)
-		err := config.RedisCli.Set(HistoryOverviewKey, string(value), 0).Err()
+		err = config.RedisCli.Set(HistoryOverviewKey, string(value), 0).Err()
 		if err != nil {
 			log.Errorf("SyncPersistYesterdayReport redis set err:[%v]", err)
 		}
