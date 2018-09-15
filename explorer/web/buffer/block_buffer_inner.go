@@ -243,7 +243,7 @@ func (b *blockBuffer) backgroundWorker() {
 	minInterval := time.Duration(10) * time.Second
 	for {
 		ts := time.Now()
-
+		b.getNowConfirmedBlock()
 		for {
 			if b.getSolidityNodeMaxBlockID() {
 				break
@@ -254,7 +254,7 @@ func (b *blockBuffer) backgroundWorker() {
 				break
 			}
 		}
-		b.getNowConfirmedBlock()
+
 		tsc := time.Since(ts)
 		if tsc < minInterval {
 			time.Sleep(minInterval - tsc)
