@@ -49,12 +49,15 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 		account.UpdateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("latest_operation_time"))
 		account.Name = dataPtr.GetField("account_name")
 		account.Balance = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalBalance"))
-		tokenInfo, err := querytokenBalanceInfo(account.Address)
+		/*tokenInfo, err := querytokenBalanceInfo(account.Address)
 		if err != nil {
 			log.Errorf("get token balance info err:[%v] by adderss:[%v]", err, account.Address)
 			return nil, err
-		}
-		account.TokenBalances = tokenInfo
+		}*/
+		//从缓存中获取数据
+		//account.TokenBalances = buffer.GetAccountTokenBuffer().GetAccountTokenBuffer(account.address)
+
+		//account.TokenBalances = tokenInfo
 	}
 
 	//查询该语句所查到的数据集合

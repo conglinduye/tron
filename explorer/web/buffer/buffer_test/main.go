@@ -9,16 +9,18 @@ import (
 )
 
 func main() {
-	mysql.Initialize("mine", "3306", "tron", "tron", "tron")
+	mysql.Initialize("127.0.0.1", "3306", "tron", "budev", "tron**1")
 
 	// initRedis([]string{"127.0.0.1:6379"})
-
+	bb := buffer.GetBlockBuffer()
 	cnt := 0
 	for cnt < 10 {
-		// getBlocks(-1, 0, 100)   // get latest 100 blocks
+		getBlocks(-1, 0, 100) // get latest 100 blocks
 		// getBlocks(-1, 500, 100) // get
 
-		getTrx()
+		//getTrx()
+
+		fmt.Printf("%v, %v, %v, %v\n", bb.GetMaxBlockID(), bb.GetMaxConfirmedBlockID(), bb.GetSolidityNodeMaxBlockID(), bb.GetFullNodeMaxBlockID())
 
 		time.Sleep(10 * time.Second)
 		cnt++

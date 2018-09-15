@@ -1,8 +1,14 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/mysql"
+	"github.com/wlcy/tron/explorer/lib/util"
+	"github.com/wlcy/tron/explorer/web/buffer"
 
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
@@ -11,7 +17,6 @@ import (
 //QueryAccounts 条件查询  	//?sort=-number&limit=1&count=true&number=2135998  TODO  cache
 func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 	var filterSQL, sortSQL, pageSQL string
-
 	/*strSQL := fmt.Sprintf(`
 		   select account_name,acc.address,acc.balance as totalBalance,
 		   frozen,create_time,latest_operation_time,votes ,
@@ -47,7 +52,64 @@ func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
-	return module.QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL)
+	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
+	log.Debug(strFullSQL)
+	dataPtr, err := mysql.QueryTableData(strFullSQL)
+	if err != nil {
+		log.Errorf("QueryAccountsRealize error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryAccountsRealize dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	accountsResp := &entity.AccountsResp{}
+	accountInfos := make([]*entity.AccountInfo, 0)
+	//accountListMap := make(map[string]*entity.AccountInfo, 0) //保存每个账户信息，用于去重
+	var oldBalance = make([]*entity.BalanceInfoDB, 0) //解析冻结信息
+	var totalFrozen = int64(0)                        //power信息
+
+	//填充数据
+	//ass.asset_name as token_name,ass.creator_address,ass.balance
+	for dataPtr.NextT() {
+		var account = &entity.AccountInfo{}
+		frozen := dataPtr.GetField("frozen")
+		if frozen != "" {
+			if err := json.Unmarshal([]byte(frozen), oldBalance); err != nil {
+				log.Errorf("Unmarshal data failed:[%v]-[%v]", err, frozen)
+				return nil, util.NewErrorMsg(util.Error_common_request_json_convert_error)
+			}
+		}
+		for _, blanceFrozen := range oldBalance {
+			totalFrozen += blanceFrozen.Amount
+		}
+		account.Power = totalFrozen
+		account.Address = dataPtr.GetField("address")
+		account.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
+		account.UpdateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("latest_operation_time"))
+		account.Name = dataPtr.GetField("account_name")
+		account.Balance = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalBalance"))
+		/*tokenInfo, err := querytokenBalanceInfo(account.Address)
+		if err != nil {
+			log.Errorf("get token balance info err:[%v] by adderss:[%v]", err, account.Address)
+			return nil, err
+		}*/
+		//从缓存中获取数据
+		account.TokenBalances = buffer.GetAccountTokenBuffer().GetAccountTokenBuffer(account.Address)
+		accountInfos = append(accountInfos, account)
+	}
+
+	//查询该语句所查到的数据集合
+	var total = int64(len(accountInfos))
+	total, err = mysql.QueryTableDataCount("tron.tron_account")
+	if err != nil {
+		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
+	}
+	accountsResp.Total = total
+	accountsResp.Data = accountInfos
+	return accountsResp, nil
+
+	//return module.QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 
 //QueryAccount 精确查询  	//number=2135998   TODO  cache
