@@ -104,3 +104,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, res)
 	})
 }
+
+func SyncParticipatedAmount() {
+
+}

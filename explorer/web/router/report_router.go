@@ -23,5 +23,4 @@ func reportRegister(ginRouter *gin.Engine) {
 
 		c.JSON(http.StatusOK, "handle done")
 	})
-
 }

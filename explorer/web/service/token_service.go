@@ -327,3 +327,19 @@ func InsertOrUpdateLogo(address, url string) error {
 	}
 	return err
 }
+
+func SyncAssetIssueParticipated() {
+	assetIssues, _ := module.QueryAllAssetIssue()
+	if len(assetIssues) == 0 {
+		log.Info("SyncAssetIssueParticipated len(assetIssues) == 0")
+		return
+	}
+	for index := range assetIssues {
+		assetIssue := assetIssues[index]
+		participateAsset, _ := module.QueryParticipateAsset(assetIssue.AssetName)
+		if participateAsset.AssetName != "" && participateAsset.TotalAmount > assetIssue.Participated {
+			module.UpdateAssetIssue(assetIssue.AssetName, participateAsset.TotalAmount)
+		}
+	}
+
+}

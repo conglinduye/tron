@@ -113,3 +113,14 @@ type UploadLogoRes struct {
 	Success 				bool				`json:"success"`				// success
 	Data 					string 				`json:"data"`					// data
 }
+
+type ParticipateAsset struct {
+	AssetName				string 				`json:"assetName"`				// assetName
+	TotalAmount			    int64				`json:"totalAmount"`			// totalAmount
+}
+
+type AssetIssue struct {
+	OwnerAddress			string 				`json:"ownerAddress"`			// ownerAddress
+	AssetName				string 				`json:"assetName"`				// assetName
+	Participated			int64				`json:"participated"`			// participated
+}
