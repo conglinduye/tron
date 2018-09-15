@@ -14,8 +14,8 @@ func TestQueryAccounts(t *testing.T) {
 	Init()
 	req := &entity.Accounts{}
 	req.Sort = "-number"
-	req.Limit = "5"
-	req.Start = "0"
+	req.Limit = 5
+	req.Start = 0
 
 	//req.Address = "2287351"
 

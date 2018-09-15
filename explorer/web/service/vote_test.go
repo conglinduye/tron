@@ -13,8 +13,8 @@ func TestVotes(t *testing.T) {
 	Init()
 	req := &entity.Votes{}
 	req.Sort = "-votes"
-	req.Limit = "5"
-	req.Start = "0"
+	req.Limit = 5
+	req.Start = 0
 
 	//req.Candidate = "2287351"
 	//req.Voter="Voter"
@@ -35,12 +35,12 @@ func TestVotes(t *testing.T) {
 func TestVoteLivefff(t *testing.T) {
 	Init()
 
-	resp, err := QueryVoteLive()
-	if err != nil {
+	//resp, err := QueryVoteLive()
+	/*if err != nil {
 		log.Error(err)
 	}
 	ss, _ := mysql.JSONObjectToString(resp)
-	log.Printf("total:%v", ss)
+	log.Printf("total:%v", ss)*/
 
 }
 
@@ -48,13 +48,13 @@ func TestVoteLivefff(t *testing.T) {
 func TestQueryVoteCurrentCycle(t *testing.T) {
 	Init()
 
-	resp, err := QueryVoteCurrentCycle()
+	/*resp, err := QueryVoteCurrentCycle()
 	if err != nil {
 		log.Error(err)
 	}
 	ss, _ := mysql.JSONObjectToString(resp)
 	log.Printf("total:%v", ss)
-
+	*/
 }
 
 //true

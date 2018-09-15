@@ -11,9 +11,9 @@ import (
 func TestTransfers(t *testing.T) {
 	Init()
 	req := &entity.Transfers{}
-	req.Sort = "-number"
-	req.Limit = "5"
-	req.Start = "0"
+	req.Sort = "-timestamp"
+	req.Limit = 5
+	req.Start = 0
 
 	//req.Number = "2287351"
 
