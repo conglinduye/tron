@@ -22,6 +22,9 @@ func transactionRegister(ginRouter *gin.Engine) {
 		req.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
 		req.Hash = c.Query("hash")
 		req.Number = c.Query("number")
+		if c.Query("block") != "" { //还能用block查
+			req.Number = c.Query("block")
+		}
 		log.Debugf("Hello /api/transaction?%#v", req)
 		resp, err := service.QueryTransactions(req)
 		if err != nil {
