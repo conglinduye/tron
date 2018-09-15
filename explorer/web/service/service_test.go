@@ -11,6 +11,6 @@ func TestGetNextCycle(t *testing.T) {
 }
 
 func TestGetMarket(t *testing.T) {
-	ss, err := QueryMarkets()
-	fmt.Sprintf("%v,%v", ss, err)
+	/*	ss, err := QueryMarkets()
+		fmt.Sprintf("%v,%v", ss, err)*/
 }

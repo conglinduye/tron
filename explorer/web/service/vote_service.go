@@ -13,7 +13,7 @@ import (
 
 //QueryVotes 条件查询  	//?sort=-number&limit=1&count=true&number=2135998   TODO: cache
 func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
-	var filterSQL, sortSQL, pageSQL, sortTemp string
+	var filterSQL, sortSQL, pageSQL string
 	mutiFilter := false
 	//默认查询得票列表
 	reportSQL := fmt.Sprint(`
@@ -51,20 +51,20 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	for _, v := range strings.Split(req.Sort, ",") {
 		if strings.Index(v, "votes") > 0 {
 			if mutiFilter {
-				sortTemp = fmt.Sprintf("%v ,", sortTemp)
+				sortSQL = fmt.Sprintf("%v ,", sortSQL)
 			}
-			sortTemp = fmt.Sprintf("%v outvoter.votes", sortTemp)
+			sortSQL = fmt.Sprintf("%v outvoter.votes", sortSQL)
 			if strings.Index(v, "-") == 0 {
-				sortTemp = fmt.Sprintf("%v desc", sortTemp)
+				sortSQL = fmt.Sprintf("%v desc", sortSQL)
 			}
 			mutiFilter = true
 		}
 	}
-	if sortTemp != "" {
-		if strings.Index(sortTemp, ",") == 0 {
-			sortTemp = sortTemp[1:]
+	if sortSQL != "" {
+		if strings.Index(sortSQL, ",") == 0 {
+			sortSQL = sortSQL[1:]
 		}
-		sortTemp = fmt.Sprintf("order by %v", sortTemp)
+		sortSQL = fmt.Sprintf("order by %v", sortSQL)
 	}
 
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)

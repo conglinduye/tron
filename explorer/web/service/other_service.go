@@ -30,7 +30,7 @@ func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 		fullnodeProcess = float64(latestdBlockIDDb) / float64(fullnodeNowBlockID) * 100
 	}
 	totalProcess := (solidityProcess + fullnodeProcess) / 2
-	log.Debugf("QuerySystemStatus,confirmBlockIDDb:[%.f],latestdBlockIDDb:[%.f],solidityNowBlockID:[%.f],fullnodeNowBlockID:[%.f]\n",
+	log.Debugf("QuerySystemStatus,confirmBlockIDDb:[%v],latestdBlockIDDb:[%v],solidityNowBlockID:[%v],fullnodeNowBlockID:[%v]\n",
 		confirmBlockIDDb, latestdBlockIDDb, solidityNowBlockID, fullnodeNowBlockID)
 	log.Debugf("QuerySystemStatus,solidityProcess:[%.f],fullnodeProcess:[%.f],totalProcess:[%.f]\n",
 		solidityProcess, fullnodeProcess, totalProcess)

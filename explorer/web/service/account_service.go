@@ -10,7 +10,7 @@ import (
 
 //QueryAccounts 条件查询  	//?sort=-number&limit=1&count=true&number=2135998  TODO  cache
 func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
-	var filterSQL, sortSQL, pageSQL, sortTemp string
+	var filterSQL, sortSQL, pageSQL string
 
 	strSQL := fmt.Sprintf(`
 		   select account_name,acc.address,acc.balance as totalBalance,
@@ -27,17 +27,17 @@ func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 
 	for _, v := range strings.Split(req.Sort, ",") {
 		if strings.Index(v, "balance") > 0 {
-			sortTemp = fmt.Sprintf("%v acc.balance", sortTemp)
+			sortSQL = fmt.Sprintf("%v acc.balance", sortSQL)
 			if strings.Index(v, "-") == 0 {
-				sortTemp = fmt.Sprintf("%v desc", sortTemp)
+				sortSQL = fmt.Sprintf("%v desc", sortSQL)
 			}
 		}
 	}
-	if sortTemp != "" {
-		if strings.Index(sortTemp, ",") == 0 {
-			sortTemp = sortTemp[1:]
+	if sortSQL != "" {
+		if strings.Index(sortSQL, ",") == 0 {
+			sortSQL = sortSQL[1:]
 		}
-		sortTemp = fmt.Sprintf("order by %v", sortTemp)
+		sortSQL = fmt.Sprintf("order by %v", sortSQL)
 	}
 
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)

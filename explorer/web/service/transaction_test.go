@@ -12,8 +12,8 @@ func TestTransactions(t *testing.T) {
 	Init()
 	req := &entity.Transactions{}
 	req.Sort = "-number"
-	req.Limit = "5"
-	req.Start = "0"
+	req.Limit = 5
+	req.Start = 0
 
 	//req.Number = "2287351"
 
