@@ -13,16 +13,16 @@ output:json
     "success":true,
     "data":[
         {
-            "date":1529856000000,
-            "totalTransaction":2850,
-            "avgBlockTime":3,
-            "avgBlockSize":207,
-            "totalBlockCount":16950,
-            "newAddressSeen":2218,
-            "blockchainSize":3525089,
-            "totalAddress":2248,
-            "newBlockSeen":16949,
-            "newTransactionSeen":2847
+            "date":1529856000000,     //日期
+            "totalTransaction":2850,  //总交易数
+            "avgBlockTime":3,         //区块上链平均时间
+            "avgBlockSize":207,       //区块平均大小
+            "totalBlockCount":16950,  //总区块数
+            "newAddressSeen":2218,    //新增地址数
+            "blockchainSize":3525089, //区块链大小
+            "totalAddress":2248,      //总地址数
+            "newBlockSeen":16949,     //新增区块数
+            "newTransactionSeen":2847 //新增交易数
         },
         {
             "date":1529942400000,

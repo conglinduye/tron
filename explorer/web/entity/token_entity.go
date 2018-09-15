@@ -103,3 +103,13 @@ type UploadLogo struct {
 	Address 				string 				`json:"address,omitempty"` 		// Address
 	LogoURL 				string 				`json:"logoUrl,omitempty"` 		// LogoURL
 }
+
+type TokenDownloadInfoRes struct {
+	Success 				bool				`json:"success"`				// success
+	Data 					string 				`json:"data"`					// data
+}
+
+type UploadLogoRes struct {
+	Success 				bool				`json:"success"`				// success
+	Data 					string 				`json:"data"`					// data
+}

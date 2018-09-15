@@ -48,10 +48,6 @@ func tokenRegister(ginRouter *gin.Engine) {
 		tokenReq.Owner = c.Query("owner")
 		log.Debugf("Hello /api/mytoken?%#v", tokenReq)
 		log.Debugf("owner_address=%v", tokenReq.Owner)
-		/*if tokenReq.Owner == "" {
-			c.JSON(http.StatusBadRequest, "")
-			return
-		}*/
 
 		if tokenReq.Start == "" || tokenReq.Limit == "" {
 			tokenReq.Start = "0"
@@ -66,14 +62,18 @@ func tokenRegister(ginRouter *gin.Engine) {
 	})
 
 	ginRouter.POST("/api/uploadLogo", func(c *gin.Context) {
+		res := &entity.UploadLogoRes{}
 		var uploadLogoReq entity.UploadLogoReq
-		/*if err := c.Bind(&uploadLogoReq); err != nil {
-			c.JSON(http.StatusBadRequest, nil)
+		if err := c.Bind(&uploadLogoReq); err != nil {
+			res.Success = false
+			c.JSON(http.StatusBadRequest, res)
+			return
 		}
 
 		if uploadLogoReq.ImageData == "" || uploadLogoReq.Address == "" {
-			c.JSON(http.StatusBadRequest, nil)
-		}*/
+			res.Success = false
+			c.JSON(http.StatusBadRequest, res)
+		}
 		//传入data格式：data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYA...
 		if len(strings.Split(uploadLogoReq.ImageData, ",")) > 1 {
 			uploadLogoReq.ImageData = strings.Split(uploadLogoReq.ImageData, ",")[1]
@@ -83,17 +83,24 @@ func tokenRegister(ginRouter *gin.Engine) {
 
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
+			res.Success = false
+			c.JSON(errCode, res)
+			return
 		}
-		
-		c.JSON(http.StatusOK, dst)
+
+		res.Success =true
+		res.Data = dst
+		c.JSON(http.StatusOK, res)
 	})
 
 	ginRouter.GET("/api/download/tokenInfo", func(c *gin.Context) {
+		res := &entity.TokenDownloadInfoRes{}
 		tokenFile := config.TokenTemplateFile
 		if tokenFile == "" {
 			tokenFile = "http://coin.top/tokenTemplate/TronscanTokenInformationSubmissionTemplate.xlsx"
 		}
-		c.JSON(http.StatusOK, tokenFile)
+		res.Success = true
+		res.Data = tokenFile
+		c.JSON(http.StatusOK, res)
 	})
 }
