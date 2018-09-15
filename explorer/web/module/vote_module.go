@@ -67,7 +67,7 @@ func QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL string, req *entity.V
 	totalVotes = getTotalVotes()
 	//查询该语句所查到的数据集合
 	var total = int64(len(voteInfos))
-	total, err = mysql.QuerySQLViewCount(strSQL)
+	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
 	if err != nil {
 		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
 	}

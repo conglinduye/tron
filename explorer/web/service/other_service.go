@@ -8,6 +8,7 @@ import (
 
 //QuerySystemStatus ...
 func QuerySystemStatus() (*entity.SystemStatusResp, error) {
+	var solidityProcess, fullnodeProcess float64
 	var systemStatusResp = &entity.SystemStatusResp{}
 	netType := &entity.Network{Type: "mainnet"} //暂时写死，用的都是主网数据
 
@@ -21,10 +22,13 @@ func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 	fullnodeNowBlockID := blockBuffer.GetFullNodeMaxBlockID()
 	//从buffer中获取db的确认过的块高
 	solidityNowBlockID := blockBuffer.GetSolidityNodeMaxBlockID()
-
-	//计算总进度
-	solidityProcess := float64(confirmBlockIDDb) / float64(solidityNowBlockID) * 100
-	fullnodeProcess := float64(latestdBlockIDDb) / float64(fullnodeNowBlockID) * 100
+	if solidityNowBlockID > 0 {
+		//计算总进度
+		solidityProcess = float64(confirmBlockIDDb) / float64(solidityNowBlockID) * 100
+	}
+	if fullnodeNowBlockID > 0 {
+		fullnodeProcess = float64(latestdBlockIDDb) / float64(fullnodeNowBlockID) * 100
+	}
 	totalProcess := (solidityProcess + fullnodeProcess) / 2
 	log.Debugf("QuerySystemStatus,confirmBlockIDDb:[%.f],latestdBlockIDDb:[%.f],solidityNowBlockID:[%.f],fullnodeNowBlockID:[%.f]\n",
 		confirmBlockIDDb, latestdBlockIDDb, solidityNowBlockID, fullnodeNowBlockID)
