@@ -39,6 +39,24 @@ var _redisCli *redis.Client
 var blockBF *blockBuffer
 var once sync.Once
 
+// Buffer ...
+type Buffer interface {
+	// blocks
+	GetMaxBlockID() int64
+	GetMaxConfirmedBlockID() int64
+	GetFullNodeMaxBlockID() int64
+	GetSolidityNodeMaxBlockID() int64
+	GetMaxBlockTimestamp() int64
+
+	GetBlocks(startID int64, offset int64, count int64) (blocks []*entity.BlockInfo, err error)
+	GetBlock(blockID int64) (block *entity.BlockInfo)
+
+	// transaction
+	GetTransactions(offset, count int64) []*entity.TransactionInfo
+	GetTransactionByBlockID(blockID int64) []*entity.TransactionInfo
+	GetTransactionByHash(hash string) []*entity.TransactionInfo
+}
+
 // GetMaxBlockID 获取DB最大的可用块ID （从fullnode获取，在缓存中可用的最大blockID）
 func (b *blockBuffer) GetMaxBlockID() int64 {
 
@@ -113,7 +131,8 @@ func (b *blockBuffer) GetBlock(blockID int64) (block *entity.BlockInfo) {
 	return nil
 }
 
-func getBlockBuffer() *blockBuffer {
+// GetBlockBuffer ...
+func GetBlockBuffer() Buffer {
 	_onceBlockBuffer.Do(func() {
 		initRedis([]string{"127.0.0.1:6379"})
 
@@ -123,8 +142,8 @@ func getBlockBuffer() *blockBuffer {
 		_blockBuffer.walletClient = grpcclient.GetRandomWallet()
 		_blockBuffer.maxNodeErr = 3
 		_blockBuffer.maxUnconfirmedBlockRead = 100
-		_blockBuffer.maxBlockInMemory = 1000
-		_blockBuffer.maxConfirmedTrx = 3000
+		_blockBuffer.maxBlockInMemory = 5000
+		_blockBuffer.maxConfirmedTrx = 30000
 
 		go _blockBuffer.backgroundWorker()
 		go _blockBuffer.backgroundSwaper()

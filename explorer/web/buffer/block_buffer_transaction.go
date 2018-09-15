@@ -1,6 +1,8 @@
 package buffer
 
 import (
+	"fmt"
+
 	"github.com/wlcy/tron/explorer/web/entity"
 )
 
@@ -14,7 +16,9 @@ func (b *blockBuffer) GetTransactions(offset, count int64) []*entity.Transaction
 	// uncTrxLen := int64(len(b.trxListUnconfirmed))
 	uncTrxLen, uncTrxMinBlockID := b.getUnconfirmdTrxListInfo()
 
-	ret := make([]*entity.TransactionInfo, 0, count)
+	fmt.Printf("get trx(offset:%v, count:%v), uncLen:%v, uncMinBlockID:%v\n", offset, count, uncTrxLen, uncTrxMinBlockID)
+
+	ret := make([]*entity.TransactionInfo, count, count)
 	if offset > uncTrxLen { // trx is in confirmed list or other
 		offset = offset - uncTrxLen
 		return b.getRestTrx(uncTrxMinBlockID, offset, count)
@@ -25,7 +29,8 @@ func (b *blockBuffer) GetTransactions(offset, count int64) []*entity.Transaction
 		copy(ret, b.trxListUnconfirmed[uncTrxBegin:])
 		cList := b.getRestTrx(uncTrxMinBlockID, 0, uncTrxBegin+count-uncTrxLen)
 		// TODO: verify the first element of cList's BlockID should be uncTRxMinBLockID -1
-		ret = append(ret, cList...)
+		copy(ret[uncTrxLen-uncTrxBegin:], cList[:])
+		// ret = append(ret, cList...)
 		return ret
 	}
 	// else { // all trx is in unconfirmed list
@@ -34,7 +39,19 @@ func (b *blockBuffer) GetTransactions(offset, count int64) []*entity.Transaction
 }
 
 func (b *blockBuffer) GetTransactionByBlockID(blockID int64) []*entity.TransactionInfo {
-	return nil
+
+	if blockID > b.GetMaxConfirmedBlockID() {
+		raw, ok := b.uncBlockTrx.Load(blockID)
+		if !ok {
+			return nil
+		}
+		ret, ok := raw.([]*entity.TransactionInfo)
+		if ok {
+			return ret
+		}
+	}
+
+	return b.getConfirmedBlockTransaction(blockID)
 }
 
 func (b *blockBuffer) GetTransactionByHash(hash string) []*entity.TransactionInfo {

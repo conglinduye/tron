@@ -39,6 +39,13 @@ type blockBuffer struct {
 	maxUnconfirmedBlockRead int64 //  = int64(50) // 需要缓存的最新的unconfirmed block的数量
 	maxBlockInMemory        int64 // max number of confirmed block in memory
 	maxBlockTimeStamp       int64 //max timestamp for confirmed block
+
+	uncBlockTrx sync.Map // 未确认block的 trx 缓存 blockID -> trxList: *entity.TransactionInfo type
+	cBlockTrx   sync.Map // 确认block的 trx 缓存 blockID -> trxList: *entity.TransactionInfo type
+
+	trxHash sync.Map // trx_hash -> entity.TransactionInfo
+
+	ownerAddrTrx sync.Map // owner_addr -> entity.TransactionInfo, not use yet
 }
 
 func (b *blockBuffer) getSolidityNodeMaxBlockID() bool {
@@ -100,20 +107,16 @@ func (b *blockBuffer) getNowBlock() bool {
 	rawBlocks := b.getBlocksStable(numStart, numEnd)
 	fmt.Printf("get blockStable cost:%v, get block count:%v, need load:%v, gap:%v\n", time.Since(ts), len(rawBlocks), blockInfo.Number-b.maxConfirmedBlockID, blockInfo.Number-b.maxConfirmedBlockID-int64(len(rawBlocks)))
 
-	trxList := make([]*entity.TransactionInfo, 0, 300)
 	blocks := make([]*entity.BlockInfo, 0, len(rawBlocks)+1)
 	for _, rawBlock := range rawBlocks {
 		bi := coreBlockConvert(rawBlock)
 		if nil != bi {
 			blocks = append(blocks, bi)
 		}
-		trxList = append(trxList, parseBlockTransaction(rawBlock, false)...)
-
 	}
 	blocks = append(blocks, blockInfo)
 
 	if b.bufferBlock(blocks) {
-
 		atomic.StoreInt64(&b.maxBlockID, numEnd)
 	}
 
@@ -135,7 +138,7 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 
 	if 0 == b.maxConfirmedBlockID {
 		filter = ""
-		limit = "limit 100"
+		limit = "limit 3000"
 	}
 
 	blocks, err := module.QueryBlocksRealize(strSQL, filter, orderBy, limit)
@@ -152,6 +155,8 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 
 	if b.bufferBlock(blocks.Data) {
 		atomic.StoreInt64(&b.maxConfirmedBlockID, maxBlockID)
+		b.bufferConfiremdTransaction(filter, "")
+		b.cleanConfirmedTrxBufferFromUncTrxList() // clean unconfirmed block transaction
 	}
 
 	return blocks.Data
@@ -161,6 +166,7 @@ func (b *blockBuffer) bufferBlock(blocks []*entity.BlockInfo) bool {
 	// return b.syncBlockToRedis(blocks)
 	for _, block := range blocks {
 		b.buffer.Store(block.Number, block)
+		b.uncBlockTrx.Delete(block.Number) // remove
 	}
 	return true
 }
@@ -203,20 +209,23 @@ func (b *blockBuffer) readBuffer(numStart int64, numEnd int64) []*entity.BlockIn
 			missingBlockID = append(missingBlockID, strconv.FormatInt(i, 10))
 		}
 	}
-	// fmt.Printf("readBuffer get from buffer:%v, missing:%v\n", len(ret), len(missingBlockID))
+	fmt.Printf("readBuffer get from buffer:%v, missing:%v\n", len(ret), len(missingBlockID))
 
 	if len(missingBlockID) > 0 {
+		ts := time.Now()
 		var redisBuf []*entity.BlockInfo
 		redisBuf, missingBlockID = b.loadBlockFromRedis(missingBlockID)
+
 		if len(redisBuf) > 0 {
 			ret = append(ret, redisBuf...)
 		}
+		fmt.Printf("readBuffer load from redis cost:%v, size:%v\n", time.Since(ts), len(redisBuf))
 	}
 
 	if len(missingBlockID) > 0 {
-		// ts := time.Now()
+		ts := time.Now()
 		blocks := b.getBlocksStableB(missingBlockID)
-		// fmt.Printf("readbuffer load from db cost:%v, size:%v\n", time.Since(ts), len(blocks))
+		fmt.Printf("readbuffer load from db cost:%v, size:%v\n", time.Since(ts), len(blocks))
 		b.bufferBlock(blocks)
 		ret = append(ret, blocks...)
 	}
@@ -226,8 +235,11 @@ func (b *blockBuffer) readBuffer(numStart int64, numEnd int64) []*entity.BlockIn
 	return ret
 }
 
-func (b *blockBuffer) backgroundWorker() {
+func (b *blockBuffer) BackgroundWorker() {
+	b.backgroundWorker()
+}
 
+func (b *blockBuffer) backgroundWorker() {
 	minInterval := time.Duration(10) * time.Second
 	for {
 		ts := time.Now()
@@ -250,8 +262,14 @@ func (b *blockBuffer) backgroundWorker() {
 }
 
 func (b *blockBuffer) backgroundSwaper() {
+
+	go b.sweepBlockBuffer()
+	go b.sweepTransactionRedisList()
+}
+
+func (b *blockBuffer) sweepBlockBuffer() {
 	minInterval := time.Duration(10) * time.Second
-	swapData := make([]*entity.BlockInfo, 3000)
+	swapData := make([]*entity.BlockInfo, b.maxBlockInMemory)
 	for {
 		ts := time.Now()
 
@@ -269,10 +287,16 @@ func (b *blockBuffer) backgroundSwaper() {
 
 		maxBlockIDSwap := int64(0)
 		minBlockIDSwap := int64(9999999999)
+		maxBlockIDBuffered := int64(0)
+		minBlockIDBuffered := int64(9999999999)
+		blockCnt := 0
 		b.buffer.Range(func(key, val interface{}) bool {
 			id, ok := key.(int64)
+			blockCnt++
+
 			if ok && id <= minBlockID {
-				b.buffer.Delete(key)
+				b.buffer.Delete(key)    // clean block buffer
+				b.cBlockTrx.Delete(key) // clean confirmed block trx list buffer
 				block := val.(*entity.BlockInfo)
 				swapData = append(swapData, block)
 				if maxBlockIDSwap < block.Number {
@@ -282,9 +306,22 @@ func (b *blockBuffer) backgroundSwaper() {
 					minBlockIDSwap = block.Number
 				}
 			}
+
+			// statistic
+			block := val.(*entity.BlockInfo)
+			if ok && nil != block {
+				if maxBlockIDBuffered < block.Number {
+					maxBlockIDBuffered = block.Number
+				}
+				if minBlockIDSwap > block.Number {
+					minBlockIDBuffered = block.Number
+				}
+			}
 			return true
 		})
-		fmt.Printf("swap record count:%v, min block_id:%v, max block_id:%v\n", len(swapData), minBlockIDSwap, maxBlockIDSwap)
+		fmt.Printf("scan buffer: total bufferd block:%v (max:%v, min:%v, gap:%v), swap count:%v, min block_id:%v, max block_id:%v\n",
+			blockCnt, maxBlockIDBuffered, minBlockIDBuffered, maxBlockIDBuffered-minBlockIDBuffered,
+			len(swapData), minBlockIDSwap, maxBlockIDSwap)
 		b.syncBlockToRedis(swapData)
 		swapData = swapData[:0]
 	}
@@ -363,6 +400,7 @@ func (b *blockBuffer) getBlocksStable(numStart int64, numEnd int64) []*core.Bloc
 				continue
 			}
 			// fmt.Printf("success get one block:%v, total:%v\n", block.BlockHeader.RawData.Number, len(ret))
+			b.bufferUnconfirmTransactions(block.BlockHeader.RawData.Number, parseBlockTransaction(block, false))
 			ret = append(ret, block)
 			break
 		}

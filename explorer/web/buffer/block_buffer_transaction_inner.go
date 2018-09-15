@@ -4,12 +4,50 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 )
+
+func (b *blockBuffer) getConfirmedBlockTransaction(blockID int64) []*entity.TransactionInfo {
+
+	raw, ok := b.cBlockTrx.Load(blockID)
+	if !ok {
+		return nil
+	}
+	ret, ok := raw.([]*entity.TransactionInfo)
+	if ok {
+		return ret
+	}
+
+	filter := fmt.Sprintf(` and block_id = '%v'`, blockID)
+	ret = b.loadTransactionFromDBFilter(filter)
+
+	if nil != ret {
+		b.cBlockTrx.Store(blockID, ret)
+	}
+
+	return ret
+}
+
+func (b *blockBuffer) loadTransactionFromDBFilter(filter string) []*entity.TransactionInfo {
+	strSQL := fmt.Sprintf(`
+	select block_id,owner_address,to_address,
+	trx_hash,contract_data,result_data,fee
+	contract_type,confirmed,create_time,expire_time
+	from tron.transactions
+	where 1=1 `)
+
+	order := " order by block_id desc "
+	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, "")
+	if nil != err {
+		return nil
+	}
+	return ret.Data
+}
 
 func (b *blockBuffer) getUnconfirmdTrxListInfo() (int64, int64) {
 	if len(b.trxListUnconfirmed) > 0 {
@@ -25,22 +63,38 @@ func (b *blockBuffer) getConfirmdTrxListInfo() (int64, int64) {
 	return 0, -1
 }
 
-func (b *blockBuffer) bufferUnconfirmTransactions(trxList []*entity.TransactionInfo) {
+func (b *blockBuffer) bufferUnconfirmTransactions(blockID int64, trxList []*entity.TransactionInfo) {
+	// buffer to trx list
 	sort.SliceStable(trxList, func(i, j int) bool { return trxList[i].Block > trxList[j].Block })
 	b.trxListUnconfirmed = append(trxList, b.trxListUnconfirmed...)
+	fmt.Printf("### buffer uncTrx, len:%v, total len:%v\n", len(trxList), len(b.trxListUnconfirmed))
 
+	// buffer to block id map
+	b.uncBlockTrx.Store(blockID, trxList)
+
+	// buffer trx hash
+	for _, trx := range trxList {
+		b.trxHash.Store(trx.Hash, trx)
+	}
+
+}
+
+// 清除unconfirmed缓存中已经被确认的transaction
+func (b *blockBuffer) cleanConfirmedTrxBufferFromUncTrxList() {
 	// clean up confirmed transaction
 	//	the min block unconfirmed is GetMaxConfirmedBlockID + 1, remove transactions which block id small than it
 	validUnconfirmedBlockID := b.GetMaxConfirmedBlockID() + 1
-	uncTrxLen := len(b.trxListUnconfirmed) - 1
-	for uncTrxLen > 0 {
-		if b.trxListUnconfirmed[uncTrxLen].Block < validUnconfirmedBlockID {
-			uncTrxLen--
+	uncTrxIdx := len(b.trxListUnconfirmed) - 1
+	for uncTrxIdx >= 0 {
+		if b.trxListUnconfirmed[uncTrxIdx].Block < validUnconfirmedBlockID {
+			uncTrxIdx--
 		} else {
 			break
 		}
 	}
-	b.trxListUnconfirmed = b.trxListUnconfirmed[0 : uncTrxLen+1] // +1 mean include index of uncTrxLen
+	b.trxListUnconfirmed = b.trxListUnconfirmed[0 : uncTrxIdx+1] // +1 mean include index of uncTrxLen
+	fmt.Printf("### clean uncTrx, uncTrxIdx:%v, uncTrx len:%v\n", uncTrxIdx, len(b.trxListUnconfirmed))
+
 }
 
 func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
@@ -50,6 +104,10 @@ func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 	b.trxList = append(data, b.trxList...)
 	if len(b.trxList) > b.maxConfirmedTrx {
 		b.trxList = b.trxList[0:b.maxConfirmedTrx]
+	}
+
+	for _, trx := range data {
+		b.trxHash.Store(trx.Hash, trx)
 	}
 }
 
@@ -74,6 +132,8 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 	if nil == block || nil == block.BlockHeader || nil == block.BlockHeader.RawData || 0 == len(block.Transactions) {
 		return nil
 	}
+
+	fmt.Printf("### raw block:%v, trans count:%v\n", block.BlockHeader.RawData.Number, len(block.Transactions))
 
 	blockID := block.BlockHeader.RawData.Number
 	ret = make([]*entity.TransactionInfo, 0, len(block.Transactions))
@@ -128,15 +188,18 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 			transfer.Confirmed = trx.Confirmed
 			transfer.TokenName = string(rawTransfer.AssetName)
 		}
+		ret = append(ret, trx)
 	}
 	return
 }
 
 // minBlockID: -1 mean get from the very beginnin of the list, otherwise need minBlockID read transaction from db
 func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count int64) []*entity.TransactionInfo {
-	ret := make([]*entity.TransactionInfo, 0, count)
+	ret := make([]*entity.TransactionInfo, count, count)
 	// cTrxLen := int64(len(b.trxList))
 	cTrxLen, minCTrxBlockID := b.getConfirmdTrxListInfo()
+	fmt.Printf("get trx confirmed(offset:%v, count:%v), cLen:%v, cMinBlockID:%v, uncMinBlockID:%v\n", offset, count, cTrxLen, minCTrxBlockID, minBlockID)
+
 	if minCTrxBlockID == -1 {
 		minCTrxBlockID = minBlockID
 	}
@@ -149,7 +212,8 @@ func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count int64) []*entit
 	if cTrxBegin+count > cTrxLen { // part in confirmed list, part in redis
 		copy(ret, b.trxList[cTrxBegin:])
 		cList := b.getRestTrxRedis(minCTrxBlockID, 0, cTrxBegin+count-cTrxLen)
-		ret = append(ret, cList...)
+		copy(ret[cTrxLen-cTrxBegin:], cList)
+		// ret = append(ret, cList...)
 		return ret
 	}
 
@@ -163,6 +227,8 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 
 	retLen := int64(len(redisList))
 	if retLen >= count {
+		fmt.Printf("get trx redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
+
 		return redisList
 	}
 
@@ -186,6 +252,8 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 	retList := b.loadTransactionFromDB(filter, limit)
 	b.storeTrxDescListToRedis(retList, true)
 	redisList = append(redisList, retList...)
+	fmt.Printf("get trx db(offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
+
 	return redisList
 }
 
@@ -241,4 +309,18 @@ func (b *blockBuffer) getTrxDescListFromRedis(offset, count int64) (ret []*entit
 
 func (b *blockBuffer) loadTrxDescFromDB() []*entity.TransactionInfo {
 	return nil
+}
+
+func (b *blockBuffer) sweepTransactionRedisList() {
+	minInterval := time.Duration(600) * time.Second // 10 分钟
+	for {
+		ts := time.Now()
+
+		tsc := time.Since(ts)
+		if tsc < minInterval {
+			time.Sleep(minInterval - tsc)
+		}
+
+		_redisCli.LTrim(TrxRedisDescListKey, 0, int64(b.maxConfirmedTrx)*2)
+	}
 }
