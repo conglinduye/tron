@@ -48,17 +48,14 @@ func (w *accountTokenBuffer) GetAccountTokenBuffer(address string) (tokenBalance
 		w.getAccountTokenBuffer()
 	}
 	log.Debugf("GetAccountTokenBuffer info from buffer, buffer data updated ")
-	w.Lock()
-	tokenBalance = w.accountTokenInfoList[address]
-	w.Unlock()
-	return
+	return w.accountTokenInfoList[address]
 }
 
 func (w *accountTokenBuffer) getAccountTokenBuffer() {
 	strSQL := fmt.Sprintf(`
 	select acc.address,acc.asset_name as token_name,acc.creator_address,acc.balance
 	from tron.account_asset_balance acc
-	where 1=1 order by address,asset_name`)
+	where 1=1 `)
 	log.Debug(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -91,4 +88,5 @@ func (w *accountTokenBuffer) getAccountTokenBuffer() {
 	w.Lock()
 	w.accountTokenInfoList = accountInfoMap
 	w.Unlock()
+	return
 }

@@ -43,7 +43,7 @@ func main() {
 	buffer.GetWitnessBuffer()
 	buffer.GetMarketBuffer()
 	buffer.GetVoteBuffer()
-	//buffer.GetAccountTokenBuffer()
+	buffer.GetAccountTokenBuffer()
 
 	/* 数据库和redis初始化也可以用这种方式， but i don't like it
 	redisCli = redis.NewClient(conf.Redis.Host, conf.Redis.Pass, conf.Redis.Index, conf.Redis.Poolsize)
