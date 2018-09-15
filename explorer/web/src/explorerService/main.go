@@ -37,13 +37,13 @@ func main() {
 	if 0 != conf.Populate(*configfile) {
 		return
 	}
-	go router.Start(conf.Address, conf.Objectpool)
+
 	//初始化buffer
-	go buffer.GetBlockBuffer()
+	buffer.GetBlockBuffer()
 	buffer.GetWitnessBuffer()
 	buffer.GetMarketBuffer()
 	buffer.GetVoteBuffer()
-	buffer.GetAccountTokenBuffer()
+	//buffer.GetAccountTokenBuffer()
 
 	/* 数据库和redis初始化也可以用这种方式， but i don't like it
 	redisCli = redis.NewClient(conf.Redis.Host, conf.Redis.Pass, conf.Redis.Index, conf.Redis.Poolsize)
@@ -56,5 +56,7 @@ func main() {
 	go task.SyncPersistYesterdayReport()
 
 	go task.SyncAssetIssueParticipated()
+
+	router.Start(conf.Address, conf.Objectpool)
 
 }
