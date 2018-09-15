@@ -38,7 +38,7 @@ func main() {
 		return
 	}
 	//初始化buffer
-	buffer.GetBlockBuffer()
+	go buffer.GetBlockBuffer()
 	buffer.GetWitnessBuffer()
 	buffer.GetMarketBuffer()
 	buffer.GetVoteBuffer()
@@ -50,17 +50,11 @@ func main() {
 		conf.Mysql.User, conf.Mysql.Pass)
 	*/
 
-	go func() {
-		task.SyncCacheTodayReportTask()
-	}()
+	go task.SyncCacheTodayReportTask()
 
-	go func() {
-		task.SyncPersistYesterdayReport()
-	}()
+	go task.SyncPersistYesterdayReport()
 
-	go func() {
-		task.SyncAssetIssueParticipated()
-	}()
+	go task.SyncAssetIssueParticipated()
 
 	router.Start(conf.Address, conf.Objectpool)
 
