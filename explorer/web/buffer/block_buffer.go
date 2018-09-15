@@ -41,7 +41,7 @@ var _redisCli *redis.Client
 var blockBF *blockBuffer
 var once sync.Once
 
-// GetMaxBlockID 获取最大的可用块ID 从fullnode获取，在缓存中可用的最大blockID
+// GetMaxBlockID 获取DB最大的可用块ID （从fullnode获取，在缓存中可用的最大blockID）
 func (b *blockBuffer) GetMaxBlockID() int64 {
 
 	blockIDUnconfirmed := atomic.LoadInt64(&b.maxBlockID)
@@ -52,7 +52,7 @@ func (b *blockBuffer) GetMaxBlockID() int64 {
 	return blockIDUnconfirmed
 }
 
-// GetMaxConfirmedBlockID 获取最大的确认块ID
+// GetMaxConfirmedBlockID 从db获取，存储在缓存中最大的确认块ID
 func (b *blockBuffer) GetMaxConfirmedBlockID() int64 {
 
 	blockID := atomic.LoadInt64(&b.maxConfirmedBlockID)
@@ -60,14 +60,19 @@ func (b *blockBuffer) GetMaxConfirmedBlockID() int64 {
 	return blockID
 }
 
-// GetUnConfirmedBlockID 从fullnode获取最大的块ID
-func (b *blockBuffer) GetUnConfirmedBlockID() int64 {
-	return atomic.LoadInt64(&b.maxBlockID)
+// GetFullNodeMaxBlockID 从fullnode获取最大的块ID
+func (b *blockBuffer) GetFullNodeMaxBlockID() int64 {
+	return atomic.LoadInt64(&b.realMaxBlockID)
 }
 
 // GetMaxBlockTimestamp 获取最大块的时间戳
 func (b *blockBuffer) GetMaxBlockTimestamp() int64 {
 	return atomic.LoadInt64(&b.maxBlockTimeStamp)
+}
+
+// GetSolidityNodeMaxBlockID 获取solidity最大确认块
+func (b *blockBuffer) GetSolidityNodeMaxBlockID() int64 {
+	return atomic.LoadInt64(&b.realMaxConfirmedBlockID)
 }
 
 // GetBlocks 从缓存批量读取blocks

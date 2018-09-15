@@ -8,21 +8,20 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 
 	"github.com/wlcy/tron/explorer/web/entity"
-	"github.com/wlcy/tron/explorer/web/module"
 )
 
 func Init() {
 	mysql.Initialize("127.0.0.1", "3306", "tron", "budev", "tron**1")
-	blockBuffer := module.GetBlockBuffer()
-	go blockBuffer.BackgroundWorker()
+	/*	blockBuffer := module.GetBlockBuffer()
+		go blockBuffer.BackgroundWorker()*/
 }
 
 func TestBlockList(t *testing.T) {
 	Init()
 	req := &entity.Blocks{}
 	req.Sort = "-number"
-	req.Limit = "5"
-	req.Start = "0"
+	req.Limit = 5
+	req.Start = 0
 	//req.Number = "2287351"
 
 	//resp, err := QueryBlocks(req)

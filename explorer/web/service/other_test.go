@@ -23,12 +23,12 @@ func TestQuerySystemStatus(t *testing.T) {
 //true
 func TestQueryMarkets(t *testing.T) {
 	Init()
-
-	resp, err := QueryMarkets()
-	if err != nil {
-		log.Error(err)
-	}
-	ss, _ := mysql.JSONObjectToString(resp)
-	log.Printf("total:%v", ss)
-
+	/*
+		resp, err := QueryMarkets()
+		if err != nil {
+			log.Error(err)
+		}
+		ss, _ := mysql.JSONObjectToString(resp)
+		log.Printf("total:%v", ss)
+	*/
 }
