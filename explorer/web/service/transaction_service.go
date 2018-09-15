@@ -15,7 +15,7 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 
 	strSQL := fmt.Sprintf(`
 			select block_id,owner_address,to_address,
-			trx_hash,contract_data,result_data,fee
+			trx_hash,contract_data,result_data,fee,
 			contract_type,confirmed,create_time,expire_time
 			from tron.transactions
 			where 1=1 `)
@@ -67,7 +67,7 @@ func QueryTransaction(req *entity.Transactions) (*entity.TransactionInfo, error)
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
 		select block_id,owner_address,to_address,
-		trx_hash,contract_data,result_data,fee
+		trx_hash,contract_data,result_data,fee,
 		contract_type,confirmed,create_time,expire_time
 		from tron.transactions
 			where 1=1 `)

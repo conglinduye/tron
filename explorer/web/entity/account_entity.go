@@ -20,7 +20,7 @@ type AccountInfo struct {
 	Address       string           `json:"address"`       //:TDtjQ1JR5UrS92W9kB6BCeAQJwn1dyBEbs,
 	Name          string           `json:"name"`          //:"00000000002097beb4b9ceabbff396bf788a8d9ee8c09de37e5e0da039a6a87f",
 	Balance       int64            `json:"balance"`       //:3006,
-	Power         string           `json:"power"`         //:"JRB1nNvqT6kcRJLdzTnUGyiwvMcnDTAaxYZhTxhvDkjM8kxYh",
+	Power         int64            `json:"power"`         //:"JRB1nNvqT6kcRJLdzTnUGyiwvMcnDTAaxYZhTxhvDkjM8kxYh",
 	TokenBalances map[string]int64 `json:"tokenBalances"` //:"00000000002097bdd482e26710c054eea72280232a9061885dc94c30c3a0f1b5",
 	UpdateTime    int64            `json:"dateUpdated"`   //:1536314760000
 	CreateTime    int64            `json:"dateCreated"`   //:1536314760000,

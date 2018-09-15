@@ -75,6 +75,10 @@ func QueryTransactionRealize(strSQL, filterSQL string) (*entity.TransactionInfo,
 		transaction.ToAddress = dataPtr.GetField("to_address")
 		transaction.OwnerAddress = dataPtr.GetField("owner_address")
 		transaction.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
+		contractData := dataPtr.GetField("contract_data")
+		if contractData != "" { //0a0a48756f6269546f6b656e121541b7a3dd3b45f5a30cb108b90cc12cee3a70ca4e861a1541c1b94b6cf7b946db06de3253ecabeb9b01e2b1f42001
+			//TODO 解析contractData
+		}
 		transaction.ContractData = dataPtr.GetField("contract_data")
 		transaction.ContractType = mysql.ConvertDBValueToInt64(dataPtr.GetField("contract_type"))
 		confirmed := dataPtr.GetField("confirmed")

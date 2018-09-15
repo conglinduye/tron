@@ -31,7 +31,7 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.
 		transfer.TransferFromAddress = dataPtr.GetField("owner_address")
 		transfer.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
 		transfer.TransferToAddress = dataPtr.GetField("to_address")
-		transfer.TokenName = dataPtr.GetField("token_name")
+		transfer.TokenName = dataPtr.GetField("asset_name")
 		transfer.Amount = mysql.ConvertDBValueToInt64(dataPtr.GetField("amount"))
 		confirmed := dataPtr.GetField("confirmed")
 		if confirmed == "1" {
@@ -75,7 +75,7 @@ func QueryTransferRealize(strSQL, filterSQL string) (*entity.TransferInfo, error
 		transfer.TransferFromAddress = dataPtr.GetField("owner_address")
 		transfer.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
 		transfer.TransferToAddress = dataPtr.GetField("to_address")
-		transfer.TokenName = dataPtr.GetField("token_name")
+		transfer.TokenName = dataPtr.GetField("asset_name")
 		transfer.Amount = mysql.ConvertDBValueToInt64(dataPtr.GetField("amount"))
 		confirmed := dataPtr.GetField("confirmed")
 		if confirmed == "1" {
