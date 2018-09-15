@@ -45,7 +45,8 @@ func QueryBlocksRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Blo
 
 	//查询该语句所查到的数据集合
 	var total = int64(len(blockInfos))
-	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
+	//total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
+	total, err = mysql.QueryTableDataCount("blocks")
 	if err != nil {
 		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
 	}

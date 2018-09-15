@@ -154,6 +154,7 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 			maxBlockID = block.Number
 		}
 	}
+	log.Debugf("done query blocks")
 
 	if b.bufferBlock(blocks.Data) {
 		atomic.StoreInt64(&b.maxConfirmedBlockID, maxBlockID)
