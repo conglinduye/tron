@@ -13,8 +13,8 @@ import (
 
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
-	"github.com/wlcy/tron/explorer/web/router"
 	"github.com/wlcy/tron/explorer/web/buffer"
+	"github.com/wlcy/tron/explorer/web/router"
 	"github.com/wlcy/tron/explorer/web/task"
 )
 
@@ -38,7 +38,7 @@ func main() {
 		return
 	}
 	//初始化buffer
-	buffer.GetBlockBufferInstance()
+	buffer.GetBlockBuffer()
 	buffer.GetWitnessBuffer()
 	buffer.GetMarketBuffer()
 	buffer.GetVoteBuffer()

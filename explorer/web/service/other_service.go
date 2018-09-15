@@ -12,7 +12,7 @@ func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 	var systemStatusResp = &entity.SystemStatusResp{}
 	netType := &entity.Network{Type: "mainnet"} //暂时写死，用的都是主网数据
 
-	blockBuffer := buffer.GetBlockBufferInstance()
+	blockBuffer := buffer.GetBlockBuffer()
 
 	// db中最大确认块
 	confirmBlockIDDb := blockBuffer.GetMaxConfirmedBlockID()

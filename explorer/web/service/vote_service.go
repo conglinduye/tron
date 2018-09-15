@@ -93,7 +93,7 @@ func QueryVoteCurrentCycleBuffer() (*entity.VoteCurrentCycleResp, error) {
 func QueryVoteNextCycleBuffer() (*entity.VoteNextCycleResp, error) {
 	var nextCycle = &entity.VoteNextCycleResp{}
 	nextCycle.NextCycle = 0
-	currentTime := buffer.GetBlockBufferInstance().GetMaxBlockTimestamp()
+	currentTime := buffer.GetBlockBuffer().GetMaxBlockTimestamp()
 	nextMaintenanceTime := buffer.GetVoteBuffer().GetNextMaintenanceTime()
 	if currentTime == 0 || nextMaintenanceTime == 0 {
 		return QueryVoteNextCycle()
