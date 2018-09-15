@@ -103,8 +103,9 @@ func tokenRegister(ginRouter *gin.Engine) {
 		res.Data = tokenFile
 		c.JSON(http.StatusOK, res)
 	})
-}
 
-func SyncParticipatedAmount() {
-
+	ginRouter.GET("/api/sync/participated", func(c *gin.Context) {
+		service.SyncAssetIssueParticipated()
+		c.JSON(http.StatusOK, "handle done")
+	})
 }

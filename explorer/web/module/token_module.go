@@ -51,7 +51,7 @@ func QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Tok
 	}
 
 	var total = int64(len(tokens))
-	total, err = mysql.QuerySQLViewCount(strSQL)
+	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
 	if err != nil {
 		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
 	}
@@ -281,7 +281,7 @@ func InsertLogoInfo(address, url string) error {
 	return nil
 }
 
-//UpdateLogoInfo 更新
+//UpdateLogoInfo
 func UpdateLogoInfo(address, url string) error {
 	strSQL := fmt.Sprintf(`
 	update wlcy_asset_logo
