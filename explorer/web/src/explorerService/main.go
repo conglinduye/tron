@@ -11,9 +11,12 @@ package main
 import (
 	"flag"
 
+	"github.com/wlcy/tron/explorer/web/buffer"
+
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/router"
+	"github.com/wlcy/tron/explorer/web/task"
 )
 
 // config file
@@ -35,12 +38,25 @@ func main() {
 	if 0 != conf.Populate(*configfile) {
 		return
 	}
+	//初始化buffer
+	buffer.GetBlockBufferInstance()
+	buffer.GetWitnessBuffer()
+	buffer.GetMarketBuffer()
+	buffer.GetVoteBuffer()
 
 	/* 数据库和redis初始化也可以用这种方式， but i don't like it
 	redisCli = redis.NewClient(conf.Redis.Host, conf.Redis.Pass, conf.Redis.Index, conf.Redis.Poolsize)
 	mysql.Initialize(conf.Mysql.Host, conf.Mysql.Port, conf.Mysql.Schema,
 		conf.Mysql.User, conf.Mysql.Pass)
 	*/
+
+	go func() {
+		task.SyncCacheTodayReportTask()
+	}()
+
+	go func() {
+		task.SyncCacheHistoryReportTask()
+	}()
 
 	router.Start(conf.Address, conf.Objectpool)
 

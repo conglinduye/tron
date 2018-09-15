@@ -4,7 +4,7 @@
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/system/status
 ```
 output:json
 ```json
@@ -42,7 +42,9 @@ output:json
 5. full->block    
     block = GRPC-fullnode接口getNowBlock返回的块高    
 6. solidity->block    
-    block = GRPC-solidity接口getNowBlock返回块高
+    block = GRPC-solidity接口getNowBlock返回块高    
+
+所有数据均从缓存中获取，缓存策略同block缓存策略
 ```
 
 
@@ -53,7 +55,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/market/markets
 ```
 output:json
 ```json
@@ -140,53 +142,7 @@ output:json
     },...
 ]
 ```
-所有数据均从https://coinmarketcap.com/currencies/tron/爬取
-
-
-## 图表信息所用接口
-- url:/api/stats/overview
-- method:get
-
-input:param
-```param
-
-```
-output:json
-```json  
-{
-    "success":true,
-    "data":[
-        {
-            "date":1529884800000,
-            "totalTransaction":3,
-            "avgBlockTime":3,
-            "avgBlockSize":198,
-            "totalBlockCount":1,
-            "newAddressSeen":1946,
-            "blockchainSize":534
-        },
-        {
-            "date":1529971200000,
-            "totalTransaction":3084,
-            "avgBlockTime":3,
-            "avgBlockSize":188,
-            "totalBlockCount":26548,
-            "newAddressSeen":203,
-            "blockchainSize":5243100
-        },
-        {
-            "date":1530057600000,
-            "totalTransaction":5032,
-            "avgBlockTime":3,
-            "avgBlockSize":190,
-            "totalBlockCount":55340,
-            "newAddressSeen":154,
-            "blockchainSize":10653964
-        },...
-    ]  
-}
-```
-日交易数图表，区块链大小，日增地址数，区块平均大小
+所有数据均从https://coinmarketcap.com/currencies/tron/爬取 每5s获取一次并加载缓存
 
 
 ## 申请测试币-TODO

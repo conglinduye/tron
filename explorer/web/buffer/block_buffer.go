@@ -2,7 +2,10 @@ package buffer
 
 import (
 	"fmt"
+	"sync"
 	"sync/atomic"
+
+	"github.com/wlcy/tron/explorer/lib/log"
 
 	"github.com/wlcy/tron/explorer/core/grpcclient"
 
@@ -33,13 +36,10 @@ if we can't find block in redis, load it from db and write to redis
 */
 
 var _redisCli *redis.Client
+var blockBF *blockBuffer
+var once sync.Once
 
-//GetBlockBuffer ...
-func GetBlockBuffer() *blockBuffer {
-	return getBlockBuffer()
-}
-
-// GetMaxBlockID 获取最大的可用块ID 从fullnode获取，在缓存中可用的最大blockID
+// GetMaxBlockID 获取DB最大的可用块ID （从fullnode获取，在缓存中可用的最大blockID）
 func (b *blockBuffer) GetMaxBlockID() int64 {
 
 	blockIDUnconfirmed := atomic.LoadInt64(&b.maxBlockID)
@@ -50,7 +50,7 @@ func (b *blockBuffer) GetMaxBlockID() int64 {
 	return blockIDUnconfirmed
 }
 
-// GetMaxConfirmedBlockID 获取最大的确认块ID
+// GetMaxConfirmedBlockID 从db获取，存储在缓存中最大的确认块ID
 func (b *blockBuffer) GetMaxConfirmedBlockID() int64 {
 
 	blockID := atomic.LoadInt64(&b.maxConfirmedBlockID)
@@ -58,11 +58,27 @@ func (b *blockBuffer) GetMaxConfirmedBlockID() int64 {
 	return blockID
 }
 
+// GetFullNodeMaxBlockID 从fullnode获取最大的块ID
+func (b *blockBuffer) GetFullNodeMaxBlockID() int64 {
+	return atomic.LoadInt64(&b.realMaxBlockID)
+}
+
+// GetMaxBlockTimestamp 获取最大块的时间戳
+func (b *blockBuffer) GetMaxBlockTimestamp() int64 {
+	return atomic.LoadInt64(&b.maxBlockTimeStamp)
+}
+
+// GetSolidityNodeMaxBlockID 获取solidity最大确认块
+func (b *blockBuffer) GetSolidityNodeMaxBlockID() int64 {
+	return atomic.LoadInt64(&b.realMaxConfirmedBlockID)
+}
+
 // GetBlocks 从缓存批量读取blocks
 //	startID: blockID start to get, -1 mean get from maxBlockID, if startID == -1, use offset to decide which is the max block_id in the buffer
 //	offset: 从最新块开始的偏移量，返回的blocks max(block_id) = 缓存的currentMaxBlockID - startNum), if startID >= 0, ignore offset
 //	count: 需要返回的块的数量
 func (b *blockBuffer) GetBlocks(startID int64, offset int64, count int64) (blocks []*entity.BlockInfo, err error) {
+	log.Debugf("get blocks data in buffer...")
 	// fmt.Printf("GetBlocks startNum:%v, offset:%v, count:%v\n", startID, offset, count)
 	if count <= 0 {
 		return nil, nil
@@ -86,6 +102,7 @@ func (b *blockBuffer) GetBlocks(startID int64, offset int64, count int64) (block
 }
 
 func (b *blockBuffer) GetBlock(blockID int64) (block *entity.BlockInfo) {
+	log.Debugf("get block data in buffer...")
 	if blockID > b.GetMaxBlockID() {
 		return nil
 	}

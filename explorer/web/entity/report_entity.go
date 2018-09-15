@@ -16,10 +16,14 @@ type ReportOverview struct {
 	NewAddressSeen			int64				`json:"newAddressSeen"`		// newAddressSeen
 	BlockchainSize			int64				`json:"blockchainSize"`		// blockchainSize
 	TotalAddress			int64				`json:"totalAddress"`		// totalAddress
+	NewBlockSeen			int64				`json:"newBlockSeen"`		// newBlockSeen
+	NewTransactionSeen 		int64				`json:"newTransactionSeen"`	// NewTransactionSeen
+
 
 }
 
 type ReportBlock struct {
 	TotalCount			   	int64				`json:"totalCount"`			// totalCount
 	TotalSize				int64				`json:"totalSize"`			// totalSize
+	TotalTransaction		int64				`json:"totalTransaction"`   // totalTransaction
 }

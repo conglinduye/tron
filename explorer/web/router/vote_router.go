@@ -3,6 +3,8 @@ package router
 import (
 	"net/http"
 
+	"github.com/wlcy/tron/explorer/lib/mysql"
+
 	"github.com/gin-gonic/gin"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/util"
@@ -16,9 +18,9 @@ func voteRegister(ginRouter *gin.Engine) {
 	ginRouter.GET("/api/vote", func(c *gin.Context) {
 		req := &entity.Votes{}
 		req.Sort = c.Query("sort")
-		req.Limit = c.Query("limit")
+		req.Limit = mysql.ConvertStringToInt64(c.Query("limit"), 40)
 		req.Count = c.Query("count")
-		req.Start = c.Query("start")
+		req.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
 		req.Candidate = c.Query("candidate")
 		req.Voter = c.Query("voter")
 		log.Debugf("Hello /api/vote?%#v", req)
@@ -32,7 +34,8 @@ func voteRegister(ginRouter *gin.Engine) {
 
 	ginRouter.GET("/api/vote/live", func(c *gin.Context) {
 		log.Debugf("Hello /api/vote/live")
-		resp, err := service.QueryVoteLive()
+		//resp, err := service.QueryVoteLive()
+		resp, err := service.QueryVoteLiveBuffer()
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
@@ -42,7 +45,8 @@ func voteRegister(ginRouter *gin.Engine) {
 
 	ginRouter.GET("/api/vote/current-cycle", func(c *gin.Context) {
 		log.Debugf("Hello /api/vote/current-cycle")
-		resp, err := service.QueryVoteCurrentCycle()
+		//	resp, err := service.QueryVoteCurrentCycle()
+		resp, err := service.QueryVoteCurrentCycleBuffer()
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
@@ -52,7 +56,8 @@ func voteRegister(ginRouter *gin.Engine) {
 
 	ginRouter.GET("/api/vote/next-cycle", func(c *gin.Context) {
 		log.Debugf("Hello /api/vote/next-cycle")
-		resp, err := service.QueryVoteNextCycle()
+		//resp, err := service.QueryVoteNextCycle()
+		resp, err := service.QueryVoteNextCycleBuffer()
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)

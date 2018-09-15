@@ -8,7 +8,7 @@ import (
 	"github.com/wlcy/tron/explorer/web/module"
 )
 
-//QueryTransactions 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
+//QueryTransactions 条件查询  	//?sort=-number&limit=1&count=true&number=2135998 TODO: cache
 func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, error) {
 	var filterSQL, sortSQL, pageSQL, sortTemp string
 	mutiFilter := false
@@ -56,13 +56,13 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 		}
 		sortTemp = fmt.Sprintf("order by %v", sortTemp)
 	}
-	if req.Limit != "" && req.Start != "" {
-		pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
-	}
+
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
 	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 
-//QueryTransaction 精确查询  	//number=2135998
+//QueryTransaction 精确查询  	//number=2135998   TODO: cache
 func QueryTransaction(req *entity.Transactions) (*entity.TransactionInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`

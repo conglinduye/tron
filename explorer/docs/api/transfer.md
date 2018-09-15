@@ -8,6 +8,8 @@ input:param
 &count=true     //是否返回总数
 &start=0        //记录的起始序号
 &sort=-timestamp       //按照时间戳倒序排列
+
+http://18.216.57.65:20110/api/transfer?sort=-number&limit=40&start=0
 ```
 output:json
 ```json
@@ -47,7 +49,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/transfer/0000fa99d223907c660722465ab78306302f99c3423d3abe9b3f9fb086338df3
 ```
 output:json
 ```json

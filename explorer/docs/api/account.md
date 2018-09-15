@@ -8,6 +8,9 @@ input:param
 &count=true     //是否返回总数
 &start=0        //记录的起始序号
 &sort=-balance       //按照账户余额倒序排列
+
+eg: http://18.216.57.65:20110/api/account?sort=-balance&start=0&limit=10
+
 ```
 output:json
 ```json
@@ -83,7 +86,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/account/T9ya5cLUd4LUXit2BR5fuG7VCA87RrnTk5
 ```
 output:json
 ```json
@@ -276,7 +279,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/account/T9ya5cLUd4LUXit2BR5fuG7VCA87RrnTk5/media
 ```
 
 output:json
@@ -310,7 +313,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/account/TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp/sr
 ```
 output:json
 ```json

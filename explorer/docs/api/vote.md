@@ -10,6 +10,13 @@ input:param
 &sort=-votes       //按照投票数量倒序排列
 &candidate=12 //按候选人地址查询
 &voter=13 //按投票人地址查询
+
+eg:
+http://18.216.57.65:20110/api/vote?sort=-number&limit=40&start=0
+
+http://18.216.57.65:20110/api/vote?candidate=TAEw4zwwYMiDcWFC9xQrLP9moMi34YAZbz
+
+http://18.216.57.65:20110/api/vote?voter=TAEw4zwwYMiDcWFC9xQrLP9moMi34YAZbz
 ```
 output:json
 ```json
@@ -46,6 +53,11 @@ output:json
 }
 ```
 
+缓存策略：
+程序运行初次加载数据到内存；     
+缓存数据每隔30s更新一次；    
+如果缓存中无数据，则触发重新加载
+
 
 ## 所有代表的实时投票信息
 - url:/api/vote/live
@@ -53,7 +65,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/vote/live
 ```
 output:json
 ```json
@@ -79,6 +91,10 @@ output:json
         },...
 }
 ```
+缓存策略：
+程序运行初次加载数据到内存；     
+缓存数据每隔60s更新一次；    
+如果缓存中无数据，则触发重新加载
 
 ## 上一个投票周期的投票情况
 - url:/api/vote/current-cycle 
@@ -86,7 +102,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/vote/current-cycle
 ```
 output:json
 ```json
@@ -123,6 +139,10 @@ output:json
     ]
 }
 ```
+缓存策略：
+程序运行初次加载数据到内存；     
+缓存数据每隔60s更新一次；    
+如果缓存中无数据，则触发重新加载
 
 ## 返回倒计时时间
 - url:/api/vote/next-cycle
@@ -130,7 +150,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/vote/next-cycle
 ```
 output:json
 ```json
@@ -138,7 +158,12 @@ output:json
     "nextCycle": 9891000 // 剩余时长，单位ms
 }
 ```
-投票每六小时一个周期<br>
-投票时段：（北京时间）   2:00  8:00  14:00  20:00
+从主网调用接口获取下次投票周期时间nextMaintenanceTime
+从主网调用接口获取最新块的时间戳 curTimeStamp
+则倒计时时间=nextMaintenanceTime-curTimeStamp
+缓存策略：
+程序运行初次加载主网数据到内存；     
+缓存数据每隔60s更新一次；    
+如果缓存中无数据，则触发重新加载
 
 

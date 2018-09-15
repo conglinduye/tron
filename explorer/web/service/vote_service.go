@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/wlcy/tron/explorer/core/grpcclient"
-	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 )
 
-//QueryVotes 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
+//QueryVotes 条件查询  	//?sort=-number&limit=1&count=true&number=2135998   TODO: cache
 func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	var filterSQL, sortSQL, pageSQL, sortTemp string
 	mutiFilter := false
@@ -66,43 +66,39 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 		}
 		sortTemp = fmt.Sprintf("order by %v", sortTemp)
 	}
-	if req.Limit != "" && req.Start != "" {
-		pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
+	return module.QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL, req)
+}
+
+//QueryVoteLiveBuffer 从buffer中获取实时投票数据
+func QueryVoteLiveBuffer() (*entity.VoteLiveInfo, error) {
+	var voteLive = &entity.VoteLiveInfo{}
+	voteBuffer := buffer.GetVoteBuffer()
+	votes, _ := voteBuffer.GetVoteLive()
+	voteLive.Data = votes
+	return voteLive, nil
+
+}
+
+//QueryVoteCurrentCycleBuffer 从buffer中获取上轮投票数据
+func QueryVoteCurrentCycleBuffer() (*entity.VoteCurrentCycleResp, error) {
+	voteBuffer := buffer.GetVoteBuffer()
+	return voteBuffer.GetVoteCurrentCycle(), nil
+}
+
+//QueryVoteNextCycleBuffer 本轮投票剩余时长
+func QueryVoteNextCycleBuffer() (*entity.VoteNextCycleResp, error) {
+	var nextCycle = &entity.VoteNextCycleResp{}
+	nextCycle.NextCycle = 0
+	currentTime := buffer.GetBlockBufferInstance().GetMaxBlockTimestamp()
+	nextMaintenanceTime := buffer.GetVoteBuffer().GetNextMaintenanceTime()
+	if currentTime == 0 || nextMaintenanceTime == 0 {
+		return QueryVoteNextCycle()
 	}
-	return module.QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL)
-}
-
-//QueryVoteLive 实时投票数据
-func QueryVoteLive() (*entity.VoteLiveInfo, error) {
-	strSQL := fmt.Sprintf(`
-	SELECT acc.address as voteraddress,outvoter.votes,
-	       acc.frozen,acc.account_name,wlwit.url
-	FROM tron.tron_account acc 
-	left join tron.wlcy_witness_create_info wlwit on wlwit.address=acc.address
-	left join (
-		select to_address,sum(vote) as votes from tron.account_vote_result 
-		 group by to_address
-	) outvoter on outvoter.to_address=acc.address
-     where 1=1 and outvoter.votes>0 `)
-
-	return module.QueryVoteLiveRealize(strSQL)
-}
-
-//QueryVoteCurrentCycle 上轮投票数据
-func QueryVoteCurrentCycle() (*entity.VoteCurrentCycleResp, error) {
-	strSQL := fmt.Sprintf(`
-	SELECT acc.address as voteraddress,outvoter.votes,
-	acc.frozen,acc.account_name,wlwit.url,srcc.github_link
-FROM tron.tron_account acc 
-left join tron.wlcy_witness_create_info wlwit on wlwit.address=acc.address
-left join tron.wlcy_sr_account srcc on srcc.address=acc.address
-left join (
- select address,sum(vote_count) as votes from tron.witness 
-  group by address
-) outvoter on outvoter.address=acc.address
-where 1=1 and outvoter.votes>0   order by votes desc `)
-
-	return module.QueryVoteCurrentCycleRealize(strSQL, "", "", "")
+	nextCycle.NextCycle = nextMaintenanceTime - currentTime
+	return nextCycle, nil
 }
 
 //QueryVoteNextCycle 本轮投票剩余时长
@@ -111,14 +107,9 @@ func QueryVoteNextCycle() (*entity.VoteNextCycleResp, error) {
 	var nextCycle = &entity.VoteNextCycleResp{}
 	nextCycle.NextCycle = 0
 	var nextMaintenanceTime, currentTime int64
-	client := grpcclient.NewWallet(fmt.Sprintf("%s:50051", utils.GetRandFullNodeAddr()))
-	err := client.Connect()
-	if nil != err {
-		log.Error(err)
-		return nextCycle, err
-	}
 
-	log.Debugf(client.GetState(), client.Target())
+	client := grpcclient.GetRandomWallet()
+
 	block, err := client.GetNowBlock()
 	if err != nil {
 		log.Error(err)

@@ -4,7 +4,7 @@
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/witness
 ```
 output:json
 ```json
@@ -47,6 +47,10 @@ output:json
     },...
 ]
 ```
+缓存策略：
+程序运行初次加载数据库数据到内存；     
+缓存数据每隔30s更新一次；    
+如果缓存中无数据，则触发重新加载
 
 
 ## 27个超级几点算力分布
@@ -55,7 +59,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/witness/maintenance-statistic
 ```
 output:json
 ```json
@@ -278,3 +282,7 @@ output:json
     }
 ]
 ```
+缓存策略：
+程序运行初次加载数据库数据到内存；     
+缓存数据每隔30s更新一次；    
+如果缓存中无数据，则触发重新加载

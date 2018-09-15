@@ -8,67 +8,72 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/redis.v4"
 )
 
-const BaseOverviewKey = "org.tron.explorer.report.base.overview"
+const HistoryOverviewKey = "org.tron.explorer.report.history.overview"
 
-const TotalOverviewKey = "org.tron.explorer.report.total.overview"
+const TodayOverviewKey = "org.tron.explorer.report.today.overview"
 
 func QueryReport() (*entity.ReportResp, error) {
 	reportResp := &entity.ReportResp{}
-	reportOverviewsList := make([]*entity.ReportOverview, 0)
 
-	totalOverviewValue, err := config.RedisCli.Get(TotalOverviewKey).Result()
-	if err != nil  {
-		log.Errorf("syncReportJob get err:[%v]", err)
+	historyOverviewValue, err := config.RedisCli.Get(HistoryOverviewKey).Result()
+	if err == redis.Nil {
+		SyncCacheHistoryReport()
+		historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
+	} else if err != nil {
+		log.Errorf("QueryReport historyOverviewValue redis get value error :[%v]\n", err)
+		return nil, err
 	}
 
-	if totalOverviewValue == "" {
-		baseOverviewValue, _ := config.RedisCli.Get(BaseOverviewKey).Result()
-		if baseOverviewValue == "" {
-			SyncReportJob()
-			baseOverviewValue, _ = config.RedisCli.Get(BaseOverviewKey).Result()
-		}
-		if err := json.Unmarshal([]byte(baseOverviewValue), &reportOverviewsList); err == nil {
-			reportOverview := &entity.ReportOverview{}
-			t := time.Now()
-			t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC)
-			t1 = t1.Add(-8 * time.Hour)
-			t2 := t
-			t3 := t1.Add(-24 * time.Hour)
-			startTime := t1.UnixNano() / 1e6
-			endTime := t2.UnixNano() / 1e6
-			dateTime := t3.UnixNano() / 1e6
-			fmt.Printf("startTime:%v, endTime:%v, dateTime:%v\n", startTime, endTime, dateTime)
-			last := reportOverviewsList[len(reportOverviewsList) - 1]
-			if dateTime == last.Date {
-				syncReportBetweenTime(startTime, endTime, reportOverview)
-				syncReportByTime(endTime, reportOverview)
-				reportOverview.Date = startTime
-
-				reportOverviewsList = reportOverviewsList[:len(reportOverviewsList)-1]
-				reportOverviewsList = append(reportOverviewsList, reportOverview)
-				value, err := json.Marshal(reportOverviewsList)
-				if err != nil {
-					log.Errorf("syncReportJob json marshal err:[%v]", err)
-				}
-				err = config.RedisCli.Set(TotalOverviewKey, string(value), 1 * time.Minute).Err()
-				if err != nil {
-					log.Errorf("syncReportJob set err:[%v]", err)
-				}
-			} else {
-				SyncReportJob()
-			}
-		}
-
-	} else {
-		if err := json.Unmarshal([]byte(totalOverviewValue), &reportOverviewsList); err != nil {
-			log.Errorf("syncReportJob json unmarshal err:[%v]", err)
-		}
+	if historyOverviewValue == "" {
+		SyncCacheHistoryReport()
+		historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
 	}
+	totalReportOverviews := make([]*entity.ReportOverview, 0)
+	err = json.Unmarshal([]byte(historyOverviewValue), &totalReportOverviews)
+	if err != nil {
+		log.Errorf("QueryReport json.Unmarshal totalReportOverviews error :[%v]\n", err)
+		return nil, err
+	}
+
+	if len(totalReportOverviews) < 1 {
+		log.Error("QueryReport len(totalReportOverviews) < 1\n")
+		return nil, err
+	}
+
+	last := totalReportOverviews[len(totalReportOverviews) - 1]
+	t := time.Now()
+	t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC).Add(-8 * time.Hour).Add(-24 * time.Hour)
+	dateTime := t1.UnixNano() / 1e6
+	if dateTime != last.Date {
+		SyncPersistYesterdayReport()
+	}
+
+	todayOverviewValue, err := config.RedisCli.Get(TodayOverviewKey).Result()
+	if err == redis.Nil {
+		SyncCacheTodayReport()
+		todayOverviewValue, _ = config.RedisCli.Get(TodayOverviewKey).Result()
+	} else if err != nil {
+		log.Errorf("QueryReport todayOverviewValue redis get value error :[%v]\n", err)
+		return nil, err
+	}
+	if todayOverviewValue == "" {
+		SyncCacheTodayReport()
+		todayOverviewValue, _ = config.RedisCli.Get(TodayOverviewKey).Result()
+	}
+	todayReportOverview := &entity.ReportOverview{}
+	err = json.Unmarshal([]byte(todayOverviewValue), &todayReportOverview)
+	if err != nil {
+		log.Errorf("QueryReport json.Unmarshal todayReportOverview error :[%v]\n", err)
+		return nil, err
+	}
+
+	totalReportOverviews = append(totalReportOverviews, todayReportOverview)
 
 	reportResp.Success = true
-	reportResp.Data = reportOverviewsList
+	reportResp.Data = totalReportOverviews
 	return reportResp, nil
 
 }
@@ -82,6 +87,8 @@ func syncReportBetweenTime(startTime, endTime int64, overview *entity.ReportOver
 		overview.AvgBlockSize = reportBlock.TotalSize / reportBlock.TotalCount
 	}
 	overview.AvgBlockTime = 3
+	overview.NewBlockSeen = reportBlock.TotalCount
+	overview.NewTransactionSeen = reportBlock.TotalTransaction
 
 	totalAccount, _ := module.QueryReportAccount(startTime, endTime)
 	overview.NewAddressSeen =totalAccount
@@ -91,80 +98,134 @@ func syncReportBetweenTime(startTime, endTime int64, overview *entity.ReportOver
 // syncReportByTime
 func syncReportByTime(dateTime int64, overview *entity.ReportOverview) {
 	reportBlock, _ := module.QueryTotalReportBlock(dateTime)
-	totalTransaction, _ := module.QueryTotalReportTransaction(dateTime)
 	totalAccount, _ := module.QueryTotalReportAccount(dateTime)
 
 	overview.TotalBlockCount = reportBlock.TotalCount
+	overview.TotalTransaction = reportBlock.TotalTransaction
 	overview.BlockchainSize = reportBlock.TotalSize
-	overview.TotalTransaction = totalTransaction
 	overview.TotalAddress = totalAccount
 }
 
-// SyncReportJob
-func SyncReportJob() {
-	baseOverviewValue, err := config.RedisCli.Get(BaseOverviewKey).Result()
-	if err != nil {
-		log.Errorf("syncReportJob get err:[%v]", err)
-	}
-	if baseOverviewValue == "" {
-		reportOverviewsList := make([]*entity.ReportOverview, 0)
-		for i := 13; i >= 1; i-- {
-			reportOverview := &entity.ReportOverview{}
-			t := time.Now()
-			t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC)
-			for j := 1; j <= i; j++ {
-				t1 = t1.Add(-24 * time.Hour)
-			}
-			t1 = t1.Add(-8 * time.Hour)
-			t2 := t1.Add(24 * time.Hour)
-			startTime := t1.UnixNano() / 1e6
-			endTime := t2.UnixNano() / 1e6
+func SyncInitReport() {
+	count, _ := module.QueryTotalStatistics()
+	if count <= 0 {
+		now := time.Now()
+		now = time.Date(now.Year(), now.Month(), now.Day(), 0,0,0,0, time.UTC).Add(-8 * time.Hour)
 
+		t,_ := time.Parse("20060102150405", "20180625000000")
+		t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC)
+		t1 = t1.Add(-8 * time.Hour)
+		t2 := t1.Add(24 * time.Hour)
+		nowTime := now.UnixNano() / 1e6
+		startTime := t1.UnixNano() / 1e6
+		endTime := t2.UnixNano() / 1e6
+		fmt.Printf("nowTime:%v, startTime:%v, endTime:%v\n",nowTime, startTime, endTime)
+		for ; startTime < nowTime ; {
+			reportOverview := &entity.ReportOverview{}
 			syncReportBetweenTime(startTime, endTime, reportOverview)
 			syncReportByTime(endTime, reportOverview)
 			reportOverview.Date = startTime
-			reportOverviewsList = append(reportOverviewsList, reportOverview)
-		}
-		fmt.Printf("reportOverviewsList size: %v\n", len(reportOverviewsList))
-		value, err := json.Marshal(reportOverviewsList)
-		if err != nil {
-			log.Errorf("syncReportJob json marshal err:[%v]", err)
-		}
-		err = config.RedisCli.Set(BaseOverviewKey, string(value), 0).Err()
-		if err != nil {
-			log.Errorf("syncReportJob set err:[%v]", err)
-		}
-
-	} else {
-		reportOverviewsList := make([]*entity.ReportOverview, 0)
-		if err := json.Unmarshal([]byte(baseOverviewValue), &reportOverviewsList); err == nil {
-			reportOverview := &entity.ReportOverview{}
-			t := time.Now()
-			t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC)
-			t1 = t1.Add(-24 * time.Hour)
-			t1 = t1.Add(-8 * time.Hour)
-			t2 := t1.Add(24 * time.Hour)
-			startTime := t1.UnixNano() / 1e6
-			endTime := t2.UnixNano() / 1e6
+			module.InsertStatistics(reportOverview)
+			t1 = t1.Add(24 * time.Hour)
+			t2 = t1.Add(24 * time.Hour)
+			startTime = t1.UnixNano() / 1e6
+			endTime = t2.UnixNano() / 1e6
 			fmt.Printf("startTime:%v, endTime:%v\n", startTime, endTime)
-			last := reportOverviewsList[len(reportOverviewsList) - 1]
-			if startTime != last.Date {
-				syncReportBetweenTime(startTime, endTime, reportOverview)
-				syncReportByTime(endTime, reportOverview)
-				reportOverview.Date = startTime
-				reportOverviewsList = append(reportOverviewsList, reportOverview)
-				reportOverviewsList = reportOverviewsList[1:]
-				value, err := json.Marshal(reportOverviewsList)
-				if err != nil {
-					log.Errorf("syncReportJob json marshal err:[%v]", err)
-				}
-				err = config.RedisCli.Set(BaseOverviewKey, string(value), 0).Err()
-				if err != nil {
-					log.Errorf("syncReportJob set err:[%v]", err)
-				}
-			}
 		}
-
 	}
 
+	SyncCacheHistoryReport()
+
+	SyncCacheTodayReport()
+}
+
+func SyncPersistYesterdayReport() {
+	t := time.Now()
+	t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC)
+	t1 = t1.Add(-8 * time.Hour)
+	t3 := t1.Add(-24 * time.Hour)
+	dateTime := t3.UnixNano() / 1e6
+
+	strSQL := fmt.Sprintf(`
+			select date, avg_block_time, avg_block_size, new_block_seen, new_transaction_seen, 
+			new_address_seen, total_block_count, total_transaction, total_address, blockchain_size
+			from wlcy_statistics order by date desc limit 1`)
+	reportOverviews, _:= module.QueryStatistics(strSQL)
+	if reportOverviews[0].Date < dateTime {
+		t1 = t1.Add(-24 * time.Hour)
+		t2 := t1.Add(24 * time.Hour)
+		startTime := t1.UnixNano() / 1e6
+		endTime := t2.UnixNano() / 1e6
+		fmt.Printf("startTime:%v, endTime:%v\n", startTime, endTime)
+		reportOverview := &entity.ReportOverview{}
+		syncReportBetweenTime(startTime, endTime, reportOverview)
+		syncReportByTime(endTime, reportOverview)
+		reportOverview.Date = startTime
+		module.InsertStatistics(reportOverview)
+
+		historyOverviewValue, _ := config.RedisCli.Get(HistoryOverviewKey).Result()
+		log.Infof("historyOverviewValue %v\n", historyOverviewValue)
+		if historyOverviewValue == "" {
+			SyncCacheHistoryReport()
+			historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
+		}
+		reportOverviews := make([]*entity.ReportOverview, 0)
+		json.Unmarshal([]byte(historyOverviewValue), &reportOverviews)
+		reportOverviews = append(reportOverviews, reportOverview)
+		value, _ := json.Marshal(reportOverviews)
+		err := config.RedisCli.Set(HistoryOverviewKey, string(value), 0).Err()
+		if err != nil {
+			log.Errorf("SyncPersistYesterdayReport redis set err:[%v]", err)
+		}
+	}
+	log.Info("SyncPersistYesterdayReport handle done")
+
+}
+
+func SyncCacheHistoryReport() {
+	log.Info("SyncCacheHistoryReport handle start")
+	strSQL := fmt.Sprintf(`
+			select date, avg_block_time, avg_block_size, new_block_seen, new_transaction_seen, 
+			new_address_seen, total_block_count, total_transaction, total_address, blockchain_size
+			from wlcy_statistics order by date asc `)
+	reportOverviews, err := module.QueryStatistics(strSQL)
+	if err != nil {
+		log.Errorf("SyncCacheHistoryReport set err:[%v]", err)
+	}
+
+	value, err := json.Marshal(reportOverviews)
+	if err != nil {
+		log.Errorf("SyncCacheHistoryReport redis set err:[%v]", err)
+	}
+	err = config.RedisCli.Set(HistoryOverviewKey, string(value), 0).Err()
+	if err != nil {
+		log.Errorf("SyncCacheHistoryReport set err:[%v]", err)
+	}
+	log.Info("SyncCacheHistoryReport handle done")
+}
+
+func SyncCacheTodayReport() {
+	t := time.Now()
+	t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC)
+	t1 = t1.Add(-8 * time.Hour)
+	t2 := t
+	startTime := t1.UnixNano() / 1e6
+	endTime := t2.UnixNano() / 1e6
+	fmt.Printf("SyncCacheTodayReport, startTime:%v, endTime:%v \n", startTime, endTime)
+	reportOverview := &entity.ReportOverview{}
+	syncReportBetweenTime(startTime, endTime, reportOverview)
+	syncReportByTime(endTime, reportOverview)
+	reportOverview.Date = startTime
+
+	value, err := json.Marshal(reportOverview)
+	if err != nil {
+		log.Errorf("SyncCacheTodayReport json.Marshal reportOverview err:[%v]", err)
+	}
+
+	err = config.RedisCli.Set(TodayOverviewKey, string(value), 0).Err()
+	if err != nil {
+		log.Errorf("SyncCacheTodayReport set err:[%v]", err)
+	}
+
+	log.Info("SyncCacheTodayReport handle done")
 }

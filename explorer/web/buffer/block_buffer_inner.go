@@ -20,9 +20,10 @@ import (
 
 type blockBuffer struct {
 	// sync.RWMutex
-
-	maxBlockID          int64
-	maxConfirmedBlockID int64
+	realMaxBlockID          int64 // fullnode的最大区块ID
+	realMaxConfirmedBlockID int64 //solidity node的最大区块ID
+	maxBlockID              int64
+	maxConfirmedBlockID     int64
 
 	solidityClient *grpcclient.WalletSolidity
 	solidityErrCnt int
@@ -37,6 +38,27 @@ type blockBuffer struct {
 	maxNodeErr              int   // 3                 // 单个node连接允许的最大错误数
 	maxUnconfirmedBlockRead int64 //  = int64(50) // 需要缓存的最新的unconfirmed block的数量
 	maxBlockInMemory        int64 // max number of confirmed block in memory
+	maxBlockTimeStamp       int64 //max timestamp for confirmed block
+}
+
+func (b *blockBuffer) getSolidityNodeMaxBlockID() bool {
+	if nil == b.solidityClient {
+		b.solidityClient = grpcclient.GetRandomSolidity()
+	}
+	block, err := b.solidityClient.GetNowBlock()
+	if nil != err || nil == block || nil == block.BlockHeader || nil == block.BlockHeader.RawData {
+		b.solidityErrCnt++
+		if b.solidityErrCnt > b.maxNodeErr {
+			b.solidityClient = grpcclient.GetRandomSolidity()
+			b.solidityErrCnt = 0
+			fmt.Printf("reset solidity connection, new client:%v!!!\n", b.solidityClient.Target())
+		}
+		return false
+	}
+	blockInfo := coreBlockConvert(block)
+	atomic.StoreInt64(&b.realMaxConfirmedBlockID, blockInfo.Number)
+
+	return true
 }
 
 // getNowBlock 获取最新的未确认块并存入redis，更新 maxBlockID 字段
@@ -56,8 +78,10 @@ func (b *blockBuffer) getNowBlock() bool {
 	}
 
 	blockInfo := coreBlockConvert(block)
-	nowBlockID := blockInfo.Number
+	atomic.StoreInt64(&b.realMaxBlockID, blockInfo.Number)
 
+	nowBlockID := blockInfo.Number
+	b.maxBlockTimeStamp = blockInfo.CreateTime
 	numEnd := nowBlockID
 	numStart := b.GetMaxConfirmedBlockID() + 1
 
@@ -201,15 +225,18 @@ func (b *blockBuffer) readBuffer(numStart int64, numEnd int64) []*entity.BlockIn
 
 	return ret
 }
-func (b *blockBuffer) BackgroundWorker() {
-	b.backgroundWorker()
-}
 
 func (b *blockBuffer) backgroundWorker() {
+
 	minInterval := time.Duration(10) * time.Second
 	for {
 		ts := time.Now()
 		b.getNowConfirmedBlock()
+		for {
+			if b.getSolidityNodeMaxBlockID() {
+				break
+			}
+		}
 		for {
 			if b.getNowBlock() {
 				break

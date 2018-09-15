@@ -10,6 +10,8 @@ sort=-number    //按照区块高度倒序
 &start=0        //记录的起始序号
 &order=-timestamp       //按照时间戳倒序排列
 &number=2170015         //按照区块高度精确查询
+
+eg: http://18.216.57.65:20110/api/block?sort=-number&limit=40&start=0
 ```
 output:json
 ```json
@@ -51,7 +53,7 @@ output:json
 
 input:param
 ```param
-
+eg: http://18.216.57.65:20110/api/block/2341043
 ```
 output:json
 ```json

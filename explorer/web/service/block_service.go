@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/wlcy/tron/explorer/lib/log"
+
 	"github.com/wlcy/tron/explorer/web/buffer"
 
 	"github.com/wlcy/tron/explorer/lib/mysql"
@@ -17,15 +19,20 @@ func QueryBlocksBuffer(req *entity.Blocks) (*entity.BlocksResp, error) {
 	var err error
 	blockResp := &entity.BlocksResp{}
 	blocks := make([]*entity.BlockInfo, 0)
-	blockBuffer := buffer.GetBlockBuffer()
+	blockBuffer := buffer.GetBlockBufferInstance()
 	blockResp.Total = blockBuffer.GetMaxBlockID()
 	if req.Number != "" {
 		block := blockBuffer.GetBlock(mysql.ConvertStringToInt64(req.Number, 0))
+		if block == nil {
+			log.Debugf("get blocks data in buffer, get them from db instead")
+			return QueryBlocks(req)
+		}
 		blocks = append(blocks, block)
 	} else {
-		blocks, err = blockBuffer.GetBlocks(-1, mysql.ConvertStringToInt64(req.Start, 0), mysql.ConvertStringToInt64(req.Limit, 40))
-		if err != nil {
-			return nil, err
+		blocks, err = blockBuffer.GetBlocks(-1, req.Start, req.Limit)
+		if err != nil || blocks == nil {
+			log.Debugf("get blocks data in buffer, get them from db instead")
+			return QueryBlocks(req)
 		}
 	}
 	blockResp.Data = blocks
@@ -69,9 +76,8 @@ func QueryBlocks(req *entity.Blocks) (*entity.BlocksResp, error) {
 	if sortTemp != "order by" {
 		sortSQL = sortTemp
 	}
-	if req.Limit != "" && req.Start != "" {
-		pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
-	}
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
 	return module.QueryBlocksRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 
@@ -95,7 +101,7 @@ func QueryBlock(req *entity.Blocks) (*entity.BlockInfo, error) {
 //QueryBlockBuffer 精确查询  	//number=2135998
 func QueryBlockBuffer(req *entity.Blocks) (*entity.BlockInfo, error) {
 	block := &entity.BlockInfo{}
-	blockBuffer := buffer.GetBlockBuffer()
+	blockBuffer := buffer.GetBlockBufferInstance()
 	if req.Number != "" {
 		block = blockBuffer.GetBlock(mysql.ConvertStringToInt64(req.Number, 0))
 	}
