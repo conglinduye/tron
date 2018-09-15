@@ -17,7 +17,6 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/router"
 	"github.com/wlcy/tron/explorer/web/task"
-	"github.com/wlcy/tron/explorer/web/service"
 )
 
 // config file
@@ -57,10 +56,6 @@ func main() {
 
 	go func() {
 		task.SyncCacheHistoryReportTask()
-	}()
-
-	go func() {
-		service.SyncInitReport()
 	}()
 
 	router.Start(conf.Address, conf.Objectpool)

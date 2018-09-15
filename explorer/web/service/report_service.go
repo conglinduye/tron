@@ -8,6 +8,7 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/redis.v4"
 )
 
 const HistoryOverviewKey = "org.tron.explorer.report.history.overview"
@@ -18,20 +19,18 @@ func QueryReport() (*entity.ReportResp, error) {
 	reportResp := &entity.ReportResp{}
 
 	historyOverviewValue, err := config.RedisCli.Get(HistoryOverviewKey).Result()
-	if err != nil {
+	if err == redis.Nil {
+		SyncCacheHistoryReport()
+		historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
+	} else if err != nil {
 		log.Errorf("QueryReport historyOverviewValue redis get value error :[%v]\n", err)
 		return nil, err
 	}
 
 	if historyOverviewValue == "" {
 		SyncCacheHistoryReport()
-		historyOverviewValue, err = config.RedisCli.Get(HistoryOverviewKey).Result()
-		if err != nil {
-			log.Errorf("QueryReport historyOverviewValue redis get value error :[%v]\n", err)
-			return nil, err
-		}
+		historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
 	}
-	log.Infof("QueryReport historyOverviewValue %v\n", historyOverviewValue)
 	totalReportOverviews := make([]*entity.ReportOverview, 0)
 	err = json.Unmarshal([]byte(historyOverviewValue), &totalReportOverviews)
 	if err != nil {
@@ -53,17 +52,16 @@ func QueryReport() (*entity.ReportResp, error) {
 	}
 
 	todayOverviewValue, err := config.RedisCli.Get(TodayOverviewKey).Result()
-	if err != nil {
+	if err == redis.Nil {
+		SyncCacheTodayReport()
+		todayOverviewValue, _ = config.RedisCli.Get(TodayOverviewKey).Result()
+	} else if err != nil {
 		log.Errorf("QueryReport todayOverviewValue redis get value error :[%v]\n", err)
 		return nil, err
 	}
 	if todayOverviewValue == "" {
 		SyncCacheTodayReport()
-		todayOverviewValue, err = config.RedisCli.Get(TodayOverviewKey).Result()
-		if err != nil {
-			log.Errorf("QueryReport todayOverviewValue redis get value error :[%v]\n", err)
-			return nil, err
-		}
+		todayOverviewValue, _ = config.RedisCli.Get(TodayOverviewKey).Result()
 	}
 	todayReportOverview := &entity.ReportOverview{}
 	err = json.Unmarshal([]byte(todayOverviewValue), &todayReportOverview)
@@ -185,6 +183,7 @@ func SyncPersistYesterdayReport() {
 }
 
 func SyncCacheHistoryReport() {
+	log.Info("SyncCacheHistoryReport handle start")
 	strSQL := fmt.Sprintf(`
 			select date, avg_block_time, avg_block_size, new_block_seen, new_transaction_seen, 
 			new_address_seen, total_block_count, total_transaction, total_address, blockchain_size
