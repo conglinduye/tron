@@ -35,7 +35,7 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 		var account = &entity.AccountInfo{}
 		frozen := dataPtr.GetField("frozen")
 		if frozen != "" {
-			if err := json.Unmarshal([]byte(frozen), oldBalance); err != nil {
+			if err := json.Unmarshal([]byte(frozen), &oldBalance); err != nil {
 				log.Errorf("Unmarshal data failed:[%v]-[%v]", err, frozen)
 				return nil, util.NewErrorMsg(util.Error_common_request_json_convert_error)
 			}
@@ -143,7 +143,7 @@ func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error
 			//[{"frozen_balance":4306000000,"expire_time":1534794417000}]
 			frozen := dataPtr.GetField("frozen")
 			if frozen != "" {
-				if err := json.Unmarshal([]byte(frozen), oldBalance); err != nil {
+				if err := json.Unmarshal([]byte(frozen), &oldBalance); err != nil {
 					log.Errorf("Unmarshal data failed:[%v]-[%v]", err, frozen)
 				}
 			}
