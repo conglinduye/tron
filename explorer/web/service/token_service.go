@@ -30,19 +30,23 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 `)
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') `)
 
 	if req.Owner != "" {
 		filterSQL = fmt.Sprintf(" and owner_address='%v'", req.Owner)
 	}
 	if req.Name != "" {
-		if strings.HasPrefix(req.Name, "%") && strings.HasSuffix(req.Name, "%") {
+		if strings.Contains(req.Name, "%") {
 			filterSQL = fmt.Sprintf(" and asset_name like '%v'", req.Name)
 		} else {
 			filterSQL = fmt.Sprintf(" and asset_name='%v'", req.Name)
 		}
 	}
-
+	if req.Status == "ico" {
+		t := time.Now().Add(-8 * time.Hour)
+		dateTime := t.UnixNano() / 1e6
+		filterSQL = fmt.Sprintf(" and start_time<=%v and end_time>=%v", dateTime, dateTime)
+	}
 	sortSQL = "order by participated desc"
 
 	if req.Limit != "" && req.Start != "" {
@@ -54,6 +58,9 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 		log.Errorf("queryTokens list is nil or err:[%v]", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
+	if len(tokenResp.Data) == 0 {
+		return tokenResp, nil
+	}
 	// calculateTokens
 	calculateTokens(tokenResp)
 
@@ -63,6 +70,7 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 			tokenAddressList = append(tokenAddressList, tokenInfo.OwnerAddress)
 		}
 	}
+
 
 	tokenExtList, err := module.QueryTokenExtInfo(tokenAddressList)
 	if err != nil {
@@ -122,7 +130,7 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 `)
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') `)
 
 	filterSQL = fmt.Sprintf(" and asset_name='%v'", name)
 
@@ -131,6 +139,11 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 		log.Errorf("queryToken list is nil or err:[%v]", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
+
+	if token.Name == "" {
+		return  nil, nil
+	}
+
 	// calculateToken
 	calculateToken(token)
 
