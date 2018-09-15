@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/wlcy/tron/explorer/lib/log"
+
 	"github.com/wlcy/tron/explorer/web/buffer"
 
 	"github.com/wlcy/tron/explorer/lib/mysql"
@@ -21,11 +23,16 @@ func QueryBlocksBuffer(req *entity.Blocks) (*entity.BlocksResp, error) {
 	blockResp.Total = blockBuffer.GetMaxBlockID()
 	if req.Number != "" {
 		block := blockBuffer.GetBlock(mysql.ConvertStringToInt64(req.Number, 0))
+		if block == nil {
+			log.Debugf("get blocks data in buffer, get them from db instead")
+			return QueryBlocks(req)
+		}
 		blocks = append(blocks, block)
 	} else {
 		blocks, err = blockBuffer.GetBlocks(-1, req.Start, req.Limit)
-		if err != nil {
-			return nil, err
+		if err != nil || blocks == nil {
+			log.Debugf("get blocks data in buffer, get them from db instead")
+			return QueryBlocks(req)
 		}
 	}
 	blockResp.Data = blocks

@@ -29,7 +29,7 @@ func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 		confirmBlockIDDb = blockinfo.Number
 		break
 	}
-	//查询数据库获取最大块包含非确认--从buffer获取
+	//查询数据库获取最大块包含非确认--从buffer获取（由于数据库中没存未确认的块，所以从fullnode获取）
 	latestdBlockIDDb := blockBuffer.GetMaxBlockID()
 	//从buffer中获取fullnode块高
 	fullnodeNowBlockID := blockBuffer.GetUnConfirmedBlockID()
@@ -40,6 +40,10 @@ func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 	solidityProcess := float64(confirmBlockIDDb) / float64(solidityNowBlockID) * 100
 	fullnodeProcess := float64(latestdBlockIDDb) / float64(fullnodeNowBlockID) * 100
 	totalProcess := (solidityProcess + fullnodeProcess) / 2
+	log.Debugf("QuerySystemStatus,confirmBlockIDDb:[%.f],latestdBlockIDDb:[%.f],solidityNowBlockID:[%.f],fullnodeNowBlockID:[%.f]\n",
+		confirmBlockIDDb, latestdBlockIDDb, solidityNowBlockID, fullnodeNowBlockID)
+	log.Debugf("QuerySystemStatus,solidityProcess:[%.f],fullnodeProcess:[%.f],totalProcess:[%.f]\n",
+		solidityProcess, fullnodeProcess, totalProcess)
 	//拼接返回数据
 	systemStatusResp.Network = netType
 	systemStatusResp.Sync = &entity.Sync{Progress: totalProcess}

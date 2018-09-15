@@ -58,8 +58,10 @@ type voteBuffer struct {
 func (w *voteBuffer) GetVoteLive() (voteLive map[string]*entity.LiveInfo, ok bool) {
 	w.RLock()
 	if len(w.voteLive) == 0 {
+		log.Debugf("get vote live info from buffer nil, data reload")
 		w.loadQueryVoteLive()
 	}
+	log.Debugf("get vote live info from buffer, buffer data updated ")
 	voteLive = w.voteLive
 	w.RUnlock()
 	return
@@ -68,16 +70,20 @@ func (w *voteBuffer) GetVoteLive() (voteLive map[string]*entity.LiveInfo, ok boo
 func (w *voteBuffer) GetVoteCurrentCycle() (voteCycle *entity.VoteCurrentCycleResp) {
 
 	if w.voteCurrentCycle == nil {
+		log.Debugf("get VoteCurrentCycle info from buffer nil, data reload")
 		w.loadQueryVoteCurrentCycle()
 	}
+	log.Debugf("get VoteCurrentCycle info from buffer, buffer data updated ")
 	return w.voteCurrentCycle
 }
 
 func (w *voteBuffer) GetNextMaintenanceTime() int64 {
 
 	if w.nextMaintenanceTime == 0 {
+		log.Debugf("get NextMaintenanceTime info from buffer nil, data reload")
 		w.getMaintenanceTimeStamp()
 	}
+	log.Debugf("get NextMaintenanceTime info from buffer, buffer data updated ")
 	return w.nextMaintenanceTime
 }
 

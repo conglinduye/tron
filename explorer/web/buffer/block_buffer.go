@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 
 	"github.com/wlcy/tron/explorer/core/utils"
+	"github.com/wlcy/tron/explorer/lib/log"
 
 	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/grpcclient"
@@ -74,6 +75,7 @@ func (b *blockBuffer) GetMaxBlockTimestamp() int64 {
 //	offset: 从最新块开始的偏移量，返回的blocks max(block_id) = 缓存的currentMaxBlockID - startNum), if startID >= 0, ignore offset
 //	count: 需要返回的块的数量
 func (b *blockBuffer) GetBlocks(startID int64, offset int64, count int64) (blocks []*entity.BlockInfo, err error) {
+	log.Debugf("get blocks data in buffer...")
 	// fmt.Printf("GetBlocks startNum:%v, offset:%v, count:%v\n", startID, offset, count)
 	if count <= 0 {
 		return nil, nil
@@ -97,6 +99,7 @@ func (b *blockBuffer) GetBlocks(startID int64, offset int64, count int64) (block
 }
 
 func (b *blockBuffer) GetBlock(blockID int64) (block *entity.BlockInfo) {
+	log.Debugf("get block data in buffer...")
 	if blockID > b.GetMaxBlockID() {
 		return nil
 	}

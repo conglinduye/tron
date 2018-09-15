@@ -70,15 +70,19 @@ func (w *witnessBuffer) GetWitnessByAddr(addr string) (witness *entity.WitnessIn
 
 func (w *witnessBuffer) GetWitness() (witness []*entity.WitnessInfo) {
 	if len(w.sortList) == 0 {
+		log.Debugf("get Witness info from buffer nil, data reload")
 		w.load()
 	}
+	log.Debugf("get Witness info from buffer, buffer data updated ")
 	return w.sortList
 }
 
 func (w *witnessBuffer) GetWitnessStatistic() (witness []*entity.WitnessStatisticInfo) {
 	if len(w.statisticList) == 0 {
+		log.Debugf("get WitnessStatistic info from buffer nil, data reload")
 		w.loadStatistic()
 	}
+	log.Debugf("get WitnessStatistic info from buffer, buffer data updated ")
 	return w.statisticList
 }
 

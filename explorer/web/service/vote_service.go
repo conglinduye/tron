@@ -11,7 +11,7 @@ import (
 	"github.com/wlcy/tron/explorer/web/module"
 )
 
-//QueryVotes 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
+//QueryVotes 条件查询  	//?sort=-number&limit=1&count=true&number=2135998   TODO: cache
 func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	var filterSQL, sortSQL, pageSQL, sortTemp string
 	mutiFilter := false

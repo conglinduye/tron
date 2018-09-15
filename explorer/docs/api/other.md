@@ -42,7 +42,9 @@ output:json
 5. full->block    
     block = GRPC-fullnode接口getNowBlock返回的块高    
 6. solidity->block    
-    block = GRPC-solidity接口getNowBlock返回块高
+    block = GRPC-solidity接口getNowBlock返回块高    
+
+所有数据均从缓存中获取，缓存策略同block缓存策略
 ```
 
 

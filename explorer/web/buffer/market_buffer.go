@@ -50,6 +50,7 @@ type marketBuffer struct {
 
 func (w *marketBuffer) GetMarket() (witness []*entity.MarketInfo) {
 	if len(w.marketInfoList) == 0 {
+		log.Debugf("get market info from buffer nil, data reload at :[%v]", w.updateTime)
 		w.load()
 	}
 	log.Debugf("get market info from buffer, buffer data updated at :[%v]", w.updateTime)

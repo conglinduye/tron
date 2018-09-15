@@ -8,7 +8,7 @@ import (
 	"github.com/wlcy/tron/explorer/web/module"
 )
 
-//QueryAccounts 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
+//QueryAccounts 条件查询  	//?sort=-number&limit=1&count=true&number=2135998  TODO  cache
 func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 	var filterSQL, sortSQL, pageSQL, sortTemp string
 
@@ -45,7 +45,7 @@ func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 	return module.QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 
-//QueryAccount 精确查询  	//number=2135998
+//QueryAccount 精确查询  	//number=2135998   TODO  cache
 func QueryAccount(req *entity.Accounts) (*entity.AccountDetail, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
