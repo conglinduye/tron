@@ -243,6 +243,7 @@ func (b *blockBuffer) backgroundWorker() {
 	minInterval := time.Duration(10) * time.Second
 	for {
 		ts := time.Now()
+		fmt.Printf("000")
 		b.getNowConfirmedBlock()
 		fmt.Printf("111-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 		for {
