@@ -61,7 +61,7 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 
 	//查询该语句所查到的数据集合
 	var total = int64(len(accountInfos))
-	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
+	total, err = mysql.QueryTableDataCount("tron.tron_account")
 	if err != nil {
 		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
 	}
