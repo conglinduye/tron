@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync/atomic"
+	"github.com/wlcy/tron/explorer/core/utils"
 )
 
 //QueryTokens
@@ -37,7 +38,7 @@ func QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Tok
 		token.EndTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("end_time"))
 		token.StartTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("start_time"))
 		token.VoteScore = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote_score"))
-		token.Description = dataPtr.GetField("asset_desc")
+		token.Description = string(utils.HexDecode(dataPtr.GetField("asset_desc")))
 		token.Url = dataPtr.GetField("utl")
 		frozenJson := dataPtr.GetField("frozen_supply")
 		var tokenFrozenInfo []entity.TokenFrozenInfo
@@ -50,7 +51,7 @@ func QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Tok
 	}
 
 	var total = int64(len(tokens))
-	total, err = mysql.QuerySQLViewCount(strSQL)
+	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
 	if err != nil {
 		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
 	}
@@ -84,7 +85,7 @@ func QueryTokenRealize(strSQL, filterSQL string) (*entity.TokenInfo, error) {
 		token.EndTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("end_time"))
 		token.StartTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("start_time"))
 		token.VoteScore = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote_score"))
-		token.Description = dataPtr.GetField("asset_desc")
+		token.Description = string(utils.HexDecode(dataPtr.GetField("asset_desc")))
 		token.Url = dataPtr.GetField("utl")
 		frozenJson := dataPtr.GetField("frozen_supply")
 		var tokenFrozenInfo []entity.TokenFrozenInfo
@@ -128,7 +129,7 @@ func QueryTotalTokenTransfers(tokenName string) (int64, error) {
 	strSQL := fmt.Sprintf(`
     select count(1) as totalTokenTransfers
 	from contract_asset_transfer
-	where token_name = '%v' `, tokenName)
+	where asset_name = '%v' `, tokenName)
 	log.Debug(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -280,7 +281,7 @@ func InsertLogoInfo(address, url string) error {
 	return nil
 }
 
-//UpdateLogoInfo 更新
+//UpdateLogoInfo
 func UpdateLogoInfo(address, url string) error {
 	strSQL := fmt.Sprintf(`
 	update wlcy_asset_logo
@@ -317,4 +318,80 @@ func IsAddressExist(address string) (bool, error) {
 	}
 	return isExist, nil
 }
+
+
+// QueryAllAssetIssue
+func QueryAllAssetIssue() ([]*entity.AssetIssue, error) {
+	strSQL := fmt.Sprintf(`
+		select owner_address, asset_name, participated
+		from asset_issue `)
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryAllAssetIssue error:[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryAllAssetIssue dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	assetIssues := make([]*entity.AssetIssue, 0)
+
+	for dataPtr.NextT() {
+		assetIssue := &entity.AssetIssue{}
+		assetIssue.OwnerAddress = dataPtr.GetField("owner_address")
+		assetIssue.AssetName = dataPtr.GetField("asset_name")
+		assetIssue.Participated = mysql.ConvertDBValueToInt64(dataPtr.GetField("participated"))
+		assetIssues = append(assetIssues, assetIssue)
+	}
+
+	return assetIssues, nil
+}
+
+
+// QueryParticipateAsset
+func QueryParticipateAsset(assetName string) (*entity.ParticipateAsset, error) {
+	strSQL := fmt.Sprintf(`
+		select asset_name, sum(amount) as totalAmount
+		from contract_participate_asset
+		where asset_name = '%v'`, assetName)
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryParticipateAsset error:[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryParticipateAsset dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	participateAsset := &entity.ParticipateAsset{}
+
+	for dataPtr.NextT() {
+		participateAsset.AssetName = dataPtr.GetField("asset_name")
+		participateAsset.TotalAmount = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalAmount"))
+	}
+
+	return participateAsset, nil
+}
+
+// UpdateAssetIssue
+func UpdateAssetIssue(assetName string, participated int64) error {
+	strSQL := fmt.Sprintf(`
+	update asset_issue set participated=%v where asset_name='%v'`,
+		participated, assetName)
+	log.Debug(strSQL)
+	_, _, err := mysql.ExecuteSQLCommand(strSQL, true)
+	if err != nil {
+		log.Errorf("UpdateAssetIssue result fail:[%v]  sql:%s", err, strSQL)
+		return err
+	}
+	log.Debugf("UpdateAssetIssue result success  sql:%s", strSQL)
+	return nil
+}
+
+
+
 

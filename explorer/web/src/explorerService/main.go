@@ -11,11 +11,10 @@ package main
 import (
 	"flag"
 
-	"github.com/wlcy/tron/explorer/web/buffer"
-
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/router"
+	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/task"
 )
 
@@ -55,7 +54,11 @@ func main() {
 	}()
 
 	go func() {
-		task.SyncCacheHistoryReportTask()
+		task.SyncPersistYesterdayReport()
+	}()
+
+	go func() {
+		task.SyncAssetIssueParticipated()
 	}()
 
 	router.Start(conf.Address, conf.Objectpool)
