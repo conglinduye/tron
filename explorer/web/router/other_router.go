@@ -37,6 +37,10 @@ func otherRegister(ginRouter *gin.Engine) {
 
 	ginRouter.GET("/socket.io/", func(c *gin.Context) {
 		log.Debugf("Hello socket.io")
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+		c.Header("Access-Control-Allow-Methods", "GET, OPTIONS, POST, PUT, DELETE")
+		c.Set("content-type", "application/json")
 		websocket.WsHandler(c.Writer, c.Request)
 		c.JSON(http.StatusOK, "ok")
 	})
