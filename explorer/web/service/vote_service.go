@@ -9,69 +9,8 @@ import (
 	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
+	"github.com/wlcy/tron/explorer/lib/util"
 )
-
-//QueryVotes 条件查询  	//?sort=-number&limit=1&count=true&number=2135998   TODO: cache
-func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
-	var filterSQL, sortSQL, pageSQL string
-	mutiFilter := false
-	//默认查询得票列表
-	reportSQL := fmt.Sprint(`
-	left join (
-		select to_address,sum(vote) as votes from tron.account_vote_result 
-		 group by to_address
-	) outvoter on outvoter.to_address=acc.address`)
-
-	//按照Voter过滤，获取该Voter投给别的人列表
-	//TODO  计票问题《此处应该取我的冻结信息》
-	if req.Voter != "" {
-		reportSQL = fmt.Sprintf(`
-	left join (
-		select to_address,sum(vote) as votes from tron.account_vote_result 
-		where 1=1 and address='%v'
-		 group by to_address
-	) outvoter on outvoter.to_address=acc.address`, req.Voter)
-	}
-	//按照Candidate过滤，获取谁投给Candidate的列表
-	if req.Candidate != "" {
-		reportSQL = fmt.Sprintf(`
-	left join (
-		select address,sum(vote) as votes from tron.account_vote_result  
-		where 1=1 and to_address='%v'
-		group by address
-	) outvoter on outvoter.address=acc.address`, req.Candidate)
-	}
-	strSQL := fmt.Sprintf(`
-	SELECT acc.address as voteraddress,outvoter.votes,
-	       acc.frozen,acc.account_name,wlwit.url
-	FROM tron.tron_account acc 
-	left join tron.wlcy_witness_create_info wlwit on wlwit.address=acc.address
-	%v
-     where 1=1 and outvoter.votes>0 `, reportSQL)
-
-	for _, v := range strings.Split(req.Sort, ",") {
-		if strings.Index(v, "votes") > 0 {
-			if mutiFilter {
-				sortSQL = fmt.Sprintf("%v ,", sortSQL)
-			}
-			sortSQL = fmt.Sprintf("%v outvoter.votes", sortSQL)
-			if strings.Index(v, "-") == 0 {
-				sortSQL = fmt.Sprintf("%v desc", sortSQL)
-			}
-			mutiFilter = true
-		}
-	}
-	if sortSQL != "" {
-		if strings.Index(sortSQL, ",") == 0 {
-			sortSQL = sortSQL[1:]
-		}
-		sortSQL = fmt.Sprintf("order by %v", sortSQL)
-	}
-
-	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
-
-	return module.QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL, req)
-}
 
 //QueryVoteLiveBuffer 从buffer中获取实时投票数据
 func QueryVoteLiveBuffer() (*entity.VoteLiveInfo, error) {
@@ -127,3 +66,100 @@ func QueryVoteNextCycle() (*entity.VoteNextCycleResp, error) {
 	nextCycle.NextCycle = nextMaintenanceTime - currentTime
 	return nextCycle, nil
 }
+
+// QueryVotes
+func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
+	votesResp := &entity.VotesResp{}
+	var filterSQL, sortSQL, pageSQL string
+	mutiFilter := false
+
+	strSQL := fmt.Sprintf(`
+			select address, to_address, vote from account_vote_result where 1=1 `)
+
+	if req.Voter != "" {
+		filterSQL = fmt.Sprintf(" and address='%v'", req.Voter)
+	}
+	if req.Candidate != "" {
+		filterSQL = fmt.Sprintf(" and to_address='%v'", req.Candidate)
+	}
+	for _, v := range strings.Split(req.Sort, ",") {
+		if strings.Index(v, "votes") > 0 {
+			if mutiFilter {
+				sortSQL = fmt.Sprintf("%v ,", sortSQL)
+			}
+			sortSQL = fmt.Sprintf("%v vote", sortSQL)
+			if strings.Index(v, "-") == 0 {
+				sortSQL = fmt.Sprintf("%v desc", sortSQL)
+			}
+			mutiFilter = true
+		}
+	}
+	if sortSQL != "" {
+		if strings.Index(sortSQL, ",") == 0 {
+			sortSQL = sortSQL[1:]
+		}
+		sortSQL = fmt.Sprintf("order by %v", sortSQL)
+	}
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+	accountVoteResultRes, err := module.QueryAccountVoteResultRealize(strSQL, filterSQL, sortSQL, pageSQL)
+	if err != nil {
+		log.Errorf("QueryVotes list is nil or err:[%v]", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	if len(accountVoteResultRes.Data) == 0 {
+
+		return votesResp, nil
+	}
+
+	voteInfos := make([]*entity.VotesInfo, 0)
+	for _, v := range accountVoteResultRes.Data {
+		votesInfo := &entity.VotesInfo{}
+		votesInfo.VoterAddress = v.Address
+		votesInfo.CandidateAddress = v.ToAddress
+		votesInfo.Votes = v.Vote
+		voteInfos = append(voteInfos, votesInfo)
+	}
+
+	votesResp.Total = accountVoteResultRes.Total
+	votesResp.Data = voteInfos
+
+	queryVotesSubHandle(votesResp)
+
+	totalVotes := module.QueryTotalVotes()
+	votesResp.TotalVotes = totalVotes
+
+	return votesResp, nil
+}
+
+// QueryVotesSubHandle
+func queryVotesSubHandle(votesResp *entity.VotesResp) {
+	votesInfos := votesResp.Data
+	for index := range votesInfos {
+		votesInfo := votesInfos[index]
+
+		strSQLOne := fmt.Sprintf(`
+			select acc.address as candidateAddress, acc.account_name as candidateName, wlwit.url as candidateUrl
+			from tron_account acc 
+			left join wlcy_witness_create_info wlwit on wlwit.address=acc.address 
+			where acc.address = '%v'`, votesInfo.CandidateAddress)
+
+		candidateInfo, err := module.QueryCandidateInfo(strSQLOne)
+		if err != nil {
+			log.Errorf("QueryVotesSubHandle queryCandidateInfo strSQL:%v, err:[%v]",strSQLOne,  err)
+		} else {
+			votesInfo.CandidateName = candidateInfo.CandidateName
+			votesInfo.CandidateURL = candidateInfo.CandidateUrl
+		}
+
+		strSQLTwo := fmt.Sprintf(`select frozen from tron_account where address = '%v'`, votesInfo.VoterAddress)
+
+		voterAvailableVotes, err := module.QueryVoterAvailableVotes(strSQLTwo)
+		if err != nil {
+			log.Errorf("QueryVotesSubHandle queryVoterAvailableVotes strSQL:%v, err:[%v]",strSQLTwo, err)
+		} else {
+			votesInfo.VoterAvailableVotes = voterAvailableVotes
+		}
+	}
+}
+

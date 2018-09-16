@@ -13,9 +13,9 @@ import (
 
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
-	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/router"
 	"github.com/wlcy/tron/explorer/web/task"
+	"github.com/wlcy/tron/explorer/web/buffer"
 )
 
 // config file
