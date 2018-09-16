@@ -12,7 +12,7 @@ func SyncCacheTodayReportTask() {
 		start := time.Now()
 		service.SyncCacheTodayReport()
 		cost := time.Since(start)
-		log.Info("SyncCacheTodayReportTask end, costTime=%s", cost)
+		log.Infof("SyncCacheTodayReportTask end, costTime=%v", cost)
 	}
 }
 
@@ -28,6 +28,6 @@ func SyncPersistYesterdayReport() {
 		<-t.C
 		service.SyncPersistYesterdayReport()
 		cost := time.Since(start)
-		log.Info("SyncPersistYesterdayReport end, costTime=%s", cost)
+		log.Infof("SyncPersistYesterdayReport end, costTime=%v", cost)
 	}
 }

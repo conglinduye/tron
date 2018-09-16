@@ -156,7 +156,7 @@ func SyncPersistYesterdayReport() {
 		t2 := t1.Add(24 * time.Hour)
 		startTime := t1.UnixNano() / 1e6
 		endTime := t2.UnixNano() / 1e6
-		fmt.Printf("startTime:%v, endTime:%v\n", startTime, endTime)
+		fmt.Printf("SyncPersistYesterdayReport startTime:%v, endTime:%v\n", startTime, endTime)
 		reportOverview := &entity.ReportOverview{}
 		syncReportBetweenTime(startTime, endTime, reportOverview)
 		syncReportByTime(endTime, reportOverview)
@@ -167,7 +167,7 @@ func SyncPersistYesterdayReport() {
 		if err == redis.Nil {
 			SyncCacheHistoryReport()
 			historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
-		} else {
+		} else if err != nil {
 			log.Errorf("SyncPersistYesterdayReport historyOverviewValue redis get value error :[%v]\n", err)
 			return
 		}
@@ -198,7 +198,6 @@ func SyncCacheHistoryReport() {
 	if err != nil {
 		log.Errorf("SyncCacheHistoryReport set err:[%v]", err)
 	}
-
 	value, err := json.Marshal(reportOverviews)
 	if err != nil {
 		log.Errorf("SyncCacheHistoryReport redis set err:[%v]", err)
