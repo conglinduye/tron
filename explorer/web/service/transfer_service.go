@@ -61,7 +61,7 @@ func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
 	if filterSQL == "" {
-		hourBefore, _ := time.ParseDuration("-2h")
+		hourBefore, _ := time.ParseDuration("-24h")
 		filterTempSQL = fmt.Sprintf("and create_time>%v", time.Now().Add(hourBefore).UnixNano())
 	}
 
