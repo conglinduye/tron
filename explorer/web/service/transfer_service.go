@@ -11,7 +11,7 @@ import (
 
 //QueryTransfers 条件查询  	//?sort=-number&limit=1&count=true&number=2135998  TODO: cache
 func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
-	var filterSQL, sortSQL, pageSQL string
+	var filterSQL, sortSQL, pageSQL, filterTempSQL string
 	mutiFilter := false
 
 	strSQL := fmt.Sprintf(`
@@ -62,10 +62,10 @@ func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 
 	if filterSQL == "" {
 		hourBefore, _ := time.ParseDuration("-2h")
-		filterSQL = fmt.Sprintf("and create_time>%v", time.Now().Add(hourBefore).UnixNano())
+		filterTempSQL = fmt.Sprintf("and create_time>%v", time.Now().Add(hourBefore).UnixNano())
 	}
 
-	return module.QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL)
+	return module.QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL)
 }
 
 //QueryTransfer 精确查询  	//number=2135998   TODO: cache

@@ -8,8 +8,8 @@ import (
 )
 
 //QueryTransfersRealize 操作数据库
-func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.TransfersResp, error) {
-	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
+func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL string) (*entity.TransfersResp, error) {
+	strFullSQL := strSQL + " " + filterSQL + "" + filterTempSQL + " " + sortSQL + " " + pageSQL
 	log.Debug(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
