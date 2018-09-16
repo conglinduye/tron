@@ -6,7 +6,7 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 )
 
-func SyncCacheTodayReportTask() {
+func SyncCacheTodayReport() {
 	for range time.Tick(3 * time.Minute) {
 		log.Info("SyncCacheTodayReportTask start")
 		start := time.Now()
