@@ -85,6 +85,8 @@ func (wsConn *wsConnection) wsWriteLoop() {
 			if msg != nil {
 				if err := wsConn.wsSocket.WriteMessage(msg.messageType, msg.data); err != nil {
 					goto error
+				} else {
+					fmt.Printf("send user:[%v],message:[%v]-[%v]\n", wsConn.wsSocket.RemoteAddr, msg.messageType, string(msg.data))
 				}
 			}
 
