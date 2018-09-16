@@ -35,7 +35,7 @@ func otherRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, resp)
 	})
 
-	ginRouter.GET("/socket.io", func(c *gin.Context) {
+	ginRouter.GET("/socket.io/", func(c *gin.Context) {
 		log.Debugf("Hello socket.io")
 		websocket.WsHandler(c.Writer, c.Request)
 		c.JSON(http.StatusOK, "ok")
