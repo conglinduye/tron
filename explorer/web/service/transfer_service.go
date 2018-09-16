@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
@@ -60,10 +59,10 @@ func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
-	if filterSQL == "" {
+	/*if filterSQL == "" {
 		hourBefore, _ := time.ParseDuration("-24h")
 		filterTempSQL = fmt.Sprintf("and create_time>%v", time.Now().Add(hourBefore).UnixNano())
-	}
+	}*/
 
 	return module.QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL)
 }
