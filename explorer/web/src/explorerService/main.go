@@ -51,7 +51,7 @@ func main() {
 		conf.Mysql.User, conf.Mysql.Pass)
 	*/
 
-	go task.SyncCacheTodayReportTask()
+	go task.SyncCacheTodayReport()
 
 	go task.SyncPersistYesterdayReport()
 

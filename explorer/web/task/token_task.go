@@ -12,7 +12,7 @@ func SyncAssetIssueParticipated() {
 		log.Info("SyncAssetIssueParticipated start")
 		service.SyncAssetIssueParticipated()
 		cost := time.Since(start)
-		log.Info("SyncAssetIssueParticipated end, costTime=%s", cost)
+		log.Infof("SyncAssetIssueParticipated end, costTime=%v", cost)
 	}
 }
 

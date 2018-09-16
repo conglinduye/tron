@@ -6,13 +6,13 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 )
 
-func SyncCacheTodayReportTask() {
+func SyncCacheTodayReport() {
 	for range time.Tick(3 * time.Minute) {
 		log.Info("SyncCacheTodayReportTask start")
 		start := time.Now()
 		service.SyncCacheTodayReport()
 		cost := time.Since(start)
-		log.Info("SyncCacheTodayReportTask end, costTime=%s", cost)
+		log.Infof("SyncCacheTodayReportTask end, costTime=%v", cost)
 	}
 }
 
@@ -28,6 +28,6 @@ func SyncPersistYesterdayReport() {
 		<-t.C
 		service.SyncPersistYesterdayReport()
 		cost := time.Since(start)
-		log.Info("SyncPersistYesterdayReport end, costTime=%s", cost)
+		log.Infof("SyncPersistYesterdayReport end, costTime=%v", cost)
 	}
 }

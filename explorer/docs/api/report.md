@@ -5,6 +5,9 @@
 input:param
 ```param
 
+eg: 
+http://18.216.57.65:20110/api/stats/overview
+
 ```
 
 output:json
