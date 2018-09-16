@@ -3,6 +3,8 @@ package router
 import (
 	"net/http"
 
+	"github.com/wlcy/tron/explorer/lib/websocket"
+
 	"github.com/gin-gonic/gin"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/util"
@@ -32,6 +34,13 @@ func otherRegister(ginRouter *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, resp)
 	})
+
+	ginRouter.GET("/socket.io", func(c *gin.Context) {
+		log.Debugf("Hello socket.io")
+		websocket.WsHandler(c.Writer, c.Request)
+		c.JSON(http.StatusOK, "ok")
+	})
+
 	//验签
 	/*ginRouter.GET("/api/auth", func(c *gin.Context) {
 		log.Debugf("Hello /api/auth")
