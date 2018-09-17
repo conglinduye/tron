@@ -26,9 +26,9 @@ func main() {
 		// getBlocks(-1, 500, 100) // get
 
 		// fmt.Println(bb.GetTransactionByBlockID(2414358))
-		r := bb.GetTransactionByBlockID(2414268)
+		r := bb.GetTransactionByBlockID(2288184)
 		for idx, trx := range r {
-			fmt.Printf("blockID:%v, %v-->%v\n", 2414268, idx, utils.ToJSONStr(trx))
+			fmt.Printf("blockID:%v, %v-->%v\n", 2288184, idx, utils.ToJSONStr(trx))
 		}
 		// getTrx()
 		// getTrxs()
