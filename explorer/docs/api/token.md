@@ -209,6 +209,35 @@ output:json
     ]
 }
 ```
+## 根据通证名称查询通证持有人信息
+- url:/api/token/:name/address
+- method:get
+
+input:param
+```param
+
+eg:
+http://18.216.57.65:20110/api/token/VIP/address
+```
+output:json
+```json
+{
+    "total":2,
+    "data":[
+        {
+            "address":"TWWBvgxBteNn1KcQXMrx4yCZTcLfZd49sB",
+            "name":"VIP",
+            "balance":1
+        },
+        {
+            "address":"TXiBuTWoXvWYKz47NcvKe1gfQDdNHnbBmh",
+            "name":"VIP",
+            "balance":2069328
+        }
+    ]
+}
+```
+
 ## 上传Token图片
 - url:/api/uploadLogo
 - method:post

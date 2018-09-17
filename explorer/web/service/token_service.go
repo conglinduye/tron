@@ -343,3 +343,13 @@ func SyncAssetIssueParticipated() {
 	}
 
 }
+
+// QueryAssetBalances
+func QueryAssetBalances(name string) (*entity.AssetBalanceResp, error){
+	assetBalanceResp, err := module.QueryAssetBalances(name)
+	if err != nil {
+		log.Errorf("QueryAssetBalances list is nil or err:[%v]", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	return assetBalanceResp, nil
+}

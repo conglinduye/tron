@@ -124,3 +124,17 @@ type AssetIssue struct {
 	AssetName				string 				`json:"assetName"`				// assetName
 	Participated			int64				`json:"participated"`			// participated
 }
+
+
+type AssetBalanceResp struct {
+	Total	int64								`json:"total"` 					// 总记录数
+	Data    []*AssetBalance						`json:"data"`   				// 数据
+}
+
+
+type AssetBalance struct {
+	Address 				string 				`json:"address"` 				// address
+	Name					string 				`json:"name"`					// asset_name
+	Balance					int64 				`json:"balance"`				// balance
+}
+

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/util"
+	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/service"
 )
 
@@ -46,24 +47,32 @@ func otherRegister(ginRouter *gin.Engine) {
 	})
 
 	//验签
-	/*ginRouter.GET("/api/auth", func(c *gin.Context) {
-		log.Debugf("Hello /api/auth")
-		resp, err := service.QueryAuth()
+	ginRouter.GET("/api/auth", func(c *gin.Context) {
+		req := &entity.Auth{}
+		if c.BindJSON(req) == nil {
+			if req == nil {
+				log.Errorf("parsing request parameter err!")
+				c.JSON(http.StatusInternalServerError, http.ErrBodyNotAllowed)
+			}
+		}
+		log.Debugf("Hello /api/auth %#v", req)
+		resp, err := service.QueryAuth(req)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
 		}
 		c.JSON(http.StatusOK, resp)
 	})
-	//申请测试币
-	ginRouter.GET("/api/testnet/request-coins", func(c *gin.Context) {
-		log.Debugf("Hello /api/testnet/request-coins")
-		resp, err := service.QueryTestRequestCoin()
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
-		}
-		c.JSON(http.StatusOK, resp)
-	})*/
+	/*
+		//申请测试币
+		ginRouter.GET("/api/testnet/request-coins", func(c *gin.Context) {
+			log.Debugf("Hello /api/testnet/request-coins")
+			resp, err := service.QueryTestRequestCoin()
+			if err != nil {
+				errCode, _ := util.GetErrorCode(err)
+				c.JSON(errCode, err)
+			}
+			c.JSON(http.StatusOK, resp)
+		})*/
 
 }

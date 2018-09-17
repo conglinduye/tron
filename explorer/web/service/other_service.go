@@ -54,7 +54,7 @@ func QueryMarketsBuffer() ([]*entity.MarketInfo, error) {
 }
 
 //QueryAuth ...
-func QueryAuth() (*entity.TransfersResp, error) {
+func QueryAuth(req *entity.Auth) (*entity.AuthResp, error) {
 
 	return nil, nil
 }

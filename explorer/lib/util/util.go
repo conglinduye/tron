@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/wlcy/tron/explorer/lib/log"
@@ -92,4 +93,35 @@ func SendRequest(urlStr, method, queryParam string, postData io.Reader) (buffer 
 	log.Debugf("Response body:[%s]", buffer.Bytes())
 
 	return buffer, nil
+}
+
+// ParsingJSONFromString 解析json结构：eg：
+// {"BitTorrent":0,"Bithumb":0,"HuobiToken":0,"IPFS":0,"James":0,"MacCoin":0,"NBACoin":0,"Skypeople":0,"TRXTestCoin":0,"binance":0,"ofoBike":0}
+func ParsingJSONFromString(jstr string) map[string]int64 {
+	if jstr == "" {
+		return nil
+	}
+	jsonMap := make(map[string]int64, 0)
+	jsonStr := jstr[1 : len(jstr)-1] //去除前后{}
+	for _, param := range strings.Split(jsonStr, ",") {
+		if param != "" {
+			for key, value := range strings.Split(param, ":") {
+				if key == 0 {
+					value = strings.Replace(value, "\"", "", -1)
+					value = strings.Replace(value, "'", "", -1)
+					jsonMap[value] = 0
+				} else {
+					ValueInt, err := strconv.ParseInt(value, 10, 64)
+					if err != nil {
+						ValueInt = 0
+					}
+					if ValueInt > 0 {
+						jsonMap[value] = ValueInt
+					}
+				}
+
+			}
+		}
+	}
+	return jsonMap
 }
