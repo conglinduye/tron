@@ -133,16 +133,18 @@ func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 	}
 
 	if len(data) > 0 {
-		blockTrx := make([]*entity.TransactionInfo, 0, 20)
 		blockID := data[0].Block
+		blockTrx := make([]*entity.TransactionInfo, 0, 30)
 		for _, trx := range data {
 			b.trxHash.Store(trx.Hash, trx) // trx hash index
 
 			if blockID != trx.Block {
-				b.cBlockTrx.Store(blockID, blockTrx) // blockID trx index
-				// log.Debugf("store cBlock(%v) trx:%v\n", blockID, len(blockTrx))
-				blockTrx = blockTrx[:0]
+				trxs := make([]*entity.TransactionInfo, len(blockTrx))
+				copy(trxs, blockTrx[:])
+				b.cBlockTrx.Store(blockID, trxs)
+
 				blockID = trx.Block
+				blockTrx = blockTrx[:0]
 			}
 			blockTrx = append(blockTrx, trx)
 		}
