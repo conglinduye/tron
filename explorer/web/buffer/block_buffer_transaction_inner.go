@@ -208,7 +208,7 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 		}
 		trx.ContractType = int64(ctx.Type)
 		trx.Confirmed = confirmed
-		trx.ContractData = utils.HexEncode(ctx.Parameter.Value)
+		_, trx.ContractData = utils.GetContractInfoStr3(int32(ctx.Type), ctx.Parameter.Value)
 
 		if ctx.Type == core.Transaction_Contract_TransferContract {
 			transfer := new(entity.TransferInfo)
