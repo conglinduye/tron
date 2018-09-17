@@ -132,18 +132,22 @@ func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 		b.trxList = b.trxList[0:b.maxConfirmedTrx]
 	}
 
-	blockTrx := make([]*entity.TransactionInfo, 0, 20)
-	blockID := data[0].Block
-	for _, trx := range data {
-		b.trxHash.Store(trx.Hash, trx) // trx hash index
+	if len(data) > 0 {
+		blockTrx := make([]*entity.TransactionInfo, 0, 20)
+		blockID := data[0].Block
+		for _, trx := range data {
+			b.trxHash.Store(trx.Hash, trx) // trx hash index
 
-		if blockID != trx.Block {
-			b.cBlockTrx.Store(blockID, blockTrx) // blockID trx index
-			blockTrx = blockTrx[:0]
+			if blockID != trx.Block {
+				b.cBlockTrx.Store(blockID, blockTrx) // blockID trx index
+				// log.Debugf("store cBlock(%v) trx:%v\n", blockID, len(blockTrx))
+				blockTrx = blockTrx[:0]
+				blockID = trx.Block
+			}
+			blockTrx = append(blockTrx, trx)
 		}
-		blockTrx = append(blockTrx, trx)
+		b.cBlockTrx.Store(blockID, blockTrx)
 	}
-	b.cBlockTrx.Store(blockID, blockTrx)
 }
 
 func (b *blockBuffer) loadTransactionFromDB(filter string, limit string) []*entity.TransactionInfo {

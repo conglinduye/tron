@@ -15,7 +15,7 @@ func main() {
 	flag.Parse()
 	// mysql.Initialize("127.0.0.1", "3306", "tron", "budev", "tron**1")
 	mysql.Initialize("mine", "3306", "tron", "tron", "tron")
-	log.ChangeLogLevel(log.Str2Level("INFO"))
+	log.ChangeLogLevel(log.Str2Level("DEBUG"))
 
 	// initRedis([]string{"127.0.0.1:6379"})
 	bb := buffer.GetBlockBuffer()
@@ -25,6 +25,11 @@ func main() {
 		// getBlocks(-1, 0, 100) // get latest 100 blocks
 		// getBlocks(-1, 500, 100) // get
 
+		// fmt.Println(bb.GetTransactionByBlockID(2414358))
+		r := bb.GetTransactionByBlockID(2414358)
+		for idx, trx := range r {
+			fmt.Printf("blockID:%v, %v-->%v\n", 2414358, idx, utils.ToJSONStr(trx))
+		}
 		// getTrx()
 		// getTrxs()
 
