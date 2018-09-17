@@ -48,6 +48,10 @@ func accountRegister(ginRouter *gin.Engine) {
 		req := &entity.Accounts{}
 		req.Address = c.Param("address") //占位符传参
 		log.Debugf("Hello /api/account/:%#v//media", req.Address)
+		if req.Address == "" {
+			errCode, _ := util.GetErrorCode(util.NewErrorMsg(util.Error_common_not_suport_parameter))
+			c.JSON(errCode, util.NewErrorMsg(util.Error_common_not_suport_parameter))
+		}
 		resp, err := service.QueryAccountMedia(req)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
@@ -79,7 +83,26 @@ func accountRegister(ginRouter *gin.Engine) {
 		req := &entity.SuperAccountInfo{}
 		req.Address = c.Param("address") //占位符传参
 		log.Debugf("Hello /api/account/:%#v//sr", req.Address)
+		if req.Address == "" {
+			errCode, _ := util.GetErrorCode(util.NewErrorMsg(util.Error_common_not_suport_parameter))
+			c.JSON(errCode, util.NewErrorMsg(util.Error_common_not_suport_parameter))
+		}
 		resp, err := service.QueryAccountSr(req)
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+	//查询用户的交易统计信息
+	ginRouter.GET("/api/account/:address/stats", func(c *gin.Context) {
+		address := c.Param("address") //占位符传参
+		log.Debugf("Hello /api/account/:%#v//stats", address)
+		if address == "" {
+			errCode, _ := util.GetErrorCode(util.NewErrorMsg(util.Error_common_not_suport_parameter))
+			c.JSON(errCode, util.NewErrorMsg(util.Error_common_not_suport_parameter))
+		}
+		resp, err := service.QueryAccountStats(address)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)

@@ -104,3 +104,10 @@ type AccountMediaInfo struct {
 	Image   string `json:"image"`  //:
 	Reason  string `json:"reason"` //:
 }
+
+//AccountTransactionNum ...
+type AccountTransactionNum struct {
+	Transactions    int64 `json:"transactions"`     //:: "827",
+	TransactionsOut int64 `json:"transactions_out"` //:: "230",
+	TransactionIn   int64 `json:"transaction_in"`   //:: "597"
+}

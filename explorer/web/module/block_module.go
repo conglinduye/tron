@@ -60,7 +60,7 @@ func QueryBlocksRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Blo
 //QueryBlockRealize 操作数据库
 func QueryBlockRealize(strSQL, filterSQL string) (*entity.BlockInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryBlocks error :[%v]\n", err)

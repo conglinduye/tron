@@ -172,23 +172,3 @@ output:json
       校验不通过，code提示“WRONG_CAPTCHA”， message提示：“Wrong Captcha Code"      
 如果存在，code提示“ALREADY_REQUESTED_IP”， message提示：“Already requested TRX from IP recently" 
 
-
-
-## 验签-TODO
-- url:/api/auth
-- method:POST
-
-input:json
-```json
-{
-    "transaction":"123213242"
-}
-```
-output:json
-```json  
-{
-    "key":"123213242"
-}
-```
-返回的key用途：
-调用【修改超级代表github信息】接口时，将key设置请求头中，用于修改前的校验

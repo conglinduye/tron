@@ -10,7 +10,7 @@ import (
 //QueryTransfersRealize 操作数据库
 func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL string) (*entity.TransfersResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + "" + filterTempSQL + " " + sortSQL + " " + pageSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryTransfersRealize error :[%v]\n", err)
@@ -57,7 +57,7 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL st
 //QueryTransferRealize 操作数据库
 func QueryTransferRealize(strSQL, filterSQL string) (*entity.TransferInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryTransferRealize error :[%v]\n", err)
