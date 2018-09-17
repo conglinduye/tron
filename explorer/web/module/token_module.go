@@ -1,20 +1,21 @@
 package module
 
 import (
-	"github.com/wlcy/tron/explorer/web/entity"
-	"github.com/wlcy/tron/explorer/lib/log"
-	"github.com/wlcy/tron/explorer/lib/mysql"
-	"github.com/wlcy/tron/explorer/lib/util"
 	"encoding/json"
 	"fmt"
 	"sync/atomic"
+
 	"github.com/wlcy/tron/explorer/core/utils"
+	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/mysql"
+	"github.com/wlcy/tron/explorer/lib/util"
+	"github.com/wlcy/tron/explorer/web/entity"
 )
 
 //QueryTokens
 func QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.TokenResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryTokens error:[%v]\n", err)
@@ -64,7 +65,7 @@ func QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Tok
 //QueryToken
 func QueryTokenRealize(strSQL, filterSQL string) (*entity.TokenInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryToken error:[%v]\n", err)
@@ -101,7 +102,7 @@ func QueryTokenRealize(strSQL, filterSQL string) (*entity.TokenInfo, error) {
 //QueryTokenBalanceRealize 查询通证余额
 func QueryTokenBalanceRealize(strSQL, filterSQL string) (*entity.TokenBalanceInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryTokenBalanceRealize error :[%v]\n", err)
@@ -130,7 +131,7 @@ func QueryTotalTokenTransfers(tokenName string) (int64, error) {
     select count(1) as totalTokenTransfers
 	from contract_asset_transfer
 	where asset_name = '%v' `, tokenName)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalTokenTransfers error :[%v]\n", err)
@@ -155,7 +156,7 @@ func QueryTotalTokenHolders(tokenName string) (int64, error) {
 	select count(1) as totalTokenHolders
 	from account_asset_balance 
 	where asset_name = '%v' `, tokenName)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalTokenHolders error :[%v]\n", err)
@@ -182,7 +183,7 @@ func QueryTokenExtInfo(addressList []string) ([]*entity.TokenExtInfo, error) {
 	FROM wlcy_asset_logo logo
 	left join wlcy_asset_info info on logo.address=info.address and info.status=1
 	where 1=1 and %v order by info.address `, filterSQL)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("queryTokenExtInfo error :[%v]\n", err)
@@ -302,7 +303,7 @@ func IsAddressExist(address string) (bool, error) {
 	select address,logo_url from wlcy_asset_logo
 	where 1=1 and address='%v' limit 1 `, address)
 	//查询结果
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("isAddressNotExist error :[%v]\n", err)
@@ -318,13 +319,12 @@ func IsAddressExist(address string) (bool, error) {
 	return isExist, nil
 }
 
-
 // QueryAllAssetIssue
 func QueryAllAssetIssue() ([]*entity.AssetIssue, error) {
 	strSQL := fmt.Sprintf(`
 		select owner_address, asset_name, participated
 		from asset_issue `)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryAllAssetIssue error:[%v]\n", err)
@@ -348,14 +348,13 @@ func QueryAllAssetIssue() ([]*entity.AssetIssue, error) {
 	return assetIssues, nil
 }
 
-
 // QueryParticipateAsset
 func QueryParticipateAsset(assetName string) (*entity.ParticipateAsset, error) {
 	strSQL := fmt.Sprintf(`
 		select asset_name, sum(amount) as totalAmount
 		from contract_participate_asset
 		where asset_name = '%v'`, assetName)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryParticipateAsset error:[%v]\n", err)
@@ -381,7 +380,7 @@ func UpdateAssetIssue(assetName string, participated int64) error {
 	strSQL := fmt.Sprintf(`
 	update asset_issue set participated=%v where asset_name='%v'`,
 		participated, assetName)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	_, _, err := mysql.ExecuteSQLCommand(strSQL, true)
 	if err != nil {
 		log.Errorf("UpdateAssetIssue result fail:[%v]  sql:%s", err, strSQL)
@@ -397,7 +396,7 @@ func QueryAssetBalances(tokenName string) (*entity.AssetBalanceResp, error) {
 	select address, asset_name, balance
 	from account_asset_balance 
 	where asset_name = '%v' order by balance desc `, tokenName)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryAssetBalances error :[%v]\n", err)
@@ -429,7 +428,3 @@ func QueryAssetBalances(tokenName string) (*entity.AssetBalanceResp, error) {
 	assetBalanceResp.Data = assetBalances
 	return assetBalanceResp, nil
 }
-
-
-
-

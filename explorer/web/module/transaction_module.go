@@ -10,7 +10,7 @@ import (
 //QueryTransactionsRealize 操作数据库
 func QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.TransactionsResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryTransactionsRealize error :[%v]\n", err)
@@ -57,7 +57,7 @@ func QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*enti
 //QueryTransactionRealize 操作数据库
 func QueryTransactionRealize(strSQL, filterSQL string) (*entity.TransactionInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryTransactionRealize error :[%v]\n", err)

@@ -11,7 +11,7 @@ import (
 
 //QueryWitnessRealize 操作数据库
 func QueryWitnessRealize(strSQL string) ([]*entity.WitnessInfo, error) {
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryWitnessRealize error :[%v]\n", err)
@@ -52,7 +52,7 @@ func QueryTotalBlocks(curTime int64) (int64, error) {
     select ifnull(count(block_id),0) as totalBlock
     from tron.blocks blk
 	where 1=1 and blk.create_time>=%v `, curTime)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalBlocks error :[%v]\n", err)
@@ -73,7 +73,7 @@ func QueryTotalBlocks(curTime int64) (int64, error) {
 
 //QueryWitnessStatisticRealize 操作数据库
 func QueryWitnessStatisticRealize(strSQL string, totalBlocks int64) ([]*entity.WitnessStatisticInfo, error) {
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryWitnessStatisticRealize error :[%v]\n", err)

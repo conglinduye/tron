@@ -290,6 +290,26 @@ output:json
 }
 ```
 
+## 验签-TODO
+- url:/api/auth
+- method:POST
+
+input:json
+```json
+{
+    "transaction":"123213242"
+}
+```
+output:json
+```json  
+{
+    "key":"123213242"
+}
+```
+返回的key用途：
+调用【修改超级代表github信息】接口时，将key设置请求头中，用于修改前的校验
+
+
 ## 修改超级代表github信息
 - url:/api/account/:address/sr
 - method:POST
@@ -306,6 +326,7 @@ output:json
 ```json
 
 ```
+修改前需要校验请求头中【X-Key】的key，并校验key解析出来的address与请求参数的address是否一致，如果一致，则继续执行修改逻辑
 
 ## 查询超级代表github信息
 - url:/api/account/:address/sr
@@ -321,4 +342,23 @@ output:json
     "address": "RTFGHJK6GCVHHByui765CVBCVBVB",
     "githubLink": "sesameseed/tronsr-template" 
 }
+```
+
+
+## 查询用户的交易统计信息
+- url:/api/account/:address/stats
+- method:GET
+
+input:param
+```param
+eg: http://18.216.57.65:20110/api/account/TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp/stats
+```
+output:json
 ```json
+{
+    "transactions": "827",
+    "transactions_out": "230",
+    "transaction_in": "597"
+}
+```
+交易数包括TRX 交易和asset 交易

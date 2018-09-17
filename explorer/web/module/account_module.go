@@ -13,7 +13,7 @@ import (
 //QueryAccountsRealize 操作数据库
 func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.AccountsResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryAccountsRealize error :[%v]\n", err)
@@ -79,7 +79,7 @@ func querytokenBalanceInfo(address string) (map[string]int64, error) {
 	select acc.address,acc.asset_name as token_name,acc.creator_address,acc.balance
 	from tron.account_asset_balance acc
 	where 1=1 order by `)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("querytokenBalanceInfo error :[%v]\n", err)
@@ -105,7 +105,7 @@ func querytokenBalanceInfo(address string) (map[string]int64, error) {
 //QueryAccountRealize 操作数据库
 func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error) {
 	strFullSQL := strSQL + " " + filterSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryAccountRealize error :[%v]\n", err)
@@ -207,7 +207,7 @@ func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error
 //QueryAccountMediaRealize 操作数据库
 func QueryAccountMediaRealize(strSQL, filterSQL string) (*entity.AccountMediaInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryAccountMediaRealize error :[%v]\n", err)
@@ -243,7 +243,7 @@ func CheckSrAccountExist(address string) bool {
 		filterSQL = fmt.Sprintf(" and address='%v'", address)
 	}
 	strFullSQL := strSQL + " " + filterSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("CheckSrAccountExist error :[%v]\n", err)
@@ -267,7 +267,7 @@ func InsertSrAccount(address, github string) (int64, error) {
 			(address,github_link) value( '%v','%v')`,
 		address, github)
 
-	log.Debugf(strSQL)
+	log.Sql(strSQL)
 	instID, _, err := mysql.ExecuteSQLCommand(strSQL, true)
 	if err != nil {
 		log.Errorf("InsertSrAccount result fail:[%v]  sql:%s", err, strSQL)
@@ -281,7 +281,7 @@ func UpdateSrAccount(address, github string) (int64, error) {
 	strSQL := fmt.Sprintf(`update tron.wlcy_sr_account set github_link='%v' where address='%v'`,
 		github, address)
 
-	log.Debugf(strSQL)
+	log.Sql(strSQL)
 	instID, _, err := mysql.ExecuteSQLCommand(strSQL, true)
 	if err != nil {
 		log.Errorf("UpdateSrAccount result fail:[%v]  sql:%s", err, strSQL)
@@ -293,7 +293,7 @@ func UpdateSrAccount(address, github string) (int64, error) {
 //QueryAccountSrRealize 按账户查询github信息
 func QueryAccountSrRealize(strSQL, filterSQL string) (*entity.SuperAccountInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryAccountSrRealize error :[%v]\n", err)
@@ -311,6 +311,29 @@ func QueryAccountSrRealize(strSQL, filterSQL string) (*entity.SuperAccountInfo, 
 	}
 
 	return srAcountInfo, nil
+}
+
+//QueryAccountStatsRealize 查询用户的交易统计信息
+func QueryAccountStatsRealize(strSQL string) (*entity.AccountTransactionNum, error) {
+	log.Sql(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryAccountStatsRealize error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryAccountStatsRealize dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	var acountTrxInfo = &entity.AccountTransactionNum{}
+	//填充数据
+	for dataPtr.NextT() {
+		acountTrxInfo.TransactionsOut = mysql.ConvertDBValueToInt64(dataPtr.GetField("trxOut"))
+		acountTrxInfo.TransactionIn = mysql.ConvertDBValueToInt64(dataPtr.GetField("trxIn"))
+		acountTrxInfo.Transactions = acountTrxInfo.TransactionsOut + acountTrxInfo.TransactionIn
+	}
+
+	return acountTrxInfo, nil
 }
 
 //解析用户asset的带宽使用情况

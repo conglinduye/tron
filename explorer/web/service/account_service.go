@@ -166,7 +166,7 @@ func UpdateAccountSr(req *entity.SuperAccountInfo) (*entity.SuperAccountInfo, er
 	return srAccount, err
 }
 
-//QueryAccountSr 查询超级账户github信息 	//number=2135998
+//QueryAccountSr 查询超级账户github信息
 func QueryAccountSr(req *entity.SuperAccountInfo) (*entity.SuperAccountInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
@@ -178,4 +178,21 @@ func QueryAccountSr(req *entity.SuperAccountInfo) (*entity.SuperAccountInfo, err
 		filterSQL = fmt.Sprintf(" and address='%v'", req.Address)
 	}
 	return module.QueryAccountSrRealize(strSQL, filterSQL)
+}
+
+//QueryAccountStats 查询用户的交易统计信息
+func QueryAccountStats(address string) (*entity.AccountTransactionNum, error) {
+	strSQL := fmt.Sprintf(`
+	select trf.owner_address,outT.trxOut,inTrx.trxIn
+	from tron.contract_transfer trf
+	left join (
+		select owner_address, count(1) as trxOut from tron.contract_transfer trf where owner_address='%v'
+	) outT on outT.owner_address=trf.owner_address
+	left join (
+		select to_address, count(1) as trxIn from tron.contract_transfer trf where to_address='%v'
+	) inTrx on inTrx.to_address=trf.owner_address
+	 where trf.owner_address='%v'
+	 limit 0,1`, address, address, address)
+
+	return module.QueryAccountStatsRealize(strSQL)
 }

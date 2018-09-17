@@ -2,8 +2,9 @@ package module
 
 import (
 	"fmt"
-	"github.com/wlcy/tron/explorer/lib/mysql"
+
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/entity"
 )
@@ -14,7 +15,7 @@ func QueryReportBlock(startTime, endTime int64) (*entity.ReportBlock, error) {
 	select count(1) as totalCount, sum(block_size) as totalSize, sum(transaction_num) as totalTransaction
 	from blocks
     where create_time >= %v and create_time < %v `, startTime, endTime)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryReportBlock error :[%v]\n", err)
@@ -41,7 +42,7 @@ func QueryTotalReportBlock(dateTime int64) (*entity.ReportBlock, error) {
 	select count(1) as totalCount, sum(block_size) as totalSize, sum(transaction_num) as totalTransaction
 	from blocks
     where create_time < %v `, dateTime)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalReportBlock error :[%v]\n", err)
@@ -62,8 +63,6 @@ func QueryTotalReportBlock(dateTime int64) (*entity.ReportBlock, error) {
 	return reportBlock, nil
 }
 
-
-
 //QueryTotalReportTransaction
 func QueryTotalReportTransaction(dateTime int64) (int64, error) {
 	var totalTransaction = int64(0)
@@ -71,7 +70,7 @@ func QueryTotalReportTransaction(dateTime int64) (int64, error) {
     select count(1) as totalTransaction
 	from transactions 
 	where create_time < %v `, dateTime)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalReportTransactions error :[%v]\n", err)
@@ -120,7 +119,7 @@ func QueryTotalReportAccount(dateTime int64) (int64, error) {
     select count(1) as totalAccount
 	from tron_account
 	where create_time < %v `, dateTime)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalReportAccounts error :[%v]\n", err)
@@ -144,7 +143,7 @@ func QueryTotalStatistics() (int64, error) {
 	strSQL := fmt.Sprintf(`
     select count(1) as totalStatistics
 	from wlcy_statistics `)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalStatistics error :[%v]\n", err)
@@ -200,7 +199,7 @@ func UpdateStatistics(overview *entity.ReportOverview) error {
 
 //QueryStatistics
 func QueryStatistics(strSQL string) ([]*entity.ReportOverview, error) {
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryStatistics error:[%v]\n", err)
@@ -231,9 +230,3 @@ func QueryStatistics(strSQL string) ([]*entity.ReportOverview, error) {
 
 	return reportOverviews, nil
 }
-
-
-
-
-
-
