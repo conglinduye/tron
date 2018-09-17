@@ -87,6 +87,18 @@ func GetContractByParamVal(ctxType core.Transaction_Contract_ContractType, val [
 func GetContractInfoStr(contract *core.Transaction_Contract) (ownerAddr string, contractDetail string) {
 	_, ctx := GetContractByParamVal(contract.Type, contract.Parameter.Value)
 	if nil != ctx {
+		contractDetail = ToJSONStr(formatContractJSONStr(ToJSONStr(ctx)))
+		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
+			ownerAddr = Base58EncodeAddr(ownerIF.GetOwnerAddress())
+		}
+	}
+	return
+}
+
+// GetContractInfoObj ...
+func GetContractInfoObj(contract *core.Transaction_Contract) (ownerAddr string, contractDetail interface{}) {
+	_, ctx := GetContractByParamVal(contract.Type, contract.Parameter.Value)
+	if nil != ctx {
 		contractDetail = formatContractJSONStr(ToJSONStr(ctx))
 		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
 			ownerAddr = Base58EncodeAddr(ownerIF.GetOwnerAddress())
@@ -100,6 +112,19 @@ func GetContractInfoStr2(ctxType int32, val []byte) (ownerAddr string, contractD
 
 	_, ctx := GetContractByParamVal(core.Transaction_Contract_ContractType(ctxType), val)
 	if nil != ctx {
+		contractDetail = ToJSONStr(formatContractJSONStr(ToJSONStr(ctx)))
+		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
+			ownerAddr = Base58EncodeAddr(ownerIF.GetOwnerAddress())
+		}
+	}
+	return
+}
+
+// GetContractInfoStr3 ...
+func GetContractInfoStr3(ctxType int32, val []byte) (ownerAddr string, contractDetail interface{}) {
+
+	_, ctx := GetContractByParamVal(core.Transaction_Contract_ContractType(ctxType), val)
+	if nil != ctx {
 		contractDetail = formatContractJSONStr(ToJSONStr(ctx))
 		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
 			ownerAddr = Base58EncodeAddr(ownerIF.GetOwnerAddress())
@@ -108,7 +133,7 @@ func GetContractInfoStr2(ctxType int32, val []byte) (ownerAddr string, contractD
 	return
 }
 
-func formatContractJSONStr(jsonStr string) string {
+func formatContractJSONStr(jsonStr string) interface{} {
 	var b interface{}
 
 	err := json.Unmarshal([]byte(jsonStr), &b)
@@ -127,7 +152,7 @@ func formatContractJSONStr(jsonStr string) string {
 		}
 	}
 
-	return ToJSONStr(m)
+	return m
 }
 
 func convertMapVal(val map[string]interface{}) interface{} {
