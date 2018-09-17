@@ -44,10 +44,10 @@ type accountTokenBuffer struct {
 
 func (w *accountTokenBuffer) GetAccountTokenBuffer(address string) (tokenBalance map[string]int64) {
 	if len(w.accountTokenInfoList) == 0 {
-		log.Debugf("GetAccountTokenBuffer info from buffer nil, data reload")
+		log.Infof("GetAccountTokenBuffer info from buffer nil, data reload")
 		w.getAccountTokenBuffer()
 	}
-	log.Debugf("GetAccountTokenBuffer info from buffer, buffer data updated ")
+	log.Infof("GetAccountTokenBuffer info from buffer, buffer data updated ")
 	return w.accountTokenInfoList[address]
 }
 
@@ -56,7 +56,7 @@ func (w *accountTokenBuffer) getAccountTokenBuffer() {
 	select acc.address,acc.asset_name as token_name,acc.creator_address,acc.balance
 	from tron.account_asset_balance acc
 	where 1=1 `)
-	log.Debug(strSQL)
+	log.Info(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("getAccountTokenBuffer error :[%v]\n", err)
@@ -84,7 +84,7 @@ func (w *accountTokenBuffer) getAccountTokenBuffer() {
 		}
 	}
 
-	log.Debugf("account token info in buffer :data done.")
+	log.Infof("account token info in buffer :data done.")
 	w.Lock()
 	w.accountTokenInfoList = accountInfoMap
 	w.Unlock()

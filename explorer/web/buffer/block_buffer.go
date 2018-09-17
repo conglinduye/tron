@@ -98,7 +98,7 @@ func (b *blockBuffer) GetSolidityNodeMaxBlockID() int64 {
 //	count: 需要返回的块的数量
 func (b *blockBuffer) GetBlocks(startID int64, offset int64, count int64) (blocks []*entity.BlockInfo, err error) {
 	log.Debugf("get blocks data in buffer...")
-	// fmt.Printf("GetBlocks startNum:%v, offset:%v, count:%v\n", startID, offset, count)
+	// log.Debugf("GetBlocks startNum:%v, offset:%v, count:%v\n", startID, offset, count)
 	if count <= 0 {
 		return nil, nil
 	}
@@ -115,7 +115,7 @@ func (b *blockBuffer) GetBlocks(startID int64, offset int64, count int64) (block
 	if numStart <= 0 {
 		numStart = 0
 	}
-	// fmt.Printf("GetBlocks finah startNum:%v, offset:%v, count:%v, maxBlockID:%v, numStart:%v, numEnd:%v, count:%v\n", startID, offset, count, maxBlockID, numStart, numEnd, numEnd-numStart+1)
+	// log.Debugf("GetBlocks finah startNum:%v, offset:%v, count:%v, maxBlockID:%v, numStart:%v, numEnd:%v, count:%v\n", startID, offset, count, maxBlockID, numStart, numEnd, numEnd-numStart+1)
 	ret := b.readBuffer(numStart, numEnd)
 	return ret, nil
 }
@@ -142,7 +142,7 @@ func GetBlockBuffer() Buffer {
 		_blockBuffer.solidityClient = grpcclient.GetRandomSolidity()
 		_blockBuffer.walletClient = grpcclient.GetRandomWallet()
 		_blockBuffer.maxNodeErr = 3
-		_blockBuffer.maxUnconfirmedBlockRead = 100
+		_blockBuffer.maxUnconfirmedBlockRead = 50
 		_blockBuffer.maxBlockInMemory = 5000
 		_blockBuffer.maxConfirmedTrx = 30000
 
