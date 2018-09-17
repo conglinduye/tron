@@ -88,18 +88,20 @@ func (b *blockBuffer) getConfirmdTrxListInfo() (int64, int64) {
 }
 
 func (b *blockBuffer) bufferUnconfirmTransactions(blockID int64, trxList []*entity.TransactionInfo) {
-	// buffer to trx list
 	sort.SliceStable(trxList, func(i, j int) bool { return trxList[i].Block > trxList[j].Block })
-	b.trxListUnconfirmed = append(trxList, b.trxListUnconfirmed...)
-	//fmt.Printf("### buffer uncTrx, len:%v, total len:%v\n", len(trxList), len(b.trxListUnconfirmed))
 
 	// buffer to block id map
 	b.uncBlockTrx.Store(blockID, trxList)
+	// log.Debugf("store uncBlock [%v] trx:%v\n", blockID, len(trxList))
 
 	// buffer trx hash
 	for _, trx := range trxList {
 		b.trxHash.Store(trx.Hash, trx)
 	}
+
+	// buffer to trx list
+	b.trxListUnconfirmed = append(trxList, b.trxListUnconfirmed...)
+	// log.Debugf("### buffer uncTrx, len:%v, total len:%v\n", len(trxList), len(b.trxListUnconfirmed))
 
 }
 
@@ -117,7 +119,7 @@ func (b *blockBuffer) cleanConfirmedTrxBufferFromUncTrxList() {
 		}
 	}
 	b.trxListUnconfirmed = b.trxListUnconfirmed[0 : uncTrxIdx+1] // +1 mean include index of uncTrxLen
-	//	fmt.Printf("### clean uncTrx, uncTrxIdx:%v, uncTrx len:%v\n", uncTrxIdx, len(b.trxListUnconfirmed))
+	//	log.Debugf("### clean uncTrx, uncTrxIdx:%v, uncTrx len:%v\n", uncTrxIdx, len(b.trxListUnconfirmed))
 
 }
 
@@ -130,9 +132,18 @@ func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 		b.trxList = b.trxList[0:b.maxConfirmedTrx]
 	}
 
+	blockTrx := make([]*entity.TransactionInfo, 0, 20)
+	blockID := data[0].Block
 	for _, trx := range data {
-		b.trxHash.Store(trx.Hash, trx)
+		b.trxHash.Store(trx.Hash, trx) // trx hash index
+
+		if blockID != trx.Block {
+			b.cBlockTrx.Store(blockID, blockTrx) // blockID trx index
+			blockTrx = blockTrx[:0]
+		}
+		blockTrx = append(blockTrx, trx)
 	}
+	b.cBlockTrx.Store(blockID, blockTrx)
 }
 
 func (b *blockBuffer) loadTransactionFromDB(filter string, limit string) []*entity.TransactionInfo {
@@ -145,6 +156,7 @@ func (b *blockBuffer) loadTransactionFromDB(filter string, limit string) []*enti
 
 	ret, err := module.QueryTransactionsRealize(strSQL, filter, "order by block_id desc", limit)
 	if nil != err || nil == ret && 0 == len(ret.Data) {
+		log.Debugf("query trx failed:%v\n", err)
 		return nil
 	}
 
@@ -157,7 +169,7 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 		return nil
 	}
 
-	///	fmt.Printf("### raw block:%v, trans count:%v\n", block.BlockHeader.RawData.Number, len(block.Transactions))
+	///	log.Debugf("### raw block:%v, trans count:%v\n", block.BlockHeader.RawData.Number, len(block.Transactions))
 
 	blockID := block.BlockHeader.RawData.Number
 	ret = make([]*entity.TransactionInfo, 0, len(block.Transactions))
@@ -214,6 +226,7 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 		}
 		ret = append(ret, trx)
 	}
+	// log.Debugf("parse raw block trx, ret size:%v\n", len(ret))
 	return
 }
 
@@ -222,7 +235,7 @@ func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count int64) []*entit
 	ret := make([]*entity.TransactionInfo, count, count)
 	// cTrxLen := int64(len(b.trxList))
 	cTrxLen, minCTrxBlockID := b.getConfirmdTrxListInfo()
-	fmt.Printf("get trx confirmed(offset:%v, count:%v), cLen:%v, cMinBlockID:%v, uncMinBlockID:%v\n", offset, count, cTrxLen, minCTrxBlockID, minBlockID)
+	log.Debugf("get trx confirmed(offset:%v, count:%v), cLen:%v, cMinBlockID:%v, uncMinBlockID:%v\n", offset, count, cTrxLen, minCTrxBlockID, minBlockID)
 
 	if minCTrxBlockID == -1 {
 		minCTrxBlockID = minBlockID
@@ -251,7 +264,7 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 
 	retLen := int64(len(redisList))
 	if retLen >= count {
-		fmt.Printf("get trx redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
+		log.Debugf("get trx redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
 
 		return redisList
 	}
@@ -276,7 +289,7 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 	retList := b.loadTransactionFromDB(filter, limit)
 	b.storeTrxDescListToRedis(retList, true)
 	redisList = append(redisList, retList...)
-	fmt.Printf("get trx db(offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
+	log.Debugf("get trx db(offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
 
 	return redisList
 }
@@ -293,9 +306,9 @@ func (b *blockBuffer) storeTrxDescListToRedis(trxList []*entity.TransactionInfo,
 		}
 		cnt, err := _redisCli.RPush(TrxRedisDescListKey, redisList...).Result()
 		if nil != err {
-			fmt.Printf("store trx to redis failed:%v, current trx desc len:%v\n", err, cnt)
+			log.Debugf("store trx to redis failed:%v, current trx desc len:%v\n", err, cnt)
 		} else {
-			fmt.Printf("store trx to redis ok, trx list len:%v, redis trx desc list len:%v\n", len(trxList), cnt)
+			log.Debugf("store trx to redis ok, trx list len:%v, redis trx desc list len:%v\n", len(trxList), cnt)
 		}
 	} else { // from memory
 		redisList := make([]interface{}, 0, len(trxList))
@@ -304,9 +317,9 @@ func (b *blockBuffer) storeTrxDescListToRedis(trxList []*entity.TransactionInfo,
 		}
 		cnt, err := _redisCli.LPush(TrxRedisDescListKey, redisList...).Result()
 		if nil != err {
-			fmt.Printf("store trx to redis failed:%v, current trx desc len:%v\n", err, cnt)
+			log.Debugf("store trx to redis failed:%v, current trx desc len:%v\n", err, cnt)
 		} else {
-			fmt.Printf("store trx to redis ok, trx list len:%v, redis trx desc list len:%v\n", len(trxList), cnt)
+			log.Debugf("store trx to redis ok, trx list len:%v, redis trx desc list len:%v\n", len(trxList), cnt)
 		}
 	}
 

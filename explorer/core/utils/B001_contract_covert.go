@@ -115,3 +115,8 @@ type OwnerAddressIF interface {
 type ToAddressIF interface {
 	GetToAddress() []byte
 }
+
+// AmountIF ...
+type AmountIF interface {
+	GetAmount() int64
+}

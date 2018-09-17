@@ -50,10 +50,10 @@ type marketBuffer struct {
 
 func (w *marketBuffer) GetMarket() (witness []*entity.MarketInfo) {
 	if len(w.marketInfoList) == 0 {
-		log.Debugf("get market info from buffer nil, data reload at :[%v]", w.updateTime)
+		log.Infof("get market info from buffer nil, data reload at :[%v]", w.updateTime)
 		w.load()
 	}
-	log.Debugf("get market info from buffer, buffer data updated at :[%v]", w.updateTime)
+	log.Infof("get market info from buffer, buffer data updated at :[%v]", w.updateTime)
 	return w.marketInfoList
 }
 
@@ -92,7 +92,7 @@ func (w *marketBuffer) load() {
 		marketInfos = append(marketInfos, marketInfo)
 	})
 
-	log.Debugf("market in buffer : parse page data done.")
+	log.Infof("market in buffer : parse page data done.")
 	w.Lock()
 	w.marketInfoList = marketInfos
 	w.updateTime = time.Now().Local().Format(mysql.DATETIMEFORMAT)

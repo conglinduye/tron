@@ -1,9 +1,9 @@
 package buffer
 
 import (
-	"fmt"
 	"sync/atomic"
 
+	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/entity"
 )
 
@@ -17,7 +17,7 @@ func (b *blockBuffer) GetTransactions(offset, count int64) []*entity.Transaction
 	// uncTrxLen := int64(len(b.trxListUnconfirmed))
 	uncTrxLen, uncTrxMinBlockID := b.getUnconfirmdTrxListInfo()
 
-	fmt.Printf("get trx(offset:%v, count:%v), uncLen:%v, uncMinBlockID:%v\n", offset, count, uncTrxLen, uncTrxMinBlockID)
+	log.Debugf("get trx(offset:%v, count:%v), uncLen:%v, uncMinBlockID:%v\n", offset, count, uncTrxLen, uncTrxMinBlockID)
 
 	ret := make([]*entity.TransactionInfo, count, count)
 	if offset > uncTrxLen { // trx is in confirmed list or other
@@ -41,9 +41,17 @@ func (b *blockBuffer) GetTransactions(offset, count int64) []*entity.Transaction
 
 func (b *blockBuffer) GetTransactionByBlockID(blockID int64) []*entity.TransactionInfo {
 
+	log.Debugf("blockID:%v-->maxConfirmedBlockID:%v\n", blockID, b.GetMaxConfirmedBlockID())
 	if blockID > b.GetMaxConfirmedBlockID() {
 		raw, ok := b.uncBlockTrx.Load(blockID)
+		log.Debugf("get uncBlockTrx[%v]--->%v-->%v\n", blockID, ok, raw)
 		if !ok {
+			cnt := 0
+			b.uncBlockTrx.Range(func(key, val interface{}) bool {
+				cnt++
+				log.Debugf("%v-->%v\n", cnt, key)
+				return true
+			})
 			return nil
 		}
 		ret, ok := raw.([]*entity.TransactionInfo)

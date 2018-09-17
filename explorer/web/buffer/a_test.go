@@ -32,14 +32,14 @@ func TestA(*testing.T) {
 	wg.Add(2)
 	go func() {
 		a.Range(b)
-		fmt.Printf("cnt:%v\n\n", cnt)
+		log.Infof("cnt:%v\n\n", cnt)
 		cnt = 0
 		wg.Done()
 	}()
 
 	go func() {
 		a.Range(c)
-		fmt.Printf("cntb:%v\n\n", cntb)
+		log.Infof("cntb:%v\n\n", cntb)
 		cntb = 0
 		wg.Done()
 	}()
@@ -48,7 +48,7 @@ func TestA(*testing.T) {
 
 	wg.Wait()
 	a.Range(c)
-	fmt.Printf("cnt:%v\n", cntb)
+	log.Infof("cnt:%v\n", cntb)
 }
 
 func TestRedis(*testing.T) {
