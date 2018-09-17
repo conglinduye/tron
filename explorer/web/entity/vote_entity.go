@@ -19,16 +19,16 @@ type VotesResp struct {
 
 //VotesInfo  投票信息
 type VotesInfo struct {
-	ID                  string `json:"id"`                  //uuid
-	Block               int64  `json:"block"`               //:2135998,
-	Transaction         string `json:"transaction"`         //:"00000000002097beb4b9ceabbff396bf788a8d9ee8c09de37e5e0da039a6a87f",
-	CreateTime          int64  `json:"timestamp"`           //:1536314760000,
-	VoterAddress        string `json:"voterAddress"`        //:"JRB1nNvqT6kcRJLdzTnUGyiwvMcnDTAaxYZhTxhvDkjM8kxYh",
-	CandidateAddress    string `json:"candidateAddress"`    //:"00000000002097bdd482e26710c054eea72280232a9061885dc94c30c3a0f1b5",
-	Votes               int64  `json:"votes"`               //:11,
-	CandidateURL        string `json:"candidateUrl"`        //:"TRX",
-	CandidateName       string `json:"candidateName"`       //:"TRX",
-	VoterAvailableVotes int64  `json:"voterAvailableVotes"` //:10
+	ID                  string 	`json:"id"`                  //uuid
+	Block               int64  	`json:"block"`               //:2135998,
+	Transaction         string 	`json:"transaction"`         //:"00000000002097beb4b9ceabbff396bf788a8d9ee8c09de37e5e0da039a6a87f",
+	CreateTime          int64  	`json:"timestamp"`           //:1536314760000,
+	VoterAddress        string 	`json:"voterAddress"`        //:"JRB1nNvqT6kcRJLdzTnUGyiwvMcnDTAaxYZhTxhvDkjM8kxYh",
+	CandidateAddress    string 	`json:"candidateAddress"`    //:"00000000002097bdd482e26710c054eea72280232a9061885dc94c30c3a0f1b5",
+	Votes               int64  	`json:"votes"`               //:11,
+	CandidateURL        string 	`json:"candidateUrl"`        //:"TRX",
+	CandidateName       string 	`json:"candidateName"`       //:"TRX",
+	VoterAvailableVotes float64 `json:"voterAvailableVotes"` //:10
 }
 
 //VoteLiveInfo 实时投票数据
@@ -65,3 +65,24 @@ type VoteCurrentCycle struct {
 type VoteNextCycleResp struct {
 	NextCycle int64 `json:"nextCycle"` //:,毫秒
 }
+
+// AccountVoteResultRes
+type AccountVoteResultRes struct {
+	Total      int64        `json:"total"`      		// total
+	Data       []*AccountVoteResult `json:"data"`       // data
+}
+
+//AccountVoteResult
+type AccountVoteResult struct {
+	Address		string 	`json:"address"`	// address
+	ToAddress	string 	`json:"toAddress"`  // toAddress
+	Vote		int64   `json:"vote"`		// vote
+}
+
+// CandidateInfo
+type CandidateInfo struct {
+	CandidateAddress	string 	`json:"candidateAddress"`		// candidateAddress
+	CandidateName		string 	`json:"candidateName"`			// candidateName
+	CandidateUrl		string 	`json:"candidateUrl"`			// candidateUrl
+}
+

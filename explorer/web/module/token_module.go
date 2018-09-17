@@ -170,7 +170,6 @@ func QueryTotalTokenHolders(tokenName string) (int64, error) {
 		totalTokenHolders = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalTokenHolders"))
 	}
 	return totalTokenHolders, nil
-
 }
 
 // QueryTokenExtInfo
@@ -390,6 +389,45 @@ func UpdateAssetIssue(assetName string, participated int64) error {
 	}
 	log.Debugf("UpdateAssetIssue result success  sql:%s", strSQL)
 	return nil
+}
+
+//QueryAssetBalances
+func QueryAssetBalances(tokenName string) (*entity.AssetBalanceResp, error) {
+	strSQL := fmt.Sprintf(` 
+	select address, asset_name, balance
+	from account_asset_balance 
+	where asset_name = '%v' order by balance desc `, tokenName)
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryAssetBalances error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryAssetBalances dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	assetBalanceResp := &entity.AssetBalanceResp{}
+	assetBalances := make([]*entity.AssetBalance, 0)
+	for dataPtr.NextT() {
+		assetBalance := &entity.AssetBalance{}
+		assetBalance.Address = dataPtr.GetField("address")
+		assetBalance.Name = dataPtr.GetField("asset_name")
+		assetBalance.Balance = mysql.ConvertDBValueToInt64(dataPtr.GetField("balance"))
+
+		assetBalances = append(assetBalances, assetBalance)
+
+	}
+
+	var total = int64(len(assetBalances))
+	total, err = mysql.QuerySQLViewCount(strSQL)
+	if err != nil {
+		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
+	}
+
+	assetBalanceResp.Total = total
+	assetBalanceResp.Data = assetBalances
+	return assetBalanceResp, nil
 }
 
 

@@ -10,75 +10,8 @@ import (
 	"github.com/wlcy/tron/explorer/web/entity"
 )
 
-//QueryVotesRealize 操作数据库
-func QueryVotesRealize(strSQL, filterSQL, sortSQL, pageSQL string, req *entity.Votes) (*entity.VotesResp, error) {
-	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
-	log.Debug(strFullSQL)
-	dataPtr, err := mysql.QueryTableData(strFullSQL)
-	if err != nil {
-		log.Errorf("QueryVotesRealize error :[%v]\n", err)
-		return nil, util.NewErrorMsg(util.Error_common_internal_error)
-	}
-	if dataPtr == nil {
-		log.Errorf("QueryVotesRealize dataPtr is nil ")
-		return nil, util.NewErrorMsg(util.Error_common_internal_error)
-	}
-	votesResp := &entity.VotesResp{}
-	accountFrozenBalance := make([]*entity.BalanceInfoDB, 0)
-	voteInfos := make([]*entity.VotesInfo, 0)
-	var totalFrozen = int64(0)
-	var totalVotes = int64(0)
-
-	//填充数据
-	for dataPtr.NextT() {
-		var vote = &entity.VotesInfo{}
-		vote.Block = mysql.ConvertDBValueToInt64(dataPtr.GetField("block_id"))
-		vote.Transaction = dataPtr.GetField("trx_hash")
-		vote.VoterAddress = dataPtr.GetField("voteraddress")
-		vote.CandidateAddress = dataPtr.GetField("voteraddress")
-		if req.Candidate != "" {
-			vote.CandidateAddress = req.Candidate
-		}
-		//vote.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
-		if req.Voter != "" {
-			vote.VoterAddress = req.Voter
-		}
-
-		vote.CandidateName = dataPtr.GetField("account_name")
-		vv := dataPtr.GetField("votes")
-		log.Debug(vv)
-		vote.Votes = mysql.ConvertDBValueToInt64(dataPtr.GetField("votes"))
-		vote.CandidateURL = dataPtr.GetField("url")
-		//outerVote := mysql.ConvertDBValueToInt64(dataPtr.GetField("outVotes"))
-		frozen := dataPtr.GetField("frozen")
-		if frozen != "" {
-			if err := json.Unmarshal([]byte(frozen), &accountFrozenBalance); err != nil {
-				log.Errorf("Unmarshal data failed:[%v]-%v", err, frozen)
-			}
-			for _, blanceFrozen := range accountFrozenBalance {
-				totalFrozen += blanceFrozen.Amount
-			}
-		}
-
-		vote.VoterAvailableVotes = totalFrozen - vote.Votes
-
-		voteInfos = append(voteInfos, vote)
-	}
-	totalVotes = getTotalVotes()
-	//查询该语句所查到的数据集合
-	var total = int64(len(voteInfos))
-	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
-	if err != nil {
-		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
-	}
-	votesResp.Total = total
-	votesResp.TotalVotes = totalVotes
-	votesResp.Data = voteInfos
-
-	return votesResp, nil
-
-}
-func getTotalVotes() int64 {
+//QueryTotalVotes
+func QueryTotalVotes() int64 {
 	strSQL := fmt.Sprintf(`
 	SELECT sum(vote_count) as totalVotes FROM tron.witness`)
 	log.Debug(strSQL)
@@ -161,7 +94,7 @@ func QueryVoteCurrentCycleRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*
 
 		voteCycle = append(voteCycle, vote)
 	}
-	totalVotes = getTotalVotes()
+	totalVotes = QueryTotalVotes()
 
 	votesResp.TotalVotes = totalVotes
 	votesResp.Candidates = voteCycle
@@ -169,3 +102,99 @@ func QueryVoteCurrentCycleRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*
 	return votesResp, nil
 
 }
+
+//QueryAccountVoteResultRealize
+func QueryAccountVoteResultRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.AccountVoteResultRes, error) {
+	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
+	log.Debug(strFullSQL)
+	dataPtr, err := mysql.QueryTableData(strFullSQL)
+	if err != nil {
+		log.Errorf("QueryAccountVoteResultRealize error:[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryAccountVoteResultRealize dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	accountVoteResultRes := &entity.AccountVoteResultRes{}
+	accountVoteResults := make([]*entity.AccountVoteResult, 0)
+
+	for dataPtr.NextT() {
+		accountVoteResult := &entity.AccountVoteResult{}
+		accountVoteResult.Address = dataPtr.GetField("address")
+		accountVoteResult.ToAddress = dataPtr.GetField("to_address")
+		accountVoteResult.Vote = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote"))
+
+		accountVoteResults = append(accountVoteResults, accountVoteResult)
+	}
+
+	var total = int64(len(accountVoteResults))
+	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
+	if err != nil {
+		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
+	}
+
+	accountVoteResultRes.Total = total
+	accountVoteResultRes.Data = accountVoteResults
+
+	return accountVoteResultRes, nil
+}
+
+// QueryCandidateInfo
+func QueryCandidateInfo(strSQL string) (*entity.CandidateInfo, error) {
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryCandidateInfo error:[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryCandidateInfo dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	candidateInfo := &entity.CandidateInfo{}
+
+	for dataPtr.NextT() {
+		candidateInfo.CandidateAddress = dataPtr.GetField("candidateAddress")
+		candidateInfo.CandidateName = dataPtr.GetField("candidateName")
+		candidateInfo.CandidateUrl = dataPtr.GetField("candidateUrl")
+	}
+
+	return candidateInfo, nil
+}
+
+// QueryVoterAvailableVotes
+func QueryVoterAvailableVotes(strSQL string) (float64, error) {
+	var voterAvailableVotes = int64(0)
+	var result = float64(0)
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryCandidateInfo error:[%v]\n", err)
+		return result, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryCandidateInfo dataPtr is nil ")
+		return result, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	for dataPtr.NextT() {
+		frozen := dataPtr.GetField("frozen")
+		if frozen != "" {
+			accountFrozenBalance := make([]*entity.BalanceInfoDB, 0)
+			if err := json.Unmarshal([]byte(frozen), &accountFrozenBalance); err != nil {
+				log.Errorf("Unmarshal data failed:[%v]-%v", err, frozen)
+			}
+			for _, v := range accountFrozenBalance {
+				voterAvailableVotes += v.Amount
+			}
+		}
+	}
+	result = float64(voterAvailableVotes)/1000000
+	return result, nil
+}
+
+
+

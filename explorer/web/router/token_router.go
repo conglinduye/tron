@@ -43,6 +43,17 @@ func tokenRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, tokenInfo)
 	})
 
+
+	ginRouter.GET("/api/token/:name/address", func(c *gin.Context) {
+		name := c.Param("name")
+		assetBalanceResp, err := service.QueryAssetBalances(name)
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+		}
+		c.JSON(http.StatusOK, assetBalanceResp)
+	})
+
 	ginRouter.GET("/api/mytoken", func(c *gin.Context) {
 		tokenReq := &entity.Token{}
 		tokenReq.Owner = c.Query("owner")
