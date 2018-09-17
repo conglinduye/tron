@@ -18,23 +18,32 @@ import (
 func (b *blockBuffer) getConfirmedBlockTransaction(blockID int64) []*entity.TransactionInfo {
 
 	raw, ok := b.cBlockTrx.Load(blockID)
-	if !ok {
-		return nil
-	}
-	ret, ok := raw.([]*entity.TransactionInfo)
 	if ok {
-		return ret
+		ret, ok := raw.([]*entity.TransactionInfo)
+		if ok {
+			return ret
+		}
 	}
 
 	filter := fmt.Sprintf(` and block_id = '%v'`, blockID)
-	ret = b.loadTransactionFromDBFilter(filter)
+	retTrxs := b.loadTransactionFromDBFilter(filter)
 
-	if nil != ret {
-		b.cBlockTrx.Store(blockID, ret)
+	if nil != retTrxs {
+		b.cBlockTrx.Store(blockID, retTrxs)
 	}
 
-	return ret
+	for _, trx := range retTrxs {
+		b.trxHash.Store(trx.Hash, trx)
+	}
+
+	return retTrxs
 }
+
+// sweep transaction buffer size
+func (b *blockBuffer) sweepTrxHash() {
+
+}
+
 func (b *blockBuffer) loadTransactionCountFromDB() {
 	strSQL := fmt.Sprintf(`select count(1) as totalNum from tron.transactions`)
 	log.Debug(strSQL)

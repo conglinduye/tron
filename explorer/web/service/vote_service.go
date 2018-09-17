@@ -108,7 +108,7 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	}
 
 	if len(accountVoteResultRes.Data) == 0 {
-
+		votesResp.Data = make([]*entity.VotesInfo , 0)
 		return votesResp, nil
 	}
 

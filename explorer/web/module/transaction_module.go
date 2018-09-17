@@ -1,6 +1,7 @@
 package module
 
 import (
+	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/lib/util"
@@ -31,8 +32,8 @@ func QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*enti
 		transaction.ToAddress = dataPtr.GetField("to_address")
 		transaction.OwnerAddress = dataPtr.GetField("owner_address")
 		transaction.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
-		transaction.ContractData = dataPtr.GetField("contract_data")
 		transaction.ContractType = mysql.ConvertDBValueToInt64(dataPtr.GetField("contract_type"))
+		_, transaction.ContractData = utils.GetContractInfoStr3(int32(transaction.ContractType), utils.HexDecode(dataPtr.GetField("contract_data")))
 		confirmed := dataPtr.GetField("confirmed")
 		if confirmed == "1" {
 			transaction.Confirmed = true

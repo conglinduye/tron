@@ -161,7 +161,7 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 		atomic.StoreInt64(&b.maxConfirmedBlockID, maxBlockID)
 
 		b.bufferConfiremdTransaction(fmt.Sprintf(" and block_id >= '%v'", blocks.Data[len(blocks.Data)-1].Number), "")
-		//b.cleanConfirmedTrxBufferFromUncTrxList() // clean unconfirmed block transaction
+		b.cleanConfirmedTrxBufferFromUncTrxList() // clean unconfirmed block transaction
 	}
 	//加载 并缓存 交易总数
 	b.loadTransactionCountFromDB()
@@ -277,6 +277,7 @@ func (b *blockBuffer) backgroundWorker() {
 func (b *blockBuffer) backgroundSwaper() {
 
 	go b.sweepBlockBuffer()
+	go b.sweepTrxHash()
 	go b.sweepTransactionRedisList()
 }
 
@@ -308,8 +309,7 @@ func (b *blockBuffer) sweepBlockBuffer() {
 			blockCnt++
 
 			if ok && id <= minBlockID {
-				b.buffer.Delete(key)    // clean block buffer
-				b.cBlockTrx.Delete(key) // clean confirmed block trx list buffer
+				b.cleanBufferBlock(id)
 				block := val.(*entity.BlockInfo)
 				swapData = append(swapData, block)
 				if maxBlockIDSwap < block.Number {
@@ -338,6 +338,19 @@ func (b *blockBuffer) sweepBlockBuffer() {
 		b.syncBlockToRedis(swapData)
 		swapData = swapData[:0]
 	}
+}
+
+func (b *blockBuffer) cleanBufferBlock(blockID int64) {
+	b.buffer.Delete(blockID) // clean block buffer
+	trxs, ok := b.cBlockTrx.Load(blockID)
+	if ok && nil != trxs {
+		trxList := trxs.([]*entity.TransactionInfo)
+		for _, trx := range trxList {
+			b.trxHash.Delete(trx.Hash)
+		}
+	}
+	b.cBlockTrx.Delete(blockID) // clean confirmed block trx list buffer
+
 }
 
 // bluk store to redis, but can't control TTL
