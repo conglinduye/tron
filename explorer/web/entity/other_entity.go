@@ -41,3 +41,13 @@ type MarketInfo struct {
 	VolumeNative     float64 `json:"volumeNative"`     //:1194868733.76,
 	Price            float64 `json:"price"`            //:0.0185331343806
 }
+
+//Auth 验证签名请求参数
+type Auth struct {
+	Transaction float64 `json:"transaction"` //:99.99
+}
+
+//AuthResp 验证签名相应
+type AuthResp struct {
+	Token float64 `json:"token"` //:99.99
+}

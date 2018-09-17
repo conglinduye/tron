@@ -118,16 +118,16 @@ func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error
 	var account = &entity.AccountDetail{}
 	var oldBalance = make([]*entity.BalanceInfoDB, 0)
 	var apiBalance = make([]*entity.BalanceInfo, 0)
-	var frozenInfo = &entity.Frozen{}
+	var frozenInfo = &entity.Frozen{Total: 0, Balances: apiBalance}
 	var represent = &entity.Represent{}
 	var totalFrozen = int64(0)
 
 	accountTokenMap := make(map[string][]*entity.Balance, 0) //保存每个账户的token信息
 
-	// account.Bandwidth TODO
 	//填充数据
 	for dataPtr.NextT() {
 		var balance = &entity.Balance{}
+		var bandwidth = &entity.BandwidthInfo{}
 		if account.Address == "" {
 			account.Address = dataPtr.GetField("address")
 			account.Name = dataPtr.GetField("account_name")
@@ -140,6 +140,25 @@ func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error
 			represent.LastWithDrawTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("latest_withdraw_time"))
 			represent.URL = dataPtr.GetField("url")
 			account.Representative = represent
+			//acc.net_usage,acc.free_net_limit,acc.net_used,acc.net_limit,acc.asset_net_used,acc.asset_net_limit,
+			bandwidth.FreeNetUsed = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_usage"))
+			bandwidth.FreeNetLimit = mysql.ConvertDBValueToInt64(dataPtr.GetField("free_net_limit"))
+			bandwidth.FreeNetRemaining = bandwidth.FreeNetLimit - bandwidth.FreeNetUsed
+			bandwidth.FreeNetPercentage = 0
+			if bandwidth.FreeNetLimit > 0 {
+				bandwidth.FreeNetPercentage = float64(bandwidth.FreeNetUsed) / float64(bandwidth.FreeNetLimit)
+			}
+			bandwidth.NetUsed = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_used"))
+			bandwidth.NetLimit = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_limit"))
+			bandwidth.NetRemaining = bandwidth.NetLimit - bandwidth.NetUsed
+			bandwidth.NetPercentage = 0
+			if bandwidth.NetLimit > 0 {
+				bandwidth.NetPercentage = float64(bandwidth.NetUsed) / float64(bandwidth.NetLimit)
+			}
+			assetNetUsed := dataPtr.GetField("asset_net_used")
+			assetNetLimit := dataPtr.GetField("asset_net_limit")
+			bandwidth.Assets = getAssetNetInfo(assetNetUsed, assetNetLimit)
+			account.Bandwidth = bandwidth
 			//[{"frozen_balance":4306000000,"expire_time":1534794417000}]
 			frozen := dataPtr.GetField("frozen")
 			if frozen != "" {
@@ -157,6 +176,7 @@ func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error
 			}
 			frozenInfo.Total = totalFrozen
 			frozenInfo.Balances = apiBalance
+			account.Frozen = frozenInfo
 		}
 
 		balance.Name = dataPtr.GetField("token_name")
@@ -291,4 +311,33 @@ func QueryAccountSrRealize(strSQL, filterSQL string) (*entity.SuperAccountInfo, 
 	}
 
 	return srAcountInfo, nil
+}
+
+//解析用户asset的带宽使用情况
+func getAssetNetInfo(assetNetUsed, assetNetLimit string) map[string]*entity.AssetInfo {
+	var assetNetInfo = make(map[string]*entity.AssetInfo, 0)
+	if assetNetUsed == "" || assetNetLimit == "" {
+		return assetNetInfo
+	}
+	netUsedMap := util.ParsingJSONFromString(assetNetUsed)
+	netLimitMap := util.ParsingJSONFromString(assetNetLimit)
+	for param, value := range netUsedMap {
+		if param != "" {
+			assetInfo := &entity.AssetInfo{}
+			assetInfo.NetUsed = value
+			if val, ok := netLimitMap[param]; ok {
+				assetInfo.NetLimit = val
+			} else {
+				assetInfo.NetLimit = 0
+			}
+			assetInfo.NetRemaining = assetInfo.NetLimit - assetInfo.NetUsed
+			assetInfo.NetPercentage = 0
+			if assetInfo.NetLimit > 0 {
+				assetInfo.NetPercentage = float64(assetInfo.NetUsed) / float64(assetInfo.NetLimit)
+			}
+			assetNetInfo[param] = assetInfo
+
+		}
+	}
+	return assetNetInfo
 }
