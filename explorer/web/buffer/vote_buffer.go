@@ -120,7 +120,7 @@ left join (
  select address,sum(vote_count) as votes from tron.witness 
   group by address
 ) outvoter on outvoter.address=acc.address
-where 1=1 and outvoter.votes>0   order by votes desc `)
+where 1=1 and outvoter.votes>=0  order by votes desc `)
 
 	voteCurrent, err := module.QueryVoteCurrentCycleRealize(strSQL, "", "", "")
 	if err != nil {
