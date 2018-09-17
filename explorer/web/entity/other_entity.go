@@ -44,10 +44,10 @@ type MarketInfo struct {
 
 //Auth 验证签名请求参数
 type Auth struct {
-	Transaction float64 `json:"transaction"` //:99.99
+	Transaction string `json:"transaction"` //:99.99
 }
 
 //AuthResp 验证签名相应
 type AuthResp struct {
-	Token float64 `json:"token"` //:99.99
+	Token string `json:"token"` //:99.99
 }
