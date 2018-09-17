@@ -14,7 +14,7 @@ import (
 func QueryTotalVotes() int64 {
 	strSQL := fmt.Sprintf(`
 	SELECT sum(vote_count) as totalVotes FROM tron.witness`)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryVoteLiveRealize error :[%v]\n", err)
@@ -34,7 +34,7 @@ func QueryTotalVotes() int64 {
 
 //QueryVoteLiveRealize 操作数据库
 func QueryVoteLiveRealize(strSQL string) (*entity.VoteLiveInfo, error) {
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryVoteLiveRealize error :[%v]\n", err)
@@ -65,7 +65,7 @@ func QueryVoteLiveRealize(strSQL string) (*entity.VoteLiveInfo, error) {
 //QueryVoteCurrentCycleRealize 操作数据库
 func QueryVoteCurrentCycleRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.VoteCurrentCycleResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryVoteCurrentCycleRealize error :[%v]\n", err)
@@ -192,9 +192,6 @@ func QueryVoterAvailableVotes(strSQL string) (float64, error) {
 			}
 		}
 	}
-	result = float64(voterAvailableVotes)/1000000
+	result = float64(voterAvailableVotes) / 1000000
 	return result, nil
 }
-
-
-

@@ -10,7 +10,7 @@ import (
 //QueryBlocksRealize 操作数据库
 func QueryBlocksRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.BlocksResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
-	log.Debug(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryBlocks error :[%v]\n", err)
