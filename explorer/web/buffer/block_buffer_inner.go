@@ -277,6 +277,7 @@ func (b *blockBuffer) backgroundWorker() {
 func (b *blockBuffer) backgroundSwaper() {
 
 	go b.sweepBlockBuffer()
+	go b.sweepTrxHash()
 	go b.sweepTransactionRedisList()
 }
 

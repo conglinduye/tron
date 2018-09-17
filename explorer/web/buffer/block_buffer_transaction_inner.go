@@ -33,6 +33,10 @@ func (b *blockBuffer) getConfirmedBlockTransaction(blockID int64) []*entity.Tran
 		b.cBlockTrx.Store(blockID, ret)
 	}
 
+	for _, trx := range ret {
+		b.trxHash.Store(trx.Hash, trx)
+	}
+
 	return ret
 }
 func (b *blockBuffer) loadTransactionCountFromDB() {
