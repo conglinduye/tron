@@ -164,7 +164,7 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 		//b.cleanConfirmedTrxBufferFromUncTrxList() // clean unconfirmed block transaction
 	}
 	//加载 并缓存 交易总数
-	//b.loadTransactionCountFromDB()
+	b.loadTransactionCountFromDB()
 
 	return blocks.Data
 }

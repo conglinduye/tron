@@ -17,10 +17,12 @@ func QueryTransactionsBuffer(req *entity.Transactions) (*entity.TransactionsResp
 	transactions := &entity.TransactionsResp{}
 	if req.Number != "" {
 		transactions.Data = buffer.GetBlockBuffer().GetTransactionByBlockID(mysql.ConvertStringToInt64(req.Number, 0))
+		transactions.Total = int64(len(transactions.Data))
 	} else {
 		transactions.Data = buffer.GetBlockBuffer().GetTransactions(req.Start, req.Limit)
+		transactions.Total = buffer.GetBlockBuffer().GetTotalTransactions()
 	}
-	transactions.Total = buffer.GetBlockBuffer().GetTotalTransactions()
+
 	return transactions, nil
 }
 

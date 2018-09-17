@@ -1,7 +1,9 @@
 package service
 
 import (
+	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 )
@@ -55,6 +57,11 @@ func QueryMarketsBuffer() ([]*entity.MarketInfo, error) {
 
 //QueryAuth ...
 func QueryAuth(req *entity.Auth) (*entity.AuthResp, error) {
+	if req == nil || req.Transaction == "" {
+		return nil, util.NewErrorMsg(util.Error_common_parameter_invalid)
+	}
+	jsonData := req.Transaction
+	utils.HexDecode(jsonData)
 
 	return nil, nil
 }
