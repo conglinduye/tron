@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/tronprotocol/grpc-gateway/core"
@@ -85,7 +87,7 @@ func GetContractByParamVal(ctxType core.Transaction_Contract_ContractType, val [
 func GetContractInfoStr(contract *core.Transaction_Contract) (ownerAddr string, contractDetail string) {
 	_, ctx := GetContractByParamVal(contract.Type, contract.Parameter.Value)
 	if nil != ctx {
-		contractDetail = ToJSONStr(ctx)
+		contractDetail = formatContractJSONStr(ToJSONStr(ctx))
 		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
 			ownerAddr = Base58EncodeAddr(ownerIF.GetOwnerAddress())
 		}
@@ -98,12 +100,66 @@ func GetContractInfoStr2(ctxType int32, val []byte) (ownerAddr string, contractD
 
 	_, ctx := GetContractByParamVal(core.Transaction_Contract_ContractType(ctxType), val)
 	if nil != ctx {
-		contractDetail = ToJSONStr(ctx)
+		contractDetail = formatContractJSONStr(ToJSONStr(ctx))
 		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
 			ownerAddr = Base58EncodeAddr(ownerIF.GetOwnerAddress())
 		}
 	}
 	return
+}
+
+func formatContractJSONStr(jsonStr string) string {
+	var b interface{}
+
+	err := json.Unmarshal([]byte(jsonStr), &b)
+	_ = err
+
+	m := b.(map[string]interface{})
+
+	for key, val := range m {
+		// fmt.Printf("%v-->%v\n", key, m[key])
+
+		switch v := val.(type) {
+		case string:
+			m[key] = convertStringVal(key, v)
+		case []interface{}:
+			m[key] = convertListVal(v)
+		}
+	}
+
+	return ToJSONStr(m)
+}
+
+func convertMapVal(val map[string]interface{}) interface{} {
+	for k, v := range val {
+		if s, ok := v.(string); ok {
+			val[k] = convertStringVal(k, s)
+		}
+	}
+	return val
+}
+
+func convertStringVal(key string, val string) string {
+	if strings.HasSuffix(key, "address") {
+		return Base58EncodeAddr(Base64Decode(val))
+	}
+	// if strings.HasSuffix(key, "name") || strings.HasSuffix(key, "id") {
+	return string(Base64Decode(val))
+}
+
+func convertListVal(val []interface{}) interface{} {
+	ret := make([]interface{}, 0, len(val))
+	for _, subVal := range val {
+		switch t := subVal.(type) {
+		case map[string]interface{}:
+			ret = append(ret, convertMapVal(t))
+		case string:
+			ret = append(ret, string(Base64Decode(t)))
+		default:
+			ret = append(ret, t)
+		}
+	}
+	return ret
 }
 
 // OwnerAddressIF ...
