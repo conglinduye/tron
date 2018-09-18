@@ -127,7 +127,7 @@ func QueryAccount(req *entity.Accounts) (*entity.AccountDetail, error) {
 
 	//按传入条件拼接sql，很容易错误，需要注意
 	if req.Address != "" {
-		filterSQL = fmt.Sprintf(" and acc.address='%v'", req.Address)
+		filterSQL = fmt.Sprintf(" and (acc.address='%v' or acc.account_name='%v'", req.Address, req.Address)
 	}
 	return module.QueryAccountRealize(strSQL, filterSQL)
 }
