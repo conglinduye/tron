@@ -32,9 +32,15 @@ func (b *blockBuffer) getConfirmedBlockTransaction(blockID int64) []*entity.Tran
 		b.cBlockTrx.Store(blockID, retTrxs)
 	}
 
+	transList := make([]*entity.TransferInfo, 0, len(retTrxs))
 	for _, trx := range retTrxs {
 		b.trxHash.Store(trx.Hash, trx)
+		if tran := b.getTransferFromTrx(trx); nil != tran {
+			transList = append(transList, tran)
+			b.tranHash.Store(tran.TransactionHash, tran)
+		}
 	}
+	b.cBlockTrans.Store(blockID, transList)
 
 	return retTrxs
 }
@@ -66,6 +72,28 @@ func (b *blockBuffer) loadTransactionCountFromDB() {
 	return
 }
 
+func (b *blockBuffer) loadTransferCountFromDB() {
+	strSQL := fmt.Sprintf(`select count(1) as totalNum from tron.contract_transfer`)
+	log.Debug(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("loadTransferCountFromDB error :[%v]\n", err)
+		return
+	}
+	if dataPtr == nil {
+		log.Errorf("loadTransferCountFromDB dataPtr is nil ")
+		return
+	}
+	//填充数据
+	for dataPtr.NextT() {
+		totalNum := mysql.ConvertDBValueToInt64(dataPtr.GetField("totalNum"))
+		if totalNum > 0 {
+			atomic.StoreInt64(&b.transferCount, totalNum+int64(len(b.tranListUnconfirmed)))
+		}
+	}
+	return
+}
+
 func (b *blockBuffer) loadTransactionFromDBFilter(filter string) []*entity.TransactionInfo {
 	strSQL := fmt.Sprintf(`
 	select block_id,owner_address,to_address,
@@ -89,9 +117,23 @@ func (b *blockBuffer) getUnconfirmdTrxListInfo() (int64, int64) {
 	return 0, -1
 }
 
+func (b *blockBuffer) getUnconfirmdTranListInfo() (int64, int64) {
+	if len(b.tranListUnconfirmed) > 0 {
+		return int64(len(b.tranListUnconfirmed)), b.tranListUnconfirmed[len(b.tranListUnconfirmed)-1].Block
+	}
+	return 0, -1
+}
+
 func (b *blockBuffer) getConfirmdTrxListInfo() (int64, int64) {
 	if len(b.trxList) > 0 {
 		return int64(len(b.trxList)), b.trxList[len(b.trxList)-1].Block
+	}
+	return 0, -1
+}
+
+func (b *blockBuffer) getConfirmdTranListInfo() (int64, int64) {
+	if len(b.tranList) > 0 {
+		return int64(len(b.tranList)), b.tranList[len(b.tranList)-1].Block
 	}
 	return 0, -1
 }
@@ -114,6 +156,24 @@ func (b *blockBuffer) bufferUnconfirmTransactions(blockID int64, trxList []*enti
 
 }
 
+func (b *blockBuffer) bufferUnconfirmTransfers(blockID int64, trans []*entity.TransferInfo) {
+	sort.SliceStable(trans, func(i, j int) bool { return trans[i].Block > trans[j].Block })
+
+	// buffer to block id map
+	b.uncBlockTrans.Store(blockID, trans)
+	// log.Debugf("store uncBlock [%v] trx:%v\n", blockID, len(trxList))
+
+	// buffer trx hash
+	for _, tran := range trans {
+		b.tranHash.Store(tran.TransactionHash, tran)
+	}
+
+	// buffer to trx list
+	b.tranListUnconfirmed = append(trans, b.tranListUnconfirmed...)
+	// log.Debugf("### buffer uncTrx, len:%v, total len:%v\n", len(trxList), len(b.trxListUnconfirmed))
+
+}
+
 // 清除unconfirmed缓存中已经被确认的transaction
 func (b *blockBuffer) cleanConfirmedTrxBufferFromUncTrxList() {
 	// clean up confirmed transaction
@@ -129,6 +189,20 @@ func (b *blockBuffer) cleanConfirmedTrxBufferFromUncTrxList() {
 	}
 	b.trxListUnconfirmed = b.trxListUnconfirmed[0 : uncTrxIdx+1] // +1 mean include index of uncTrxLen
 	//	log.Debugf("### clean uncTrx, uncTrxIdx:%v, uncTrx len:%v\n", uncTrxIdx, len(b.trxListUnconfirmed))
+	b.cleanConfirmedTranBufferFromUncTranList()
+}
+
+func (b *blockBuffer) cleanConfirmedTranBufferFromUncTranList() {
+	validUnconfirmedBlockID := b.GetMaxConfirmedBlockID() + 1
+	uncTranIdx := len(b.tranListUnconfirmed) - 1
+	for uncTranIdx >= 0 {
+		if b.tranListUnconfirmed[uncTranIdx].Block < validUnconfirmedBlockID {
+			uncTranIdx--
+		} else {
+			break
+		}
+	}
+	b.tranListUnconfirmed = b.tranListUnconfirmed[0 : uncTranIdx+1] // +1 mean include index of uncTrxLen
 
 }
 
@@ -144,21 +218,69 @@ func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 	if len(data) > 0 {
 		blockID := data[0].Block
 		blockTrx := make([]*entity.TransactionInfo, 0, 30)
+		blockTran := make([]*entity.TransferInfo, 0, 30)
 		for _, trx := range data {
 			b.trxHash.Store(trx.Hash, trx) // trx hash index
+
+			if tran := b.getTransferFromTrx(trx); nil != tran {
+				b.tranHash.Store(tran.TransactionHash, tran)
+				blockTran = append(blockTran, tran)
+			}
 
 			if blockID != trx.Block {
 				trxs := make([]*entity.TransactionInfo, len(blockTrx))
 				copy(trxs, blockTrx[:])
 				b.cBlockTrx.Store(blockID, trxs)
 
+				trans := make([]*entity.TransferInfo, len(blockTran))
+				copy(trans, blockTran[:])
+				b.cBlockTrans.Store(blockID, trans)
+
 				blockID = trx.Block
 				blockTrx = blockTrx[:0]
+				blockTran = blockTran[:0]
 			}
 			blockTrx = append(blockTrx, trx)
 		}
 		b.cBlockTrx.Store(blockID, blockTrx)
+		b.cBlockTrans.Store(blockID, blockTran)
 	}
+}
+
+func (b *blockBuffer) getTransferFromTrx(trx *entity.TransactionInfo) *entity.TransferInfo {
+	if trx.ContractType == int64(core.Transaction_Contract_TransferContract) {
+		transfer := new(entity.TransferInfo)
+		transfer.Block = trx.Block
+		transfer.TransactionHash = trx.Hash
+		transfer.CreateTime = trx.CreateTime
+		transfer.Confirmed = trx.Confirmed
+
+		_, tranRaw := utils.GetContractByParamVal(core.Transaction_Contract_ContractType(int32(trx.ContractType)), utils.HexDecode(trx.ContractDataRaw))
+		if tran, ok := tranRaw.(*core.TransferContract); ok && nil != tran {
+			transfer.Amount = tran.Amount
+			transfer.TokenName = "TRX"
+			transfer.TransferFromAddress = utils.Base58EncodeAddr(tran.OwnerAddress)
+			transfer.TransferToAddress = utils.Base58EncodeAddr(tran.ToAddress)
+		}
+		return transfer
+
+	} else if trx.ContractType == int64(core.Transaction_Contract_TransferAssetContract) {
+		transfer := new(entity.TransferInfo)
+		transfer.Block = trx.Block
+		transfer.TransactionHash = trx.Hash
+		transfer.CreateTime = trx.CreateTime
+		transfer.Confirmed = trx.Confirmed
+
+		_, tranRaw := utils.GetContractByParamVal(core.Transaction_Contract_ContractType(int32(trx.ContractType)), utils.HexDecode(trx.ContractDataRaw))
+		if tran, ok := tranRaw.(*core.TransferAssetContract); ok && nil != tran {
+			transfer.Amount = tran.Amount
+			transfer.TokenName = string(tran.AssetName)
+			transfer.TransferFromAddress = utils.Base58EncodeAddr(tran.OwnerAddress)
+			transfer.TransferToAddress = utils.Base58EncodeAddr(tran.ToAddress)
+		}
+		return transfer
+	}
+	return nil
 }
 
 func (b *blockBuffer) loadTransactionFromDB(filter string, limit string) []*entity.TransactionInfo {
@@ -179,9 +301,9 @@ func (b *blockBuffer) loadTransactionFromDB(filter string, limit string) []*enti
 	return ret.Data
 }
 
-func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.TransactionInfo) {
+func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.TransactionInfo, transfers []*entity.TransferInfo) {
 	if nil == block || nil == block.BlockHeader || nil == block.BlockHeader.RawData || 0 == len(block.Transactions) {
-		return nil
+		return nil, nil
 	}
 
 	///	log.Debugf("### raw block:%v, trans count:%v\n", block.BlockHeader.RawData.Number, len(block.Transactions))
@@ -210,6 +332,9 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 		trx.Confirmed = confirmed
 		_, trx.ContractData = utils.GetContractInfoStr3(int32(ctx.Type), ctx.Parameter.Value)
 
+		ret = append(ret, trx)
+
+		// parse transfer
 		if ctx.Type == core.Transaction_Contract_TransferContract {
 			transfer := new(entity.TransferInfo)
 			rawTransfer := realCtx.(*core.TransferContract)
@@ -224,6 +349,8 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 			}
 			transfer.Confirmed = trx.Confirmed
 			transfer.TokenName = "TRX"
+
+			transfers = append(transfers, transfer)
 		} else if ctx.Type == core.Transaction_Contract_TransferAssetContract {
 			transfer := new(entity.TransferInfo)
 			rawTransfer := realCtx.(*core.TransferAssetContract)
@@ -238,8 +365,9 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 			}
 			transfer.Confirmed = trx.Confirmed
 			transfer.TokenName = string(rawTransfer.AssetName)
+
+			transfers = append(transfers, transfer)
 		}
-		ret = append(ret, trx)
 	}
 	// log.Debugf("parse raw block trx, ret size:%v\n", len(ret))
 	return
@@ -299,11 +427,11 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 		count = count - retLen
 		filter = fmt.Sprintf("and block_id < '%v'", minBlockID)
 	}
-	limit = fmt.Sprintf("limit %v", count)
+	limit = fmt.Sprintf("limit %v", count+100) // load from db +100  record
 
 	retList := b.loadTransactionFromDB(filter, limit)
 	b.storeTrxDescListToRedis(retList, true)
-	redisList = append(redisList, retList...)
+	redisList = append(redisList, retList[0:count]...)
 	log.Debugf("get trx db(offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
 
 	return redisList
@@ -359,10 +487,6 @@ func (b *blockBuffer) getTrxDescListFromRedis(offset, count int64) (ret []*entit
 	return ret
 }
 
-func (b *blockBuffer) loadTrxDescFromDB() []*entity.TransactionInfo {
-	return nil
-}
-
 func (b *blockBuffer) sweepTransactionRedisList() {
 	minInterval := time.Duration(600) * time.Second // 10 分钟
 	for {
@@ -373,6 +497,8 @@ func (b *blockBuffer) sweepTransactionRedisList() {
 			time.Sleep(minInterval - tsc)
 		}
 
-		_redisCli.LTrim(TrxRedisDescListKey, 0, int64(b.maxConfirmedTrx)*2)
+		_redisCli.LTrim(TrxRedisDescListKey, 0, int64(b.maxConfirmedTrx)*2) // clean transaction redis
+
+		_redisCli.LTrim(TranRedisDescListKey, 0, int64(b.maxConfirmedTrx)*2) // clean transfer redis
 	}
 }

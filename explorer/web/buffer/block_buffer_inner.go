@@ -30,24 +30,33 @@ type blockBuffer struct {
 	walletClient   *grpcclient.Wallet
 	walletErrCnt   int
 
-	buffer             sync.Map                  // blockID, blockInfo
-	trxListUnconfirmed []*entity.TransactionInfo // tranx 列表，最新开始, unconfirmed
-	trxList            []*entity.TransactionInfo // tranx 列表，最新开始, confirmed
-	maxConfirmedTrx    int                       // 内存中最大的confirmed transaction 数量
+	buffer sync.Map // blockID, blockInfo
 
 	maxNodeErr              int   // 3                 // 单个node连接允许的最大错误数
 	maxUnconfirmedBlockRead int64 //  = int64(50) // 需要缓存的最新的unconfirmed block的数量
 	maxBlockInMemory        int64 // max number of confirmed block in memory
 	maxBlockTimeStamp       int64 //max timestamp for confirmed block
+	maxConfirmedTrx         int   // 内存中最大的confirmed transaction 数量
 
-	uncBlockTrx sync.Map // 未确认block的 trx 缓存 blockID -> trxList: *entity.TransactionInfo type
-	cBlockTrx   sync.Map // 确认block的 trx 缓存 blockID -> trxList: *entity.TransactionInfo type
+	// transactions
+	trxListUnconfirmed []*entity.TransactionInfo // tranx 列表，最新开始, unconfirmed
+	trxList            []*entity.TransactionInfo // tranx 列表，最新开始, confirmed
+	uncBlockTrx        sync.Map                  // 未确认block的 trx 缓存 blockID -> trxList: *entity.TransactionInfo type
+	cBlockTrx          sync.Map                  // 确认block的 trx 缓存 blockID -> trxList: *entity.TransactionInfo type
+	trxHash            sync.Map                  // trx_hash -> entity.TransactionInfo
 
-	trxHash sync.Map // trx_hash -> entity.TransactionInfo
+	// transfers, the same as tansactions
+	tranListUnconfirmed []*entity.TransferInfo
+	tranList            []*entity.TransferInfo
+	uncBlockTrans       sync.Map
+	cBlockTrans         sync.Map
+	tranHash            sync.Map
 
+	// not implement yet
 	ownerAddrTrx sync.Map // owner_addr -> entity.TransactionInfo, not use yet
 
 	transactionCount int64 //total transaction record
+	transferCount    int64 //total transaction record
 }
 
 func (b *blockBuffer) getSolidityNodeMaxBlockID() bool {
@@ -165,6 +174,7 @@ func (b *blockBuffer) getNowConfirmedBlock() []*entity.BlockInfo {
 	}
 	//加载 并缓存 交易总数
 	b.loadTransactionCountFromDB()
+	b.loadTransferCountFromDB()
 
 	return blocks.Data
 }
@@ -347,9 +357,11 @@ func (b *blockBuffer) cleanBufferBlock(blockID int64) {
 		trxList := trxs.([]*entity.TransactionInfo)
 		for _, trx := range trxList {
 			b.trxHash.Delete(trx.Hash)
+			b.tranHash.Delete(trx.Hash)
 		}
 	}
 	b.cBlockTrx.Delete(blockID) // clean confirmed block trx list buffer
+	b.cBlockTrans.Delete(blockID)
 
 }
 
@@ -431,7 +443,9 @@ func (b *blockBuffer) getBlocksStable(numStart int64, numEnd int64) []*core.Bloc
 	}
 
 	for idx := len(ret) - 1; idx >= 0; idx-- {
-		b.bufferUnconfirmTransactions(ret[idx].BlockHeader.RawData.Number, parseBlockTransaction(ret[idx], false))
+		trxs, trans := parseBlockTransaction(ret[idx], false)
+		b.bufferUnconfirmTransactions(ret[idx].BlockHeader.RawData.Number, trxs)
+		b.bufferUnconfirmTransfers(ret[idx].BlockHeader.RawData.Number, trans)
 	}
 	return ret
 }

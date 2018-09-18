@@ -1,5 +1,9 @@
 package entity
 
+import (
+	"time"
+)
+
 //Transfers 查询转账列表的请求参数
 type Transfers struct {
 	Sort    string `json:"sort,omitempty"`    // 按时间戳倒序
@@ -19,13 +23,14 @@ type TransfersResp struct {
 
 //TransferInfo 转账信息
 type TransferInfo struct {
-	ID                  string `json:"id"`                  //uuid
-	Block               int64  `json:"block"`               //:2135998,
-	TransactionHash     string `json:"transactionHash"`     //:"00000000002097beb4b9ceabbff396bf788a8d9ee8c09de37e5e0da039a6a87f",
-	CreateTime          int64  `json:"timestamp"`           //:1536314760000,
-	TransferFromAddress string `json:"transferFromAddress"` //:"JRB1nNvqT6kcRJLdzTnUGyiwvMcnDTAaxYZhTxhvDkjM8kxYh",
-	TransferToAddress   string `json:"transferToAddress"`   //:"00000000002097bdd482e26710c054eea72280232a9061885dc94c30c3a0f1b5",
-	Amount              int64  `json:"amount"`              //:11,
-	TokenName           string `json:"tokenName"`           //:"TRX",
-	Confirmed           bool   `json:"confirmed"`           //:true
+	ID                  string    `json:"id"`                  //uuid
+	Block               int64     `json:"block"`               //:2135998,
+	TransactionHash     string    `json:"transactionHash"`     //:"00000000002097beb4b9ceabbff396bf788a8d9ee8c09de37e5e0da039a6a87f",
+	CreateTime          int64     `json:"timestamp"`           //:1536314760000,
+	TransferFromAddress string    `json:"transferFromAddress"` //:"JRB1nNvqT6kcRJLdzTnUGyiwvMcnDTAaxYZhTxhvDkjM8kxYh",
+	TransferToAddress   string    `json:"transferToAddress"`   //:"00000000002097bdd482e26710c054eea72280232a9061885dc94c30c3a0f1b5",
+	Amount              int64     `json:"amount"`              //:11,
+	TokenName           string    `json:"tokenName"`           //:"TRX",
+	Confirmed           bool      `json:"confirmed"`           //:true
+	LoadTime            time.Time `json:"-"`
 }
