@@ -57,7 +57,7 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 		filterSQL = fmt.Sprintf(" and trx_hash='%v'", req.Hash)
 	}
 	if req.Address != "" {
-		filterSQL = fmt.Sprintf(" and (owner_address='%v' or to_address='%v'", req.Address, req.Address)
+		filterSQL = fmt.Sprintf(" and (owner_address='%v' or to_address='%v')", req.Address, req.Address)
 	}
 	for _, v := range strings.Split(req.Sort, ",") {
 		if strings.Index(v, "timestamp") > 0 {
