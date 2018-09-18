@@ -23,7 +23,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 		log.Debugf("Hello /api/token?%#v", tokenReq)
 		if tokenReq.Start == "" || tokenReq.Limit == "" {
 			tokenReq.Start = "0"
-			tokenReq.Limit = "40"
+			tokenReq.Limit = "20"
 		}
 
 		tokenResp := &entity.TokenResp{}
@@ -54,14 +54,15 @@ func tokenRegister(ginRouter *gin.Engine) {
 		}
 
 		if start + limit < length {
+			log.Info("tokenRegister, start:%v, limit:%v ", start, limit)
 			tokenResp.Data = tokenInfos[start:start+limit]
 			c.JSON(http.StatusOK, tokenResp)
 			return
 		} else {
 			tokenResp.Data = tokenInfos[start:length]
+			c.JSON(http.StatusOK, tokenResp)
 			return
 		}
-		c.JSON(http.StatusOK, tokenResp)
 	})
 
 	ginRouter.GET("/api/token/:name", func(c *gin.Context) {
