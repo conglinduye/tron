@@ -74,8 +74,17 @@ func tokenRegister(ginRouter *gin.Engine) {
 
 
 	ginRouter.GET("/api/token/:name/address", func(c *gin.Context) {
-		name := c.Param("name")
-		assetBalanceResp, err := service.QueryAssetBalances(name)
+		tokenReq := &entity.Token{}
+		tokenReq.Name = c.Param("name")
+		tokenReq.Start = c.Query("start")
+		tokenReq.Limit = c.Query("limit")
+
+		if tokenReq.Start == "" || tokenReq.Limit == "" {
+			tokenReq.Start = "0"
+			tokenReq.Limit = "50"
+		}
+
+		assetBalanceResp, err := service.QueryAssetBalances(tokenReq)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)

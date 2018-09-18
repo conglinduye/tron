@@ -391,11 +391,12 @@ func UpdateAssetIssue(assetName string, participated int64) error {
 }
 
 //QueryAssetBalances
-func QueryAssetBalances(tokenName string) (*entity.AssetBalanceResp, error) {
+func QueryAssetBalances(req *entity.Token) (*entity.AssetBalanceResp, error) {
 	strSQL := fmt.Sprintf(` 
 	select address, asset_name, balance
 	from account_asset_balance 
-	where asset_name = '%v' order by balance desc `, tokenName)
+	where asset_name = '%v' order by balance desc 
+	limit %v, %v `, req.Name, req.Start, req.Limit)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
