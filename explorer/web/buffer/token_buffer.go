@@ -113,7 +113,7 @@ func (w *tokenBuffer) loadIcoQueryTokens() {
 
 	subHandle(icoTokenResp)
 
-	filterIcoAssetExpire(icoTokenResp)
+	icoTokenResp.Data = filterIcoAssetExpire(icoTokenResp)
 
 	w.Lock()
 	w.icoTokenResp = icoTokenResp
@@ -265,14 +265,16 @@ func queryAssetCreateTime(tokenName string) int64 {
 }
 
 // filterIcoAssetExpire
-func filterIcoAssetExpire(tokenResp *entity.TokenResp) {
-	tokens := tokenResp.Data
-	for index := range tokens {
-		token := tokens[index]
-		if token.IssuedPercentage == 100 {
-			tokens = append(tokens[:index], tokens[index+1:]...)
+func filterIcoAssetExpire(tokenResp *entity.TokenResp)  []*entity.TokenInfo {
+	tokens := make([]*entity.TokenInfo, 0)
+	data := tokenResp.Data
+	for index := range data {
+		token := data[index]
+		if  token.IssuedPercentage < 100 {
+			tokens = append(tokens, token)
 		}
 	}
+	return tokens
 }
 
 
