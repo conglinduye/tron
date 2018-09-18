@@ -395,10 +395,11 @@ func QueryAssetBalances(req *entity.Token) (*entity.AssetBalanceResp, error) {
 	strSQL := fmt.Sprintf(` 
 	select address, asset_name, balance
 	from account_asset_balance 
-	where asset_name = '%v' order by balance desc 
-	limit %v, %v `, req.Name, req.Start, req.Limit)
-	log.Sql(strSQL)
-	dataPtr, err := mysql.QueryTableData(strSQL)
+	where asset_name = '%v' order by balance desc `, req.Name)
+	pageSQL := fmt.Sprintf(` limit %v, %v `, req.Start, req.Limit)
+	fullSQL := strSQL + pageSQL
+	log.Sql(fullSQL)
+	dataPtr, err := mysql.QueryTableData(fullSQL)
 	if err != nil {
 		log.Errorf("QueryAssetBalances error :[%v]\n", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
