@@ -37,6 +37,11 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL st
 		transfer.TransferToAddress = dataPtr.GetField("to_address")
 		transfer.TokenName = dataPtr.GetField("asset_name")
 		transfer.Amount = mysql.ConvertDBValueToInt64(dataPtr.GetField("amount"))
+		if transfer.TokenName == "" {
+			transfer.TokenName = "TRX"
+			//如果是TRX，页面做的单位转换
+			//transfer.Amount = transfer.Amount / 1000000
+		}
 		confirmed := dataPtr.GetField("confirmed")
 		if confirmed == "1" {
 			transfer.Confirmed = true

@@ -110,6 +110,13 @@ func (w *witnessBuffer) load() { //QueryWitness()
 	// votes 大的排在前面
 	sort.SliceStable(sortList, func(i, j int) bool { return sortList[i].Votes > sortList[j].Votes })
 
+	totalVotes := module.QueryTotalVotes()
+	for index := range sortList {
+		witnessInfo := sortList[index]
+		witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal)/float64(witnessInfo.ProducedTotal) * 100
+		witnessInfo.VotesPercentage = float64(witnessInfo.Votes)/float64(totalVotes) * 100
+	}
+
 	w.Lock()
 	w.addrMap = addrMap
 	w.sortList = sortList
