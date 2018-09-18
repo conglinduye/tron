@@ -31,9 +31,15 @@ func QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*enti
 		transaction.Hash = dataPtr.GetField("trx_hash")
 		transaction.ToAddress = dataPtr.GetField("to_address")
 		transaction.OwnerAddress = dataPtr.GetField("owner_address")
-		transaction.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
+		createTime := dataPtr.GetField("create_time")
+		if len(createTime) > 13 {
+			createTime = createTime[:13]
+		}
+		transaction.CreateTime = mysql.ConvertDBValueToInt64(createTime)
 		transaction.ContractType = mysql.ConvertDBValueToInt64(dataPtr.GetField("contract_type"))
-		_, transaction.ContractData = utils.GetContractInfoStr3(int32(transaction.ContractType), utils.HexDecode(dataPtr.GetField("contract_data")))
+		if dataPtr.GetField("contract_data") != "" {
+			_, transaction.ContractData = utils.GetContractInfoStr3(int32(transaction.ContractType), utils.HexDecode(dataPtr.GetField("contract_data")))
+		}
 		confirmed := dataPtr.GetField("confirmed")
 		if confirmed == "1" {
 			transaction.Confirmed = true
@@ -75,11 +81,11 @@ func QueryTransactionRealize(strSQL, filterSQL string) (*entity.TransactionInfo,
 		transaction.Hash = dataPtr.GetField("trx_hash")
 		transaction.ToAddress = dataPtr.GetField("to_address")
 		transaction.OwnerAddress = dataPtr.GetField("owner_address")
-		transaction.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
-		contractData := dataPtr.GetField("contract_data")
-		if contractData != "" { //0a0a48756f6269546f6b656e121541b7a3dd3b45f5a30cb108b90cc12cee3a70ca4e861a1541c1b94b6cf7b946db06de3253ecabeb9b01e2b1f42001
-			//TODO 解析contractData
+		createTime := dataPtr.GetField("create_time")
+		if len(createTime) > 13 {
+			createTime = createTime[:13]
 		}
+		transaction.CreateTime = mysql.ConvertDBValueToInt64(createTime)
 		transaction.ContractType = mysql.ConvertDBValueToInt64(dataPtr.GetField("contract_type"))
 		_, transaction.ContractData = utils.GetContractInfoStr3(int32(transaction.ContractType), utils.HexDecode(dataPtr.GetField("contract_data")))
 		confirmed := dataPtr.GetField("confirmed")
