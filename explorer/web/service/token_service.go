@@ -7,8 +7,6 @@ import (
 	"strings"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/util"
-	"github.com/wlcy/tron/explorer/lib/mysql"
-	"sync/atomic"
 	"encoding/base64"
 	"bytes"
 	"time"
@@ -28,8 +26,6 @@ func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
 	commonTokenResp, _ := tokenBuffer.GetCommonTokenResp()
 
-	handleTokensIndex(req, commonTokenResp)
-
 	return commonTokenResp, nil
 
 }
@@ -38,8 +34,6 @@ func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 func QueryIcoTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
 	icoTokenResp, _ := tokenBuffer.GetIcoTokenResp()
-
-	handleTokensIndex(req, icoTokenResp)
 
 	return icoTokenResp, nil
 
@@ -111,12 +105,12 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 
 	var tokenListResp = &entity.TokenResp{}
 	tokenList := make([]*entity.TokenInfo, 0)
-	var index = mysql.ConvertStringToInt32(req.Start, 0)
+	//var index = mysql.ConvertStringToInt32(req.Start, 0)
 	tokenExtEmptyInfoList := module.InitTokenExtInfos()
 
 	for _, tokenInfo := range tokenResp.Data {
-		atomic.AddInt32(&index, 1)
-		tokenInfo.Index = index
+		//atomic.AddInt32(&index, 1)
+		//tokenInfo.Index = index
 
 		for _, tokenExtInfo := range tokenExtList {
 
@@ -388,16 +382,6 @@ func QueryAssetBalances(req *entity.Token) (*entity.AssetBalanceResp, error){
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 	return assetBalanceResp, nil
-}
-
-// handleTokensIndex
-func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
-	var index = mysql.ConvertStringToInt32(req.Start, 0)
-
-	for _, tokenInfo := range tokenResp.Data {
-		atomic.AddInt32(&index, 1)
-		tokenInfo.Index = index
-	}
 }
 
 // QueryAssetCreateTime

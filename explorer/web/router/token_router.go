@@ -10,6 +10,7 @@ import (
 	"strings"
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/mysql"
+	"sync/atomic"
 )
 
 func tokenRegister(ginRouter *gin.Engine) {
@@ -49,20 +50,16 @@ func tokenRegister(ginRouter *gin.Engine) {
 		limit := mysql.ConvertStringToInt(tokenReq.Limit, 0)
 		if start > length {
 			tokenResp.Data = make([]*entity.TokenInfo, 0)
-			c.JSON(http.StatusOK, tokenResp)
-			return
-		}
-
-		if start + limit < length {
-			log.Info("tokenRegister, start:%v, limit:%v ", start, limit)
-			tokenResp.Data = tokenInfos[start:start+limit]
-			c.JSON(http.StatusOK, tokenResp)
-			return
 		} else {
-			tokenResp.Data = tokenInfos[start:length]
-			c.JSON(http.StatusOK, tokenResp)
-			return
+			if start + limit < length {
+				tokenResp.Data = tokenInfos[start:start+limit]
+			} else {
+				tokenResp.Data = tokenInfos[start:length-1]
+			}
 		}
+		handleTokensIndex(tokenReq, tokenResp)
+
+		c.JSON(http.StatusOK, tokenResp)
 	})
 
 	ginRouter.GET("/api/token/:name", func(c *gin.Context) {
@@ -162,4 +159,14 @@ func tokenRegister(ginRouter *gin.Engine) {
 		service.SyncAssetIssueParticipated()
 		c.JSON(http.StatusOK, "handle done")
 	})
+}
+
+// handleTokensIndex
+func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
+	var index = mysql.ConvertStringToInt32(req.Start, 0)
+
+	for _, tokenInfo := range tokenResp.Data {
+		atomic.AddInt32(&index, 1)
+		tokenInfo.Index = index
+	}
 }
