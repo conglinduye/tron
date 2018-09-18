@@ -450,7 +450,7 @@ func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp) {
 	tokens := tokenResp.Data
 	for index := range tokens {
 		token := tokens[index]
-		if req.Status == "ICO" && token.IssuedPercentage == 100 {
+		if req.Status == "ico" && token.IssuedPercentage == 100 {
 			tokens = append(tokens[:index], tokens[index+1:]...)
 		}
 	}
