@@ -98,3 +98,5 @@ func QueryWitnessStatisticRealize(strSQL string, totalBlocks int64) ([]*entity.W
 	return witnessInfos, nil
 
 }
+
+
