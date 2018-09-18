@@ -10,6 +10,7 @@ import (
 	"strings"
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/mysql"
+	"sync/atomic"
 )
 
 func tokenRegister(ginRouter *gin.Engine) {
@@ -23,19 +24,21 @@ func tokenRegister(ginRouter *gin.Engine) {
 		log.Debugf("Hello /api/token?%#v", tokenReq)
 		if tokenReq.Start == "" || tokenReq.Limit == "" {
 			tokenReq.Start = "0"
-			tokenReq.Limit = "40"
+			tokenReq.Limit = "20"
 		}
 
 		tokenResp := &entity.TokenResp{}
 		var err error = nil
 		/*if tokenReq.Owner == "" && tokenReq.Name == "" && tokenReq.Status == "" {
 			tokenResp, err = service.QueryCommonTokensBuffer(tokenReq)
-		} else if tokenReq.Status != ""{
+		} else if tokenReq.Status != "" && tokenReq.Status == "ico" {
 			tokenResp, err = service.QueryIcoTokensBuffer(tokenReq)
 		} else {
 			tokenResp, err = service.QueryTokens(tokenReq)
 		}*/
+
 		tokenResp, err = service.QueryTokens(tokenReq)
+
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
@@ -43,21 +46,20 @@ func tokenRegister(ginRouter *gin.Engine) {
 		}
 		tokenInfos := tokenResp.Data
 		length := len(tokenInfos)
+		tokenResp.Total = int64(length)
 		start := mysql.ConvertStringToInt(tokenReq.Start, 0)
 		limit := mysql.ConvertStringToInt(tokenReq.Limit, 0)
 		if start > length {
 			tokenResp.Data = make([]*entity.TokenInfo, 0)
-			c.JSON(http.StatusOK, tokenResp)
-			return
-		}
-
-		if start + limit < length {
-			tokenResp.Data = tokenInfos[start:start+limit]
-			c.JSON(http.StatusOK, tokenResp)
-			return
 		} else {
-			tokenResp.Data = tokenInfos[start:length]
+			if start + limit < length {
+				tokenResp.Data = tokenInfos[start:start+limit]
+			} else {
+				tokenResp.Data = tokenInfos[start:length]
+			}
 		}
+		handleTokensIndex(tokenReq, tokenResp)
+
 		c.JSON(http.StatusOK, tokenResp)
 	})
 
@@ -158,4 +160,14 @@ func tokenRegister(ginRouter *gin.Engine) {
 		service.SyncAssetIssueParticipated()
 		c.JSON(http.StatusOK, "handle done")
 	})
+}
+
+// handleTokensIndex
+func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
+	var index = mysql.ConvertStringToInt32(req.Start, 0)
+
+	for _, tokenInfo := range tokenResp.Data {
+		atomic.AddInt32(&index, 1)
+		tokenInfo.Index = index
+	}
 }

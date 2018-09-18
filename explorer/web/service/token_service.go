@@ -7,8 +7,6 @@ import (
 	"strings"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/util"
-	"github.com/wlcy/tron/explorer/lib/mysql"
-	"sync/atomic"
 	"encoding/base64"
 	"bytes"
 	"time"
@@ -28,25 +26,6 @@ func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
 	commonTokenResp, _ := tokenBuffer.GetCommonTokenResp()
 
-	commonTokenInfos := commonTokenResp.Data
-	length := len(commonTokenInfos)
-	start := mysql.ConvertStringToInt(req.Start, 0)
-	limit := mysql.ConvertStringToInt(req.Limit, 0)
-
-	if start > length {
-		commonTokenResp.Data = make([]*entity.TokenInfo, 0)
-		return commonTokenResp, nil
-	}
-
-	if start + limit < length {
-		commonTokenResp.Data = commonTokenInfos[start:start+limit]
-		return commonTokenResp, nil
-	} else {
-		commonTokenResp.Data = commonTokenInfos[start:length]
-	}
-
-	handleTokensIndex(req, commonTokenResp)
-
 	return commonTokenResp, nil
 
 }
@@ -55,24 +34,6 @@ func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 func QueryIcoTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
 	icoTokenResp, _ := tokenBuffer.GetIcoTokenResp()
-
-	icoTokenInfos := icoTokenResp.Data
-	length := len(icoTokenInfos)
-	start := mysql.ConvertStringToInt(req.Start, 0)
-	limit := mysql.ConvertStringToInt(req.Limit, 0)
-	if start > length {
-		icoTokenResp.Data = make([]*entity.TokenInfo, 0)
-		return icoTokenResp, nil
-	}
-
-	if start + limit < length {
-		icoTokenResp.Data = icoTokenInfos[start:start+limit]
-		return icoTokenResp, nil
-	} else {
-		icoTokenResp.Data = icoTokenInfos[start:length]
-	}
-
-	handleTokensIndex(req, icoTokenResp)
 
 	return icoTokenResp, nil
 
@@ -144,12 +105,12 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 
 	var tokenListResp = &entity.TokenResp{}
 	tokenList := make([]*entity.TokenInfo, 0)
-	var index = mysql.ConvertStringToInt32(req.Start, 0)
+	//var index = mysql.ConvertStringToInt32(req.Start, 0)
 	tokenExtEmptyInfoList := module.InitTokenExtInfos()
 
 	for _, tokenInfo := range tokenResp.Data {
-		atomic.AddInt32(&index, 1)
-		tokenInfo.Index = index
+		//atomic.AddInt32(&index, 1)
+		//tokenInfo.Index = index
 
 		for _, tokenExtInfo := range tokenExtList {
 
@@ -423,16 +384,6 @@ func QueryAssetBalances(req *entity.Token) (*entity.AssetBalanceResp, error){
 	return assetBalanceResp, nil
 }
 
-// handleTokensIndex
-func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
-	var index = mysql.ConvertStringToInt32(req.Start, 0)
-
-	for _, tokenInfo := range tokenResp.Data {
-		atomic.AddInt32(&index, 1)
-		tokenInfo.Index = index
-	}
-}
-
 // QueryAssetCreateTime
 func queryAssetCreateTime(tokenName string) int64 {
 	createTime, err := module.QueryAssetCreateTime(tokenName)
@@ -445,7 +396,7 @@ func queryAssetCreateTime(tokenName string) int64 {
 }
 
 // filterIcoAssetExpire
-func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp)  []*entity.TokenInfo {
+func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp) []*entity.TokenInfo {
 	tokens := make([]*entity.TokenInfo, 0)
 	data := tokenResp.Data
 	for index := range data {
