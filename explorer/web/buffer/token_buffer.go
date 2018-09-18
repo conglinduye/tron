@@ -97,7 +97,7 @@ func (w *tokenBuffer) loadIcoQueryTokens() {
 			from asset_issue
 			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') `)
 
-	t := time.Now().Add(-8 * time.Hour)
+	t := time.Now()
 	dateTime := t.UnixNano() / 1e6
 	filterSQL := fmt.Sprintf(" and start_time<=%v and end_time>=%v", dateTime, dateTime)
 
@@ -270,12 +270,15 @@ func filterIcoAssetExpire(tokenResp *entity.TokenResp)  []*entity.TokenInfo {
 	data := tokenResp.Data
 	for index := range data {
 		token := data[index]
-		if  token.IssuedPercentage < 100 {
+		if token.IssuedPercentage == 100 {
+			// do nothing
+		} else {
 			tokens = append(tokens, token)
 		}
 	}
 	return tokens
 }
+
 
 
 

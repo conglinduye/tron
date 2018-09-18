@@ -28,23 +28,6 @@ func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
 	commonTokenResp, _ := tokenBuffer.GetCommonTokenResp()
 
-	commonTokenInfos := commonTokenResp.Data
-	length := len(commonTokenInfos)
-	start := mysql.ConvertStringToInt(req.Start, 0)
-	limit := mysql.ConvertStringToInt(req.Limit, 0)
-
-	if start > length {
-		commonTokenResp.Data = make([]*entity.TokenInfo, 0)
-		return commonTokenResp, nil
-	}
-
-	if start + limit < length {
-		commonTokenResp.Data = commonTokenInfos[start:start+limit]
-		return commonTokenResp, nil
-	} else {
-		commonTokenResp.Data = commonTokenInfos[start:length]
-	}
-
 	handleTokensIndex(req, commonTokenResp)
 
 	return commonTokenResp, nil
@@ -55,22 +38,6 @@ func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 func QueryIcoTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
 	icoTokenResp, _ := tokenBuffer.GetIcoTokenResp()
-
-	icoTokenInfos := icoTokenResp.Data
-	length := len(icoTokenInfos)
-	start := mysql.ConvertStringToInt(req.Start, 0)
-	limit := mysql.ConvertStringToInt(req.Limit, 0)
-	if start > length {
-		icoTokenResp.Data = make([]*entity.TokenInfo, 0)
-		return icoTokenResp, nil
-	}
-
-	if start + limit < length {
-		icoTokenResp.Data = icoTokenInfos[start:start+limit]
-		return icoTokenResp, nil
-	} else {
-		icoTokenResp.Data = icoTokenInfos[start:length]
-	}
 
 	handleTokensIndex(req, icoTokenResp)
 
