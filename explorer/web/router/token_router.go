@@ -28,13 +28,15 @@ func tokenRegister(ginRouter *gin.Engine) {
 
 		tokenResp := &entity.TokenResp{}
 		var err error = nil
-		if tokenReq.Owner == "" && tokenReq.Name == "" && tokenReq.Status == "" {
+		/*if tokenReq.Owner == "" && tokenReq.Name == "" && tokenReq.Status == "" {
 			tokenResp, err = service.QueryCommonTokensBuffer(tokenReq)
 		} else if tokenReq.Status != "" && tokenReq.Status == "ico" {
 			tokenResp, err = service.QueryIcoTokensBuffer(tokenReq)
 		} else {
 			tokenResp, err = service.QueryTokens(tokenReq)
-		}
+		}*/
+
+		tokenResp, err = service.QueryTokens(tokenReq)
 
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
