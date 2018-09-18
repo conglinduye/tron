@@ -26,12 +26,12 @@ func main() {
 		// getBlocks(-1, 500, 100) // get
 
 		// fmt.Println(bb.GetTransactionByBlockID(2414358))
-		r := bb.GetTransactionByBlockID(2288184)
-		for idx, trx := range r {
-			fmt.Printf("blockID:%v, %v-->%v\n", 2288184, idx, utils.ToJSONStr(trx))
-		}
-		// getTrx()
-		// getTrxs()
+		// r := bb.GetTransactionByBlockID(2288184)
+		// for idx, trx := range r {
+		// 	fmt.Printf("blockID:%v, %v-->%v\n", 2288184, idx, utils.ToJSONStr(trx))
+		// }
+		// getTrxHash()
+		getTrxs()
 
 		// fmt.Printf("\n### %v, %v, %v, %v\n\n", bb.GetMaxBlockID(), bb.GetMaxConfirmedBlockID(), bb.GetSolidityNodeMaxBlockID(), bb.GetFullNodeMaxBlockID())
 
@@ -47,6 +47,15 @@ func getTrx() {
 	// fmt.Printf("trx 0~100, len:%v\n", len(ret))
 
 	getMaxBlockIDTrx()
+}
+
+func getTrxHash() {
+	bb := buffer.GetBlockBuffer()
+
+	hashKey := "0001eebeb06e0f1ce9afad287266de87b35577867679334b44abc2e5561affe6"
+	// ret := bb.GetTransactionByHash(hashKey)
+	ret := bb.GetTransferByHash(hashKey)
+	fmt.Printf("hash:%v\n ret:%#v\n", hashKey, ret)
 }
 
 func getMaxBlockIDTrx() {
@@ -69,7 +78,8 @@ func getTrxs() {
 	start = 100
 	count = 40
 	ts := time.Now()
-	trxs := bb.GetTransactions(start, count)
+	// trxs := bb.GetTransactions(start, count)
+	trxs := bb.GetTransfers(start, count)
 	tsc := time.Since(ts)
 	trxLen = int64(len(trxs))
 	fmt.Printf("get trxs result, ret count %v, req count %v, cost:%v\n", trxLen, count, tsc)
@@ -82,7 +92,7 @@ func getTrxs() {
 		n++
 		for idx, trx := range trxs {
 			_ = idx
-			// fmt.Printf("%v-->%v\n", idx, trx.Block)
+			fmt.Printf("%v-->%v\n", idx, trx.Block)
 			if cur == trx.Block || cur > trx.Block {
 			} else {
 				fmt.Printf("trx list block error, Non-continuous number %v--%v\n", cur, trx.Block)

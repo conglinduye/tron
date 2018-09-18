@@ -1,5 +1,9 @@
 package entity
 
+import (
+	"time"
+)
+
 //Transactions 查询转账列表的请求参数
 type Transactions struct {
 	Sort   string `json:"sort,omitempty"`   // 按时间戳倒序
@@ -29,6 +33,7 @@ type TransactionInfo struct {
 	Confirmed       bool        `json:"confirmed"`    //:true
 	ContractData    interface{} `json:"contractData"` //:原始交易数据，TODO；需要解析
 	ContractDataRaw string      `json:"-"`            // inner user
+	LoadTime        time.Time   `json:"-"`
 }
 
 //PostTransaction  创建交易

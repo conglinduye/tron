@@ -11,6 +11,8 @@ import (
 var (
 	TrxRedisDescListKey = "transaction:list:desc" // 倒叙列表 缓存
 	TrxRedisAscListKey  = "transaction:list:asc"  // 正序列表 缓存
+
+	TranRedisDescListKey = "transfer:list:desc" // 交易缓存 倒叙
 )
 
 func (b *blockBuffer) GetTransactions(offset, count int64) []*entity.TransactionInfo {
@@ -41,15 +43,15 @@ func (b *blockBuffer) GetTransactions(offset, count int64) []*entity.Transaction
 
 func (b *blockBuffer) GetTransactionByBlockID(blockID int64) []*entity.TransactionInfo {
 
-	log.Debugf("blockID:%v-->maxConfirmedBlockID:%v\n", blockID, b.GetMaxConfirmedBlockID())
+	// log.Debugf("blockID:%v-->maxConfirmedBlockID:%v\n", blockID, b.GetMaxConfirmedBlockID())
 	if blockID > b.GetMaxConfirmedBlockID() {
 		raw, ok := b.uncBlockTrx.Load(blockID)
-		log.Debugf("get uncBlockTrx[%v]--->%v-->%v\n", blockID, ok, raw)
+		// log.Debugf("get uncBlockTrx[%v]--->%v-->%v\n", blockID, ok, raw)
 		if !ok {
 			cnt := 0
 			b.uncBlockTrx.Range(func(key, val interface{}) bool {
 				cnt++
-				log.Debugf("%v-->%v\n", cnt, key)
+				// log.Debugf("%v-->%v\n", cnt, key)
 				return true
 			})
 			return nil

@@ -56,6 +56,12 @@ type Buffer interface {
 	GetTransactionByBlockID(blockID int64) []*entity.TransactionInfo
 	GetTransactionByHash(hash string) *entity.TransactionInfo
 	GetTotalTransactions() int64
+
+	// transfer
+	GetTransfers(offset, count int64) []*entity.TransferInfo
+	GetTransferByBlockID(blockID int64) []*entity.TransferInfo
+	GetTransferByHash(hash string) *entity.TransferInfo
+	GetTotalTransfers() int64
 }
 
 // GetMaxBlockID 获取DB最大的可用块ID （从fullnode获取，在缓存中可用的最大blockID）
