@@ -53,6 +53,7 @@ func startDaemon() {
 	startWintnessDaemon()
 	startRedisAccountRefreshPush()
 	startAccountDaemon()
+	startNodeDaemon()
 }
 
 func main() {

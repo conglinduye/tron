@@ -33,6 +33,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 		  `create_time` bigint NOT NULL DEFAULT 0 COMMENT '交易创建时间',
 		  `expire_time` bigint NOT NULL DEFAULT 0 COMMENT '交易过期时间',
 		  `modified_time` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '记录更新时间',
+		  `real_timestamp` bigint not null default 0 comment 'transaction 的timestamp',
 		  PRIMARY KEY (`trx_hash`,`block_id`),
 		  KEY `idx_transactions_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -40,7 +41,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 		PARTITIONS 100 */
 	/*
 	 */
-	sqlstr := "insert into transactions (trx_hash, block_id, contract_type, contract_data, result_data, create_time, expire_time, owner_address) values (?, ?, ?, ?, ?, ?, ?, ?)"
+	sqlstr := "insert into transactions (trx_hash, block_id, contract_type, contract_data, result_data, real_timestamp, expire_time, owner_address, create_time) values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := txn.Prepare(sqlstr)
 	if nil != err {
 		fmt.Printf("prepare store transaction SQL failed:%v\n", err)
@@ -53,8 +54,13 @@ func storeTransactions(trans []*core.Transaction) bool {
 			continue
 		}
 		if len(tran.RawData.Contract) > 0 {
-			blockID := tran.RawData.RefBlockNum
-			tran.RawData.RefBlockNum = 0
+			var blockID, blockCreateTime int64
+			if len(tran.Signature) >= 3 {
+				blockID = int64(utils.BinaryBigEndianDecodeUint64(tran.Signature[1]))         // use signature[1] store block_id
+				blockCreateTime = int64(utils.BinaryBigEndianDecodeUint64(tran.Signature[2])) // use signature[1] store block create_time
+			} else {
+				fmt.Printf("ERROR: can't get transaction blockID and create time:%v\n", utils.ToJSONStr(tran))
+			}
 			trxHash := utils.HexEncode(utils.CalcTransactionHash(tran)) // calc trx hash need reset RefBlockNum as main net do not fill this field
 			tran.RawData.RefBlockNum = blockID                          // set it back as store contract need this value
 			trxRetData := []byte{}
@@ -72,12 +78,12 @@ func storeTransactions(trans []*core.Transaction) bool {
 				tran.RawData.Timestamp,
 				tran.RawData.Expiration,
 				toAddr,
+				blockCreateTime,
 			)
 			if err != nil {
 				fmt.Printf("ERROR: store transaction failed!%v, trx_hash:%v, blockID:%v\n", err, trxHash, blockID) //,utils.ToJSONStr(tran))
 				// return false
 			} else {
-
 				storeContractDetail(txn, 1, trxHash, tran)
 			}
 		} else {
@@ -165,7 +171,9 @@ func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
 
 		// prepare transaction
 		for _, tran := range block.Transactions {
-			tran.RawData.RefBlockNum = block.BlockHeader.RawData.Number
+			// tran.RawData.RefBlockNum = block.BlockHeader.RawData.Number
+			tran.Signature = append(tran.Signature, utils.BinaryBigEndianEncodeInt64(block.BlockHeader.RawData.Number))
+			tran.Signature = append(tran.Signature, utils.BinaryBigEndianEncodeInt64(block.BlockHeader.RawData.Timestamp))
 			tranList = append(tranList, tran)
 		}
 	}

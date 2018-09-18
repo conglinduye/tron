@@ -123,16 +123,16 @@ func storeAccountCreateContract(txn *sql.Tx, confiremd int, trxHash string, trx 
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confiremd,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		utils.Base58EncodeAddr(ctx.AccountAddress),
 		ctx.Type)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err) //utils.ToJSONStr(ctx), err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err) //utils.ToJSONStr(ctx), err)
 	}
 
 	AddRefreshAddress(ctx.OwnerAddress, ctx.AccountAddress)
@@ -169,9 +169,9 @@ func storeTransferContract(txn *sql.Tx, confirmed int, trxHash string, trx *core
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -179,7 +179,7 @@ func storeTransferContract(txn *sql.Tx, confirmed int, trxHash string, trx *core
 		ctx.Amount,
 		"")
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ToAddress)
 
@@ -215,9 +215,9 @@ func storeTransferAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -225,7 +225,7 @@ func storeTransferAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		ctx.Amount,
 		string(ctx.AssetName))
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 
 	_, err = txn.Exec(`insert into contract_asset_transfer 
@@ -235,9 +235,9 @@ func storeTransferAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 	(?, ?, ?, ?, ?, ?,
 		 ?, ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -245,7 +245,7 @@ func storeTransferAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		ctx.Amount,
 		string(ctx.AssetName))
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ToAddress)
 
@@ -280,16 +280,16 @@ func storeVoteWitnessContract(txn *sql.Tx, confirmed int, trxHash string, trx *c
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		utils.ToJSONStr(ctx.Votes),
 		ctx.Support)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 
 	AddRefreshAddress(ctx.OwnerAddress)
@@ -323,15 +323,15 @@ func storeWitnessCreateContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		string(ctx.Url))
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 	return
@@ -383,9 +383,9 @@ func storeAssetIssueContract(txn *sql.Tx, confirmed int, trxHash string, trx *co
 			 ?, ?, ?, ?,
 			 ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -406,7 +406,7 @@ func storeAssetIssueContract(txn *sql.Tx, confirmed int, trxHash string, trx *co
 		ctx.PublicFreeAssetNetUsage,
 		ctx.PublicLatestFreeNetTime)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 	return
@@ -441,9 +441,9 @@ func storeParticipateAssetIssueContract(txn *sql.Tx, confirmed int, trxHash stri
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -451,7 +451,7 @@ func storeParticipateAssetIssueContract(txn *sql.Tx, confirmed int, trxHash stri
 		string(ctx.AssetName),
 		ctx.Amount)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ToAddress)
 	return
@@ -486,9 +486,9 @@ func storeFreezeBalanceContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -496,7 +496,7 @@ func storeFreezeBalanceContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		ctx.FrozenDuration,
 		ctx.Resource)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -530,15 +530,15 @@ func storeUnfreezeBalanceContract(txn *sql.Tx, confirmed int, trxHash string, tr
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		ctx.Resource)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -571,14 +571,14 @@ func storeWithdrawBalanceContract(txn *sql.Tx, confirmed int, trxHash string, tr
 		(?, ?, ?, ?, ?, ?,
 			 ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress))
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -611,14 +611,14 @@ func storeUnfreezeAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		(?, ?, ?, ?, ?, ?,
 			 ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress))
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 	return
@@ -651,15 +651,15 @@ func storeAccountUpdateContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		string(ctx.AccountName))
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -693,15 +693,15 @@ func storeSetAccountIDContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		string(ctx.AccountId))
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 	return
@@ -736,9 +736,9 @@ func storeVoteAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx *cor
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -746,7 +746,7 @@ func storeVoteAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx *cor
 		ctx.Support,
 		ctx.Count)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -781,16 +781,16 @@ func storeUpdateSettingContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		utils.Base58EncodeAddr(ctx.ContractAddress),
 		ctx.ConsumeUserResourcePercent)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ContractAddress)
 
@@ -824,15 +824,15 @@ func storeWitnessUpdateContract(txn *sql.Tx, confirmed int, trxHash string, trx 
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		string(ctx.UpdateUrl))
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -869,9 +869,9 @@ func storeUpdateAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx *c
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -880,7 +880,7 @@ func storeUpdateAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx *c
 		ctx.NewLimit,
 		ctx.NewPublicLimit)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress)
 
@@ -919,9 +919,9 @@ func storeCreateSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *c
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?, ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -932,7 +932,7 @@ func storeCreateSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *c
 		ctx.NewContract.ConsumeUserResourcePercent,
 		ctx.NewContract.Name)
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.NewContract.ContractAddress)
 	return
@@ -967,9 +967,9 @@ func storeTriggerSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 		(?, ?, ?, ?, ?, ?,
 			 ?, ?, ?, ?)`,
 		trxHash,
-		trx.RawData.RefBlockNum,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
-		trx.RawData.Timestamp,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
@@ -977,7 +977,7 @@ func storeTriggerSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 		ctx.CallValue,
 		string(ctx.Data))
 	if nil != err {
-		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, trx.RawData.RefBlockNum, err)
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ContractAddress)
 
