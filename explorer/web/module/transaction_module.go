@@ -37,7 +37,9 @@ func QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*enti
 		}
 		transaction.CreateTime = mysql.ConvertDBValueToInt64(createTime)
 		transaction.ContractType = mysql.ConvertDBValueToInt64(dataPtr.GetField("contract_type"))
-		_, transaction.ContractData = utils.GetContractInfoStr3(int32(transaction.ContractType), utils.HexDecode(dataPtr.GetField("contract_data")))
+		if dataPtr.GetField("contract_data") != "" {
+			_, transaction.ContractData = utils.GetContractInfoStr3(int32(transaction.ContractType), utils.HexDecode(dataPtr.GetField("contract_data")))
+		}
 		confirmed := dataPtr.GetField("confirmed")
 		if confirmed == "1" {
 			transaction.Confirmed = true
