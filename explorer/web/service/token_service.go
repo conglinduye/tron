@@ -20,11 +20,67 @@ import (
 	"image/gif"
 	"io"
 	"errors"
+	"github.com/wlcy/tron/explorer/web/buffer"
 )
+
+// QueryCommonTokensBuffer
+func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
+	tokenBuffer := buffer.GetTokenBuffer()
+	commonTokenResp, _ := tokenBuffer.GetCommonTokenResp()
+
+	commonTokenInfos := commonTokenResp.Data
+	length := len(commonTokenInfos)
+	start := mysql.ConvertStringToInt(req.Start, 0)
+	limit := mysql.ConvertStringToInt(req.Limit, 0)
+
+	if start > length {
+		commonTokenResp.Data = make([]*entity.TokenInfo, 0)
+		return commonTokenResp, nil
+	}
+
+	if start + limit < length {
+		commonTokenResp.Data = commonTokenInfos[start:start+limit]
+		return commonTokenResp, nil
+	} else {
+		commonTokenResp.Data = commonTokenInfos[start:length]
+	}
+
+	handleTokensIndex(req, commonTokenResp)
+
+	return commonTokenResp, nil
+
+}
+
+// QueryIcoTokensBuffer
+func QueryIcoTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
+	tokenBuffer := buffer.GetTokenBuffer()
+	icoTokenResp, _ := tokenBuffer.GetIcoTokenResp()
+
+	icoTokenInfos := icoTokenResp.Data
+	length := len(icoTokenInfos)
+	start := mysql.ConvertStringToInt(req.Start, 0)
+	limit := mysql.ConvertStringToInt(req.Limit, 0)
+	if start > length {
+		icoTokenResp.Data = make([]*entity.TokenInfo, 0)
+		return icoTokenResp, nil
+	}
+
+	if start + limit < length {
+		icoTokenResp.Data = icoTokenInfos[start:start+limit]
+		return icoTokenResp, nil
+	} else {
+		icoTokenResp.Data = icoTokenInfos[start:length]
+	}
+
+	handleTokensIndex(req, icoTokenResp)
+
+	return icoTokenResp, nil
+
+}
 
 //QueryTokens
 func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
-	var filterSQL, sortSQL, pageSQL string
+	var filterSQL, sortSQL string
 
 	strSQL := fmt.Sprintf(`
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
@@ -36,24 +92,20 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 		filterSQL = fmt.Sprintf(" and owner_address='%v'", req.Owner)
 	}
 	if req.Name != "" {
-		if strings.Contains(req.Name, "%") {
+		if strings.HasPrefix(req.Name, "%") && strings.HasSuffix(req.Name, "%") {
 			filterSQL = fmt.Sprintf(" and asset_name like '%v'", req.Name)
 		} else {
 			filterSQL = fmt.Sprintf(" and asset_name='%v'", req.Name)
 		}
 	}
 	if req.Status == "ico" {
-		t := time.Now().Add(-8 * time.Hour)
+		t := time.Now()
 		dateTime := t.UnixNano() / 1e6
 		filterSQL = fmt.Sprintf(" and start_time<=%v and end_time>=%v", dateTime, dateTime)
 	}
 	sortSQL = "order by participated desc"
 
-	if req.Limit != "" && req.Start != "" {
-		pageSQL = fmt.Sprintf(" limit %v, %v", req.Start, req.Limit)
-	}
-
-	tokenResp, err := module.QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL)
+	tokenResp, err := module.QueryTokensRealize(strSQL, filterSQL, sortSQL, "")
 	if err != nil {
 		log.Errorf("queryTokens list is nil or err:[%v]", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
@@ -61,8 +113,20 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 	if len(tokenResp.Data) == 0 {
 		return tokenResp, nil
 	}
+
 	// calculateTokens
 	calculateTokens(tokenResp)
+
+	// filterIcoAssetExpire
+	filterIcoAssetExpire(req, tokenResp)
+
+	// queryCreateTime
+	tokens := tokenResp.Data
+	for index := range tokens {
+		token := tokens[index]
+		createTime := queryAssetCreateTime(token.Name)
+		tokens[index].DateCreated = createTime
+	}
 
 	tokenAddressList := make([]string, 0)
 	for _, tokenInfo := range tokenResp.Data {
@@ -146,6 +210,12 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 
 	// calculateToken
 	calculateToken(token)
+
+
+
+	// queryCreateTime
+	createTime := queryAssetCreateTime(token.Name)
+	token.DateCreated = createTime
 
 	// QueryTotalTokenTransfers
 	totalTokenTransfers, _ := module.QueryTotalTokenTransfers(name)
@@ -352,4 +422,36 @@ func QueryAssetBalances(name string) (*entity.AssetBalanceResp, error){
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 	return assetBalanceResp, nil
+}
+
+// handleTokensIndex
+func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
+	var index = mysql.ConvertStringToInt32(req.Start, 0)
+
+	for _, tokenInfo := range tokenResp.Data {
+		atomic.AddInt32(&index, 1)
+		tokenInfo.Index = index
+	}
+}
+
+// QueryAssetCreateTime
+func queryAssetCreateTime(tokenName string) int64 {
+	createTime, err := module.QueryAssetCreateTime(tokenName)
+	if err != nil {
+		log.Errorf("QueryAssetCreateTime list is nil or err:[%v]", err)
+		t := time.Now()
+		createTime = t.UnixNano() / 1e6
+	}
+	return createTime
+}
+
+// filterIcoAssetExpire
+func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp) {
+	tokens := tokenResp.Data
+	for index := range tokens {
+		token := tokens[index]
+		if req.Status == "ICO" && token.IssuedPercentage == 100 {
+			tokens = append(tokens[:index], tokens[index+1:]...)
+		}
+	}
 }

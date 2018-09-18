@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"github.com/wlcy/tron/explorer/lib/config"
+	"github.com/wlcy/tron/explorer/lib/mysql"
 )
 
 func tokenRegister(ginRouter *gin.Engine) {
@@ -24,10 +25,38 @@ func tokenRegister(ginRouter *gin.Engine) {
 			tokenReq.Start = "0"
 			tokenReq.Limit = "40"
 		}
-		tokenResp, err := service.QueryTokens(tokenReq)
+
+		tokenResp := &entity.TokenResp{}
+		var err error = nil
+		/*if tokenReq.Owner == "" && tokenReq.Name == "" && tokenReq.Status == "" {
+			tokenResp, err = service.QueryCommonTokensBuffer(tokenReq)
+		} else if tokenReq.Status != ""{
+			tokenResp, err = service.QueryIcoTokensBuffer(tokenReq)
+		} else {
+			tokenResp, err = service.QueryTokens(tokenReq)
+		}*/
+		tokenResp, err = service.QueryTokens(tokenReq)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
+			return
+		}
+		tokenInfos := tokenResp.Data
+		length := len(tokenInfos)
+		start := mysql.ConvertStringToInt(tokenReq.Start, 0)
+		limit := mysql.ConvertStringToInt(tokenReq.Limit, 0)
+		if start > length {
+			tokenResp.Data = make([]*entity.TokenInfo, 0)
+			c.JSON(http.StatusOK, tokenResp)
+			return
+		}
+
+		if start + limit < length {
+			tokenResp.Data = tokenInfos[start:start+limit]
+			c.JSON(http.StatusOK, tokenResp)
+			return
+		} else {
+			tokenResp.Data = tokenInfos[start:length]
 		}
 		c.JSON(http.StatusOK, tokenResp)
 	})
@@ -84,6 +113,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 		if uploadLogoReq.ImageData == "" || uploadLogoReq.Address == "" {
 			res.Success = false
 			c.JSON(http.StatusBadRequest, res)
+			return
 		}
 		//传入data格式：data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYA...
 		if len(strings.Split(uploadLogoReq.ImageData, ",")) > 1 {

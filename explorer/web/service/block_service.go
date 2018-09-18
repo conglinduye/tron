@@ -31,7 +31,7 @@ func QueryBlocksBuffer(req *entity.Blocks) (*entity.BlocksResp, error) {
 		blocks = append(blocks, block)
 		blockResp.Total = int64(len(blocks))
 	} else if req.Producer != "" {
-		//return QueryBlockByProduct()
+		return QueryBlocks(req)
 	} else {
 		blocks, err = blockBuffer.GetBlocks(-1, req.Start, req.Limit)
 		if err != nil || blocks == nil {
@@ -58,6 +58,9 @@ func QueryBlocks(req *entity.Blocks) (*entity.BlocksResp, error) {
 	//按传入条件拼接sql，很容易错误，需要注意
 	if req.Number != "" {
 		filterSQL = fmt.Sprintf(" and block_id=%v", req.Number)
+	}
+	if req.Producer != "" {
+		filterSQL = fmt.Sprintf(" and witness_address='%v'", req.Number)
 	}
 	sortTemp = "order by"
 	if strings.Index(req.Order, "timestamp") > 0 {

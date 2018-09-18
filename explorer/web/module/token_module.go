@@ -428,3 +428,28 @@ func QueryAssetBalances(tokenName string) (*entity.AssetBalanceResp, error) {
 	assetBalanceResp.Data = assetBalances
 	return assetBalanceResp, nil
 }
+
+// QueryAssetCreateTime
+func QueryAssetCreateTime(tokenName string) (int64, error) {
+	var assetCreateTime = int64(0)
+	strSQL := fmt.Sprintf(` 
+	select c.create_time as createTime
+	from asset_issue a, contract_asset_issue b, blocks c
+    where a.asset_name = b.asset_name and b.block_id = c.block_id 
+	and a.asset_name = '%v' `, tokenName)
+	log.Sql(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryAssetCreateTime error :[%v]\n", err)
+		return assetCreateTime, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryAssetCreateTime dataPtr is nil ")
+		return assetCreateTime, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	for dataPtr.NextT() {
+		assetCreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("createTime"))
+	}
+	return assetCreateTime, nil
+}
