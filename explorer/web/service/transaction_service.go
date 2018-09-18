@@ -28,13 +28,63 @@ func QueryTransactionsBuffer(req *entity.Transactions) (*entity.TransactionsResp
 		transactions.Data = transacts
 		transactions.Total = int64(len(transactions.Data))
 	} else if req.Address != "" { //按照交易所属人查询，包含转出的交易，和转入的交易
-		transactions, _ = QueryTransactions(req)
+		transactions, _ = QueryTransactionsByAddress(req)
 	} else { //分页查询
 		transactions.Data = buffer.GetBlockBuffer().GetTransactions(req.Start, req.Limit)
 		transactions.Total = buffer.GetBlockBuffer().GetTotalTransactions()
 	}
 
 	return transactions, nil
+}
+
+//QueryTransactionsByAddress  根据地址查询其下所有相关的交易列表
+func QueryTransactionsByAddress(req *entity.Transactions) (*entity.TransactionsResp, error) {
+	var filterSQL, sortSQL, pageSQL string
+	mutiFilter := false
+	strSQL := fmt.Sprintf(`
+	select oo.contract_type,oo.trx_hash,oo.create_time from (
+	SELECT contract_type,trx_hash,create_time 
+	FROM tron.contract_transfer 
+	where to_address='%v' 
+	union 
+	SELECT contract_type,trx_hash,create_time 
+	FROM tron.transactions 
+	where owner_address='%v') oo
+	where 1=1 `, req.Address, req.Address)
+
+	for _, v := range strings.Split(req.Sort, ",") {
+		if strings.Index(v, "timestamp") > 0 {
+			if mutiFilter {
+				sortSQL = fmt.Sprintf("%v ,", sortSQL)
+			}
+			sortSQL = fmt.Sprintf("%v create_time", sortSQL)
+			if strings.Index(v, "-") == 0 {
+				sortSQL = fmt.Sprintf("%v desc", sortSQL)
+			}
+			mutiFilter = true
+		}
+
+		if strings.Index(v, "number") > 0 {
+			if mutiFilter {
+				sortSQL = fmt.Sprintf("%v ,", sortSQL)
+			}
+			sortSQL = fmt.Sprintf("%v block_id", sortSQL)
+			if strings.Index(v, "-") == 0 {
+				sortSQL = fmt.Sprintf("%v desc", sortSQL)
+			}
+			mutiFilter = true
+		}
+	}
+	if sortSQL != "" {
+		if strings.Index(sortSQL, ",") == 0 {
+			sortSQL = sortSQL[1:]
+		}
+		sortSQL = fmt.Sprintf("order by %v", sortSQL)
+	}
+
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
+	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 
 //QueryTransactions 条件查询  	//?sort=-number&limit=1&count=true&number=2135998 TODO: cache

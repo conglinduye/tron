@@ -29,7 +29,11 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL st
 		transfer.Block = mysql.ConvertDBValueToInt64(dataPtr.GetField("block_id"))
 		transfer.TransactionHash = dataPtr.GetField("trx_hash")
 		transfer.TransferFromAddress = dataPtr.GetField("owner_address")
-		transfer.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
+		createTime := dataPtr.GetField("create_time")
+		if len(createTime) > 13 {
+			createTime = createTime[:12]
+		}
+		transfer.CreateTime = mysql.ConvertDBValueToInt64(createTime)
 		transfer.TransferToAddress = dataPtr.GetField("to_address")
 		transfer.TokenName = dataPtr.GetField("asset_name")
 		transfer.Amount = mysql.ConvertDBValueToInt64(dataPtr.GetField("amount"))
@@ -73,7 +77,11 @@ func QueryTransferRealize(strSQL, filterSQL string) (*entity.TransferInfo, error
 		transfer.Block = mysql.ConvertDBValueToInt64(dataPtr.GetField("block_id"))
 		transfer.TransactionHash = dataPtr.GetField("trx_hash")
 		transfer.TransferFromAddress = dataPtr.GetField("owner_address")
-		transfer.CreateTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
+		createTime := dataPtr.GetField("create_time")
+		if len(createTime) > 13 {
+			createTime = createTime[:12]
+		}
+		transfer.CreateTime = mysql.ConvertDBValueToInt64(createTime)
 		transfer.TransferToAddress = dataPtr.GetField("to_address")
 		transfer.TokenName = dataPtr.GetField("asset_name")
 		transfer.Amount = mysql.ConvertDBValueToInt64(dataPtr.GetField("amount"))
