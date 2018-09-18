@@ -46,6 +46,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 		}
 		tokenInfos := tokenResp.Data
 		length := len(tokenInfos)
+		tokenResp.Total = int64(length)
 		start := mysql.ConvertStringToInt(tokenReq.Start, 0)
 		limit := mysql.ConvertStringToInt(tokenReq.Limit, 0)
 		if start > length {

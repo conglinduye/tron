@@ -396,7 +396,7 @@ func queryAssetCreateTime(tokenName string) int64 {
 }
 
 // filterIcoAssetExpire
-func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp)  []*entity.TokenInfo {
+func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp) []*entity.TokenInfo {
 	tokens := make([]*entity.TokenInfo, 0)
 	data := tokenResp.Data
 	for index := range data {
