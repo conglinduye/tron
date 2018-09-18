@@ -20,7 +20,63 @@ import (
 	"image/gif"
 	"io"
 	"errors"
+	"github.com/wlcy/tron/explorer/web/buffer"
 )
+
+// QueryCommonTokensBuffer
+func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
+	tokenBuffer := buffer.GetTokenBuffer()
+	commonTokenResp, _ := tokenBuffer.GetCommonTokenResp()
+
+	commonTokenInfos := commonTokenResp.Data
+	length := len(commonTokenInfos)
+	start := mysql.ConvertStringToInt(req.Start, 0)
+	limit := mysql.ConvertStringToInt(req.Limit, 0)
+
+	if start > length {
+		commonTokenResp.Data = make([]*entity.TokenInfo, 0)
+		return commonTokenResp, nil
+	}
+
+	if start + limit < length {
+		commonTokenResp.Data = commonTokenInfos[start:start+limit]
+		return commonTokenResp, nil
+	} else {
+		commonTokenResp.Data = commonTokenInfos[start:length]
+	}
+
+	handleTokensIndex(req, commonTokenResp)
+
+	return commonTokenResp, nil
+
+}
+
+// QueryIcoTokensBuffer
+func QueryIcoTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
+	tokenBuffer := buffer.GetTokenBuffer()
+	icoTokenResp, _ := tokenBuffer.GetIcoTokenResp()
+
+	icoTokenInfos := icoTokenResp.Data
+	length := len(icoTokenInfos)
+	start := mysql.ConvertStringToInt(req.Start, 0)
+	limit := mysql.ConvertStringToInt(req.Limit, 0)
+	if start > length {
+		icoTokenResp.Data = make([]*entity.TokenInfo, 0)
+		return icoTokenResp, nil
+	}
+
+	if start + limit < length {
+		icoTokenResp.Data = icoTokenInfos[start:start+limit]
+		return icoTokenResp, nil
+	} else {
+		icoTokenResp.Data = icoTokenInfos[start:length]
+	}
+
+	handleTokensIndex(req, icoTokenResp)
+
+	return icoTokenResp, nil
+
+}
 
 //QueryTokens
 func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
@@ -58,11 +114,21 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 		log.Errorf("queryTokens list is nil or err:[%v]", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
+	log.Info("111111111")
 	if len(tokenResp.Data) == 0 {
+		log.Info("22222222222")
 		return tokenResp, nil
 	}
 	// calculateTokens
 	calculateTokens(tokenResp)
+
+	// queryCreateTime
+	tokens := tokenResp.Data
+	for index := range tokens {
+		token := tokens[index]
+		createTime := queryAssetCreateTime(token.Name)
+		tokens[index].DateCreated = createTime
+	}
 
 	tokenAddressList := make([]string, 0)
 	for _, tokenInfo := range tokenResp.Data {
@@ -352,4 +418,25 @@ func QueryAssetBalances(name string) (*entity.AssetBalanceResp, error){
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 	return assetBalanceResp, nil
+}
+
+// handleTokensIndex
+func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
+	var index = mysql.ConvertStringToInt32(req.Start, 0)
+
+	for _, tokenInfo := range tokenResp.Data {
+		atomic.AddInt32(&index, 1)
+		tokenInfo.Index = index
+	}
+}
+
+// QueryAssetCreateTime
+func queryAssetCreateTime(tokenName string) int64 {
+	createTime, err := module.QueryAssetCreateTime(tokenName)
+	if err != nil {
+		log.Errorf("QueryAssetCreateTime list is nil or err:[%v]", err)
+		t := time.Now()
+		createTime = t.UnixNano() / 1e6
+	}
+	return createTime
 }

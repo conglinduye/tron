@@ -134,6 +134,7 @@ output:json
     "percentage":89.97078260869566,
     "frozenTotal":230671,
     "frozenPercentage":10.029173913043477,
+    "dateCreated":1534304985000,
     "ownerAddress":"TXiBuTWoXvWYKz47NcvKe1gfQDdNHnbBmh",
     "name":"VIP",
     "totalSupply":2300000,
