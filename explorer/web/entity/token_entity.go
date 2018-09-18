@@ -29,6 +29,7 @@ type TokenInfo struct {
 	Percentage				float64  			`json:"percentage"`				// 余额数量占比
 	FrozenTotal				int64				`json:"frozenTotal"`			// 冻结数量
 	FrozenPercentage		float64				`json:"frozenPercentage"`		// 冻结数量占比
+	DateCreated				int64				`json:"dateCreated"`			// 创建时间
 
 	OwnerAddress			string 				`json:"ownerAddress"`			// owner_address
 	Name  					string 				`json:"name"`					// asset_name

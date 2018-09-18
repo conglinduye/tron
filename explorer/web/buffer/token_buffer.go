@@ -14,7 +14,8 @@ var onceTokenBuffer sync.Once
 
 type tokenBuffer struct {
 	sync.RWMutex
-	tokenResp *entity.TokenResp
+	commonTokenResp *entity.TokenResp
+	icoTokenResp *entity.TokenResp
 }
 
 func GetTokenBuffer() *tokenBuffer {
@@ -24,11 +25,14 @@ func GetTokenBuffer() *tokenBuffer {
 func getTokenBuffer() *tokenBuffer {
 	onceTokenBuffer.Do(func() {
 		_tokenBuffer = &tokenBuffer{}
-		_tokenBuffer.loadQueryTokens()
+		_tokenBuffer.loadCommonQueryTokens()
+		_tokenBuffer.loadIcoQueryTokens()
 
 		go func() {
-			time.Sleep(1 * time.Minute)
-			_tokenBuffer.loadQueryTokens()
+			log.Info("sssssssssss")
+			time.Sleep(20 * time.Second)
+			_tokenBuffer.loadCommonQueryTokens()
+			_tokenBuffer.loadIcoQueryTokens()
 		}()
 	})
 
@@ -36,20 +40,20 @@ func getTokenBuffer() *tokenBuffer {
 
 }
 
-func (w *tokenBuffer) GetTokenResp() (tokenResp *entity.TokenResp, ok bool) {
+func (w *tokenBuffer) GetCommonTokenResp() (commonTokenResp *entity.TokenResp, ok bool) {
 	w.RLock()
-	if w.tokenResp == nil {
-		log.Debugf("GetTokenResp from buffer nil, data reload")
-		w.loadQueryTokens()
-		log.Debugf("GetTokenResp from buffer, buffer data updated ")
+	if w.commonTokenResp == nil {
+		log.Debugf("GetCommonTokenResp from buffer nil, data reload")
+		w.loadCommonQueryTokens()
+		log.Debugf("GetCommonTokenResp from buffer, buffer data updated ")
 	}
-	tokenResp = w.tokenResp
+	commonTokenResp = w.commonTokenResp
 	w.RUnlock()
 	return
 }
 
-
-func (w *tokenBuffer) loadQueryTokens() {
+// loadCommonQueryTokens
+func (w *tokenBuffer) loadCommonQueryTokens() {
 	strSQL := fmt.Sprintf(`
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
@@ -57,15 +61,77 @@ func (w *tokenBuffer) loadQueryTokens() {
 			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') 
 			order by participated desc `)
 
-	tokenResp, err := module.QueryTokensRealize(strSQL, "", "", "")
+	commonTokenResp, err := module.QueryTokensRealize(strSQL, "", "", "")
 	if err != nil {
-		log.Errorf("queryTokens list is nil or err:[%v]", err)
+		log.Errorf("loadCommonQueryTokens list is nil or err:[%v]", err)
 	}
-	if len(tokenResp.Data) == 0 {
+	if len(commonTokenResp.Data) == 0 {
 		return
 	}
+
+	subHandle(commonTokenResp)
+
+	w.Lock()
+	w.commonTokenResp = commonTokenResp
+	w.Unlock()
+
+}
+
+// GetIcoTokenResp
+func (w *tokenBuffer) GetIcoTokenResp() (icoTokenResp *entity.TokenResp, ok bool) {
+	w.RLock()
+	if w.icoTokenResp == nil {
+		log.Debugf("GetIcoTokenResp from buffer nil, data reload")
+		w.loadIcoQueryTokens()
+		log.Debugf("GetIcoTokenResp from buffer, buffer data updated ")
+	}
+	icoTokenResp = w.icoTokenResp
+	w.RUnlock()
+	return
+}
+
+// loadIcoQueryTokens
+func (w *tokenBuffer) loadIcoQueryTokens() {
+	strSQL := fmt.Sprintf(`
+			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
+			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
+			from asset_issue
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') `)
+
+	t := time.Now().Add(-8 * time.Hour)
+	dateTime := t.UnixNano() / 1e6
+	filterSQL := fmt.Sprintf(" and start_time<=%v and end_time>=%v", dateTime, dateTime)
+
+	sortSQL := "order by participated desc"
+
+	icoTokenResp, err := module.QueryTokensRealize(strSQL, filterSQL, sortSQL, "")
+	if err != nil {
+		log.Errorf("loadIcoQueryTokens list is nil or err:[%v]", err)
+	}
+	if len(icoTokenResp.Data) == 0 {
+		return
+	}
+
+	subHandle(icoTokenResp)
+
+	w.Lock()
+	w.icoTokenResp = icoTokenResp
+	w.Unlock()
+
+}
+
+// subHandle
+func subHandle(tokenResp *entity.TokenResp) {
 	// calculateTokens
 	calculateTokens(tokenResp)
+
+	// queryCreateTime
+	tokens := tokenResp.Data
+	for index := range tokens {
+		token := tokens[index]
+		createTime := queryAssetCreateTime(token.Name)
+		tokens[index].DateCreated = createTime
+	}
 
 	tokenAddressList := make([]string, 0)
 	for _, tokenInfo := range tokenResp.Data {
@@ -120,11 +186,6 @@ func (w *tokenBuffer) loadQueryTokens() {
 			tokenListResp.Total = tokenResp.Total
 		}
 	}
-
-	w.Lock()
-	w.tokenResp = tokenResp
-	w.Unlock()
-
 }
 
 // calculateTokens
@@ -190,3 +251,17 @@ func queryTokenBalance(address, tokenName string) (*entity.TokenBalanceInfo, err
 
 	return module.QueryTokenBalanceRealize(strSQL, filterSQL)
 }
+
+// queryAssetCreateTime
+func queryAssetCreateTime(tokenName string) int64 {
+	createTime, err := module.QueryAssetCreateTime(tokenName)
+	if err != nil {
+		log.Errorf("QueryAssetCreateTime list is nil or err:[%v]", err)
+		t := time.Now()
+		createTime = t.UnixNano() / 1e6
+	}
+	return createTime
+}
+
+
+
