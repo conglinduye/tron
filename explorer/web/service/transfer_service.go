@@ -4,9 +4,41 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/wlcy/tron/explorer/lib/mysql"
+	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 )
+
+//QueryTransfersBuffer ...从缓存中获取数据
+func QueryTransfersBuffer(req *entity.Transfers) (*entity.TransfersResp, error) {
+	transfers := &entity.TransfersResp{}
+	if req.Number != "" { //按blockID查询
+		transfers.Data = buffer.GetBlockBuffer().GetTransferByBlockID(mysql.ConvertStringToInt64(req.Number, 0))
+		transfers.Total = int64(len(transfers.Data))
+	} else if req.Hash != "" { //按照交易hash查询
+		transact := buffer.GetBlockBuffer().GetTransferByHash(req.Hash)
+		if transact == nil {
+			transact, _ = QueryTransfer(req)
+		}
+		transacts := make([]*entity.TransferInfo, 0)
+		transacts = append(transacts, transact)
+		transfers.Data = transacts
+		transfers.Total = int64(len(transfers.Data))
+	} else if req.Address != "" { //按照交易所属人查询，包含转出的交易，和转入的交易
+		//transactions, _ = QueryTransfersByAddress(req)
+	} else { //分页查询
+		transfers.Data = buffer.GetBlockBuffer().GetTransfers(req.Start, req.Limit)
+		transfers.Total = buffer.GetBlockBuffer().GetTotalTransfers()
+	}
+	return transfers, nil
+
+}
+
+//QueryTransferByHashFromBuffer 从缓存中精确查询  	//number=2135998   TODO: cache
+func QueryTransferByHashFromBuffer(req *entity.Transfers) (*entity.TransferInfo, error) {
+	return buffer.GetBlockBuffer().GetTransferByHash(req.Hash), nil
+}
 
 //QueryTransfers 条件查询  	//?sort=-number&limit=1&count=true&number=2135998  TODO: cache
 func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {

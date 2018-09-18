@@ -27,7 +27,8 @@ func transferRegister(ginRouter *gin.Engine) {
 			req.Number = c.Query("block")
 		}
 		log.Debugf("Hello /api/transfer?%#v", req)
-		resp, err := service.QueryTransfers(req)
+		resp, err := service.QueryTransfersBuffer(req)
+		//resp, err := service.QueryTransfers(req)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
@@ -39,7 +40,8 @@ func transferRegister(ginRouter *gin.Engine) {
 		req := &entity.Transfers{}
 		req.Hash = c.Param("hash") //占位符传参
 		log.Debugf("Hello /api/transfer/:%#v", req.Hash)
-		resp, err := service.QueryTransfer(req)
+		resp, err := service.QueryTransferByHashFromBuffer(req)
+		//resp, err := service.QueryTransfer(req)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)

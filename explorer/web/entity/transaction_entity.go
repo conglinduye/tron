@@ -23,7 +23,6 @@ type TransactionsResp struct {
 
 //TransactionInfo 转账信息
 type TransactionInfo struct {
-<<<<<<< HEAD
 	ID              string      `json:"id"`           //uuid
 	Block           int64       `json:"block"`        //:2135998,
 	Hash            string      `json:"hash"`         //:"00000000002097beb4b9ceabbff396bf788a8d9ee8c09de37e5e0da039a6a87f",
@@ -36,18 +35,6 @@ type TransactionInfo struct {
 	ContractData    interface{} `json:"contractData"` //:原始交易数据，TODO；需要解析
 	ContractDataRaw string      `json:"-"`            // inner user
 	LoadTime        time.Time   `json:"-"`
-=======
-	ID           string      `json:"id"`           //uuid
-	Block        int64       `json:"block"`        //:2135998,
-	Hash         string      `json:"hash"`         //:"00000000002097beb4b9ceabbff396bf788a8d9ee8c09de37e5e0da039a6a87f",
-	CreateTime   int64       `json:"timestamp"`    //:1536314760000,
-	OwnerAddress string      `json:"ownerAddress"` //:"JRB1nNvqT6kcRJLdzTnUGyiwvMcnDTAaxYZhTxhvDkjM8kxYh",
-	ToAddress    string      `json:"toAddress"`    //:"00000000002097bdd482e26710c054eea72280232a9061885dc94c30c3a0f1b5",
-	Data         string      `json:"data"`         //:"", 没用
-	ContractType int64       `json:"contractType"` //:1,
-	Confirmed    bool        `json:"confirmed"`    //:true
-	ContractData interface{} `json:"contractData"` //:原始交易数据
->>>>>>> c7e4b67aac005560d6ee151af32f422dfb11bcd9
 }
 
 //PostTransaction  创建交易
