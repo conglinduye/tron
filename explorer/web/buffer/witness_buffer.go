@@ -101,6 +101,13 @@ func (w *witnessBuffer) load() { //QueryWitness()
 		return
 	}
 
+	totalVotes := module.QueryTotalVotes()
+	for index := range witnessList {
+		witnessInfo := witnessList[index]
+		witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal)/float64(witnessInfo.ProducedTotal) * 100
+		witnessInfo.VotesPercentage = float64(witnessInfo.Votes)/float64(totalVotes) * 100
+	}
+
 	addrMap := make(map[string]*entity.WitnessInfo, len(witnessList))
 	sortList := make([]*entity.WitnessInfo, 0, len(witnessList))
 	for _, witness := range witnessList {
@@ -109,13 +116,6 @@ func (w *witnessBuffer) load() { //QueryWitness()
 	}
 	// votes 大的排在前面
 	sort.SliceStable(sortList, func(i, j int) bool { return sortList[i].Votes > sortList[j].Votes })
-
-	totalVotes := module.QueryTotalVotes()
-	for index := range sortList {
-		witnessInfo := sortList[index]
-		witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal)/float64(witnessInfo.ProducedTotal) * 100
-		witnessInfo.VotesPercentage = float64(witnessInfo.Votes)/float64(totalVotes) * 100
-	}
 
 	w.Lock()
 	w.addrMap = addrMap
