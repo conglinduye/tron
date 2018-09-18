@@ -2,12 +2,13 @@ package entity
 
 //Transactions 查询转账列表的请求参数
 type Transactions struct {
-	Sort   string `json:"sort,omitempty"`   // 按时间戳倒序
-	Limit  int64  `json:"limit,omitempty"`  // 每页记录数
-	Count  string `json:"count,omitempty"`  // 是否返回总数
-	Start  int64  `json:"start,omitempty"`  // 记录的起始序号
-	Number string `json:"number,omitempty"` // 按照区块高度精确查询
-	Hash   string `json:"hash,omitempty"`   // 按照交易hash精确查询
+	Sort    string `json:"sort,omitempty"`    // 按时间戳倒序
+	Limit   int64  `json:"limit,omitempty"`   // 每页记录数
+	Count   string `json:"count,omitempty"`   // 是否返回总数
+	Start   int64  `json:"start,omitempty"`   // 记录的起始序号
+	Number  string `json:"number,omitempty"`  // 按照区块高度精确查询
+	Hash    string `json:"hash,omitempty"`    // 按照交易hash精确查询
+	Address string `json:"address,omitempty"` // 按照交易精确查询
 }
 
 //TransactionsResp 查询转账列表的结果
@@ -27,7 +28,7 @@ type TransactionInfo struct {
 	Data         string      `json:"data"`         //:"", 没用
 	ContractType int64       `json:"contractType"` //:1,
 	Confirmed    bool        `json:"confirmed"`    //:true
-	ContractData interface{} `json:"contractData"` //:原始交易数据，TODO；需要解析
+	ContractData interface{} `json:"contractData"` //:原始交易数据
 }
 
 //PostTransaction  创建交易

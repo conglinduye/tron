@@ -21,6 +21,7 @@ func transferRegister(ginRouter *gin.Engine) {
 		req.Count = c.Query("count")
 		req.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
 		req.Hash = c.Query("hash")
+		req.Address = c.Query("address")
 		req.Number = c.Query("number")
 		if c.Query("block") != "" { //也能用block过滤
 			req.Number = c.Query("block")

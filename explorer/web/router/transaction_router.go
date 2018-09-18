@@ -21,8 +21,9 @@ func transactionRegister(ginRouter *gin.Engine) {
 		req.Count = c.Query("count")
 		req.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
 		req.Hash = c.Query("hash")
-		req.Number = c.Query("number") // block
-		if c.Query("block") != "" {    //还能用block查
+		req.Address = c.Query("address") //按照交易所属人查询，此处包含转入和转出的交易
+		req.Number = c.Query("number")   // block
+		if c.Query("block") != "" {      //还能用block查
 			req.Number = c.Query("block")
 		}
 		log.Debugf("Hello /api/transaction?%#v", req)

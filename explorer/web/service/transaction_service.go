@@ -27,6 +27,8 @@ func QueryTransactionsBuffer(req *entity.Transactions) (*entity.TransactionsResp
 		transacts = append(transacts, transact)
 		transactions.Data = transacts
 		transactions.Total = int64(len(transactions.Data))
+	} else if req.Address != "" { //按照交易所属人查询，包含转出的交易，和转入的交易
+		transactions, _ = QueryTransactions(req)
 	} else { //分页查询
 		transactions.Data = buffer.GetBlockBuffer().GetTransactions(req.Start, req.Limit)
 		transactions.Total = buffer.GetBlockBuffer().GetTotalTransactions()
@@ -53,6 +55,9 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 	}
 	if req.Hash != "" {
 		filterSQL = fmt.Sprintf(" and trx_hash='%v'", req.Hash)
+	}
+	if req.Address != "" {
+		filterSQL = fmt.Sprintf(" and (owner_address='%v' or to_address='%v'", req.Address, req.Address)
 	}
 	for _, v := range strings.Split(req.Sort, ",") {
 		if strings.Index(v, "timestamp") > 0 {
