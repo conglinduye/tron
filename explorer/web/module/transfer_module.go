@@ -31,7 +31,7 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL st
 		transfer.TransferFromAddress = dataPtr.GetField("owner_address")
 		createTime := dataPtr.GetField("create_time")
 		if len(createTime) > 13 {
-			createTime = createTime[:12]
+			createTime = createTime[:13]
 		}
 		transfer.CreateTime = mysql.ConvertDBValueToInt64(createTime)
 		transfer.TransferToAddress = dataPtr.GetField("to_address")
@@ -79,7 +79,7 @@ func QueryTransferRealize(strSQL, filterSQL string) (*entity.TransferInfo, error
 		transfer.TransferFromAddress = dataPtr.GetField("owner_address")
 		createTime := dataPtr.GetField("create_time")
 		if len(createTime) > 13 {
-			createTime = createTime[:12]
+			createTime = createTime[:13]
 		}
 		transfer.CreateTime = mysql.ConvertDBValueToInt64(createTime)
 		transfer.TransferToAddress = dataPtr.GetField("to_address")

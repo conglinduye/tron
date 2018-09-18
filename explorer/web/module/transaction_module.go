@@ -33,7 +33,7 @@ func QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*enti
 		transaction.OwnerAddress = dataPtr.GetField("owner_address")
 		createTime := dataPtr.GetField("create_time")
 		if len(createTime) > 13 {
-			createTime = createTime[:12]
+			createTime = createTime[:13]
 		}
 		transaction.CreateTime = mysql.ConvertDBValueToInt64(createTime)
 		transaction.ContractType = mysql.ConvertDBValueToInt64(dataPtr.GetField("contract_type"))
@@ -83,7 +83,7 @@ func QueryTransactionRealize(strSQL, filterSQL string) (*entity.TransactionInfo,
 		transaction.OwnerAddress = dataPtr.GetField("owner_address")
 		createTime := dataPtr.GetField("create_time")
 		if len(createTime) > 13 {
-			createTime = createTime[:12]
+			createTime = createTime[:13]
 		}
 		transaction.CreateTime = mysql.ConvertDBValueToInt64(createTime)
 		transaction.ContractType = mysql.ConvertDBValueToInt64(dataPtr.GetField("contract_type"))
