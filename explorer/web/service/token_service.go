@@ -114,9 +114,7 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 		log.Errorf("queryTokens list is nil or err:[%v]", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
-	log.Info("111111111")
 	if len(tokenResp.Data) == 0 {
-		log.Info("22222222222")
 		return tokenResp, nil
 	}
 	// calculateTokens
@@ -212,6 +210,10 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 
 	// calculateToken
 	calculateToken(token)
+
+	// queryCreateTime
+	createTime := queryAssetCreateTime(token.Name)
+	token.DateCreated = createTime
 
 	// QueryTotalTokenTransfers
 	totalTokenTransfers, _ := module.QueryTotalTokenTransfers(name)
