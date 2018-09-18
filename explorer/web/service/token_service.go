@@ -80,7 +80,7 @@ func QueryIcoTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 
 //QueryTokens
 func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
-	var filterSQL, sortSQL, pageSQL string
+	var filterSQL, sortSQL string
 
 	strSQL := fmt.Sprintf(`
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
@@ -92,24 +92,20 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 		filterSQL = fmt.Sprintf(" and owner_address='%v'", req.Owner)
 	}
 	if req.Name != "" {
-		if strings.Contains(req.Name, "%") {
+		if strings.HasPrefix(req.Name, "%") && strings.HasSuffix(req.Name, "%") {
 			filterSQL = fmt.Sprintf(" and asset_name like '%v'", req.Name)
 		} else {
 			filterSQL = fmt.Sprintf(" and asset_name='%v'", req.Name)
 		}
 	}
 	if req.Status == "ico" {
-		t := time.Now().Add(-8 * time.Hour)
+		t := time.Now()
 		dateTime := t.UnixNano() / 1e6
 		filterSQL = fmt.Sprintf(" and start_time<=%v and end_time>=%v", dateTime, dateTime)
 	}
 	sortSQL = "order by participated desc"
 
-	if req.Limit != "" && req.Start != "" {
-		pageSQL = fmt.Sprintf(" limit %v, %v", req.Start, req.Limit)
-	}
-
-	tokenResp, err := module.QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL)
+	tokenResp, err := module.QueryTokensRealize(strSQL, filterSQL, sortSQL, "")
 	if err != nil {
 		log.Errorf("queryTokens list is nil or err:[%v]", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
@@ -117,8 +113,12 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 	if len(tokenResp.Data) == 0 {
 		return tokenResp, nil
 	}
+
 	// calculateTokens
 	calculateTokens(tokenResp)
+
+	// filterIcoAssetExpire
+	filterIcoAssetExpire(req, tokenResp)
 
 	// queryCreateTime
 	tokens := tokenResp.Data
@@ -210,6 +210,8 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 
 	// calculateToken
 	calculateToken(token)
+
+
 
 	// queryCreateTime
 	createTime := queryAssetCreateTime(token.Name)
@@ -441,4 +443,15 @@ func queryAssetCreateTime(tokenName string) int64 {
 		createTime = t.UnixNano() / 1e6
 	}
 	return createTime
+}
+
+// filterIcoAssetExpire
+func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp) {
+	tokens := tokenResp.Data
+	for index := range tokens {
+		token := tokens[index]
+		if req.Status == "ICO" && token.IssuedPercentage == 100 {
+			tokens = append(tokens[:index], tokens[index+1:]...)
+		}
+	}
 }
