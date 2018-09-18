@@ -24,6 +24,9 @@ func Base58DecodeAddr(in string) (ret []byte) {
 
 // Base58EncodeAddr 将地址字节码编码为base58字符串
 func Base58EncodeAddr(in []byte) string {
+	if len(in) < 2 {
+		return ""
+	}
 	return base58.CheckEncode(in[1:], in[0]) // first byte is version, reset is data
 }
 
