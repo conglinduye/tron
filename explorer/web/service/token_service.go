@@ -118,7 +118,7 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 	calculateTokens(tokenResp)
 
 	// filterIcoAssetExpire
-	filterIcoAssetExpire(req, tokenResp)
+	tokenResp.Data = filterIcoAssetExpire(req, tokenResp)
 
 	// queryCreateTime
 	tokens := tokenResp.Data
@@ -210,7 +210,6 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 
 	// calculateToken
 	calculateToken(token)
-
 
 
 	// queryCreateTime
@@ -446,12 +445,14 @@ func queryAssetCreateTime(tokenName string) int64 {
 }
 
 // filterIcoAssetExpire
-func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp) {
-	tokens := tokenResp.Data
-	for index := range tokens {
-		token := tokens[index]
-		if req.Status == "ico" && token.IssuedPercentage == 100 {
-			tokens = append(tokens[:index], tokens[index+1:]...)
+func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp)  []*entity.TokenInfo {
+	tokens := make([]*entity.TokenInfo, 0)
+	data := tokenResp.Data
+	for index := range data {
+		token := data[index]
+		if req.Status == "ico" && token.IssuedPercentage < 100 {
+			tokens = append(tokens, token)
 		}
 	}
+	return tokens
 }
