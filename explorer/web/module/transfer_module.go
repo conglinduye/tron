@@ -39,7 +39,8 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL st
 		transfer.Amount = mysql.ConvertDBValueToInt64(dataPtr.GetField("amount"))
 		if transfer.TokenName == "" {
 			transfer.TokenName = "TRX"
-			transfer.Amount = transfer.Amount / 1000000
+			//如果是TRX，页面做的单位转换
+			//transfer.Amount = transfer.Amount / 1000000
 		}
 		confirmed := dataPtr.GetField("confirmed")
 		if confirmed == "1" {
