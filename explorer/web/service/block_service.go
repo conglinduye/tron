@@ -60,7 +60,7 @@ func QueryBlocks(req *entity.Blocks) (*entity.BlocksResp, error) {
 		filterSQL = fmt.Sprintf(" and block_id=%v", req.Number)
 	}
 	if req.Producer != "" {
-		filterSQL = fmt.Sprintf(" and witness_address='%v'", req.Number)
+		filterSQL = fmt.Sprintf(" and witness_address='%v'", req.Producer)
 	}
 	sortTemp = "order by"
 	if strings.Index(req.Order, "timestamp") > 0 {
