@@ -104,9 +104,16 @@ func (w *witnessBuffer) load() { //QueryWitness()
 	totalVotes := module.QueryTotalVotes()
 	for index := range witnessList {
 		witnessInfo := witnessList[index]
-		log.Infof("ProducedTotal:%v, MissedTotal:%v, totalVotes:%v", witnessInfo.ProducedTotal, witnessInfo.MissedTotal, totalVotes)
-		witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal)/float64(witnessInfo.ProducedTotal) * 100
-		witnessInfo.VotesPercentage = float64(witnessInfo.Votes)/float64(totalVotes) * 100
+		if witnessInfo.ProducedTotal != 0 {
+			witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal)/float64(witnessInfo.ProducedTotal) * 100
+		} else {
+			witnessInfo.ProducePercentage = 0
+		}
+		if totalVotes != 0 {
+			witnessInfo.VotesPercentage = float64(witnessInfo.Votes)/float64(totalVotes) * 100
+		} else {
+			witnessInfo.VotesPercentage = 0
+		}
 	}
 
 	addrMap := make(map[string]*entity.WitnessInfo, len(witnessList))
