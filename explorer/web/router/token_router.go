@@ -54,7 +54,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 			if start + limit < length {
 				tokenResp.Data = tokenInfos[start:start+limit]
 			} else {
-				tokenResp.Data = tokenInfos[start:length-1]
+				tokenResp.Data = tokenInfos[start:length]
 			}
 		}
 		handleTokensIndex(tokenReq, tokenResp)
