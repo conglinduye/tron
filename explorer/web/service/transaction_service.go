@@ -15,10 +15,19 @@ import (
 //QueryTransactionsBuffer ...
 func QueryTransactionsBuffer(req *entity.Transactions) (*entity.TransactionsResp, error) {
 	transactions := &entity.TransactionsResp{}
-	if req.Number != "" {
+	if req.Number != "" { //按blockID查询
 		transactions.Data = buffer.GetBlockBuffer().GetTransactionByBlockID(mysql.ConvertStringToInt64(req.Number, 0))
 		transactions.Total = int64(len(transactions.Data))
-	} else {
+	} else if req.Hash != "" { //按照交易hash查询
+		transact := buffer.GetBlockBuffer().GetTransactionByHash(req.Hash)
+		if transact == nil {
+			transact, _ = QueryTransaction(req)
+		}
+		transacts := make([]*entity.TransactionInfo, 0)
+		transacts = append(transacts, transact)
+		transactions.Data = transacts
+		transactions.Total = int64(len(transactions.Data))
+	} else { //分页查询
 		transactions.Data = buffer.GetBlockBuffer().GetTransactions(req.Start, req.Limit)
 		transactions.Total = buffer.GetBlockBuffer().GetTotalTransactions()
 	}

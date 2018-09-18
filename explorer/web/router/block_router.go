@@ -22,6 +22,7 @@ func blockRegister(ginRouter *gin.Engine) {
 		blockReq.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
 		blockReq.Order = c.Query("order")
 		blockReq.Number = c.Query("number")
+		blockReq.Producer = c.Query("producer")
 		log.Debugf("Hello /api/block?%#v", blockReq)
 		//blockResp, err := service.QueryBlocks(blockReq)
 		blockResp, err := service.QueryBlocksBuffer(blockReq)

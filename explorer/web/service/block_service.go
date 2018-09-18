@@ -27,7 +27,11 @@ func QueryBlocksBuffer(req *entity.Blocks) (*entity.BlocksResp, error) {
 			log.Debugf("get blocks data in buffer, get them from db instead")
 			return QueryBlocks(req)
 		}
+
 		blocks = append(blocks, block)
+		blockResp.Total = int64(len(blocks))
+	} else if req.Producer != "" {
+		//return QueryBlockByProduct()
 	} else {
 		blocks, err = blockBuffer.GetBlocks(-1, req.Start, req.Limit)
 		if err != nil || blocks == nil {
