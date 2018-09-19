@@ -40,7 +40,7 @@ func main() {
 
 	//初始化buffer
 	buffer.GetBlockBuffer()
-	buffer.GetWitnessBuffer()
+	//buffer.GetWitnessBuffer()
 	buffer.GetMarketBuffer()
 	buffer.GetVoteBuffer()
 	buffer.GetAccountTokenBuffer()
