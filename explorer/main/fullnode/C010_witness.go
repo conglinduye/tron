@@ -77,7 +77,8 @@ func storeWitness(witnessList []*core.Witness) (iCnt int64, uCnt int64, eCnt int
 	}
 	defer stmtI.Close()
 
-	sqlU := "update witness set vote_count = ?, public_key = ?, url = ?, total_produced = ?, total_missed = ?, latest_block_num = ?, latest_slot_num = ?, is_job = ? where address = ?"
+	// 修正更新witness逻辑，当total_produced >= 当前值，且 latest_block_num >= 当前值时，才更新数据，否则不更新数据
+	sqlU := "update witness set vote_count = ?, public_key = ?, url = ?, total_produced = ?, total_missed = ?, latest_block_num = ?, latest_slot_num = ?, is_job = ? where address = ? and total_produced <= ? and latest_block_num <= ?"
 	stmtU, err := txn.Prepare(sqlU)
 	if nil != err {
 		fmt.Printf("prepare update witness failed:%v\n", err)
@@ -117,6 +118,8 @@ func storeWitness(witnessList []*core.Witness) (iCnt int64, uCnt int64, eCnt int
 				witness.LatestSlotNum,
 				witness.IsJobs,
 				addr,
+				witness.TotalProduced,
+				witness.LatestBlockNum,
 			)
 
 			if nil != err {

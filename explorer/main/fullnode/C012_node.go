@@ -69,12 +69,27 @@ func storeNodes(nodeList []*api.Node) (iCnt int64, uCnt int64, eCnt int64, err e
 	}
 	defer stmt.Close()
 
-	txn.Exec("delete from nodes where 1=1")
+	sqlU := `update nodes set create_time = current_timestamp where node_host = ? and node_port = ?`
+	stmtU, err := txn.Prepare(sqlU)
+	if nil != err {
+		fmt.Printf("prepare [%v] failed:%v\n", sqlU, err)
+		return
+	}
+	defer stmtU.Close()
+
+	// txn.Exec("delete from nodes where 1=1")
 	for _, node := range nodeList {
 		_, err = stmt.Exec(string(node.Address.Host), node.Address.Port)
 		if nil != err {
 			// fmt.Printf("insert asset_issue [%T] failed:%v\n", asset, err)
-			eCnt++
+			// try to update timestamp
+
+			_, err = stmtU.Exec(string(node.Address.Host), node.Address.Port)
+			if nil != err {
+				eCnt++
+			} else {
+				uCnt++
+			}
 		} else {
 			iCnt++
 		}
