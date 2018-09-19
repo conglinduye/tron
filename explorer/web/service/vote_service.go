@@ -10,6 +10,7 @@ import (
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 	"github.com/wlcy/tron/explorer/lib/util"
+	"sort"
 )
 
 //QueryVoteLiveBuffer 从buffer中获取实时投票数据
@@ -214,6 +215,8 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 			voteWitness.VotesPercentage = float64(voteWitness.LastCycleVotes) / float64(totalVotes)
 		}
 	}
+
+	sort.SliceStable(voteWitnessList, func(i, j int) bool { return voteWitnessList[i].RealTimeVotes > voteWitnessList[j].RealTimeVotes })
 
 	return voteWitnessResp, nil
 }
