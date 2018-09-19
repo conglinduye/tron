@@ -10,6 +10,7 @@ input:param
 
 eg:
 http://18.216.57.65:20110/api/vote/witness?start=0&limit=40
+http://18.216.57.65:20110/api/vote/witness?start=0&limit=40&address=TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp
 ```
 output:json
 ```json
