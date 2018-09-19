@@ -130,7 +130,7 @@ func subHandle(tokenResp *entity.TokenResp) {
 	tokens := tokenResp.Data
 	for index := range tokens {
 		token := tokens[index]
-		createTime := queryAssetCreateTime(token.Name)
+		createTime := queryAssetCreateTime(token.OwnerAddress, token.Name)
 		tokens[index].DateCreated = createTime
 	}
 
@@ -254,8 +254,8 @@ func queryTokenBalance(address, tokenName string) (*entity.TokenBalanceInfo, err
 }
 
 // queryAssetCreateTime
-func queryAssetCreateTime(tokenName string) int64 {
-	createTime, err := module.QueryAssetCreateTime(tokenName)
+func queryAssetCreateTime(ownerAddress, tokenName string) int64 {
+	createTime, err := module.QueryAssetCreateTime(ownerAddress, tokenName)
 	if err != nil {
 		log.Errorf("QueryAssetCreateTime list is nil or err:[%v]", err)
 		t := time.Now()
