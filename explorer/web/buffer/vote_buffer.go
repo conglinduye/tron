@@ -32,15 +32,8 @@ func getVoteBuffer() *voteBuffer {
 		_voteBuffer.getMaintenanceTimeStamp()
 		_voteBuffer.loadQueryVoteCurrentCycle()
 
-		go func() {
-			time.Sleep(30 * time.Second)
-			_voteBuffer.loadQueryVoteLive()
-		}()
-		go func() {
-			time.Sleep(60 * time.Second)
-			_voteBuffer.getMaintenanceTimeStamp()
-			_voteBuffer.loadQueryVoteCurrentCycle()
-		}()
+		go voteLiveBufferLoader()
+		go voteCycleBufferLoader()
 	})
 	return _voteBuffer
 }
@@ -53,6 +46,20 @@ type voteBuffer struct {
 	voteCurrentCycle *entity.VoteCurrentCycleResp
 
 	nextMaintenanceTime int64
+}
+
+func voteLiveBufferLoader() {
+	for {
+		_voteBuffer.loadQueryVoteLive()
+		time.Sleep(30 * time.Second)
+	}
+}
+func voteCycleBufferLoader() {
+	for {
+		_voteBuffer.getMaintenanceTimeStamp()
+		_voteBuffer.loadQueryVoteCurrentCycle()
+		time.Sleep(60 * time.Second)
+	}
 }
 
 func (w *voteBuffer) GetVoteLive() (voteLive map[string]*entity.LiveInfo, ok bool) {

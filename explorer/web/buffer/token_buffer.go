@@ -1,12 +1,13 @@
 package buffer
 
 import (
-	"sync"
-	"github.com/wlcy/tron/explorer/web/entity"
 	"fmt"
-	"github.com/wlcy/tron/explorer/web/module"
-	"github.com/wlcy/tron/explorer/lib/log"
+	"sync"
 	"time"
+
+	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/web/entity"
+	"github.com/wlcy/tron/explorer/web/module"
 )
 
 var _tokenBuffer *tokenBuffer
@@ -15,7 +16,7 @@ var onceTokenBuffer sync.Once
 type tokenBuffer struct {
 	sync.RWMutex
 	commonTokenResp *entity.TokenResp
-	icoTokenResp *entity.TokenResp
+	icoTokenResp    *entity.TokenResp
 }
 
 func GetTokenBuffer() *tokenBuffer {
@@ -28,15 +29,18 @@ func getTokenBuffer() *tokenBuffer {
 		_tokenBuffer.loadCommonQueryTokens()
 		_tokenBuffer.loadIcoQueryTokens()
 
-		go func() {
-			time.Sleep(20 * time.Second)
-			_tokenBuffer.loadCommonQueryTokens()
-			_tokenBuffer.loadIcoQueryTokens()
-		}()
+		go tokenInfoBufferLoader()
 	})
 
 	return _tokenBuffer
 
+}
+func tokenInfoBufferLoader() {
+	for {
+		_tokenBuffer.loadCommonQueryTokens()
+		_tokenBuffer.loadIcoQueryTokens()
+		time.Sleep(20 * time.Second)
+	}
 }
 
 func (w *tokenBuffer) GetCommonTokenResp() (commonTokenResp *entity.TokenResp, ok bool) {
@@ -141,7 +145,6 @@ func subHandle(tokenResp *entity.TokenResp) {
 		}
 	}
 
-
 	tokenExtList, err := module.QueryTokenExtInfo(tokenAddressList)
 	if err != nil {
 		log.Errorf("queryTokenExtInfo list is nil or err:[%v]", err)
@@ -240,7 +243,6 @@ func calculateToken(token *entity.TokenInfo) {
 
 }
 
-
 // queryTokenBalance
 func queryTokenBalance(address, tokenName string) (*entity.TokenBalanceInfo, error) {
 	var filterSQL string
@@ -265,7 +267,7 @@ func queryAssetCreateTime(ownerAddress, tokenName string) int64 {
 }
 
 // filterIcoAssetExpire
-func filterIcoAssetExpire(tokenResp *entity.TokenResp)  []*entity.TokenInfo {
+func filterIcoAssetExpire(tokenResp *entity.TokenResp) []*entity.TokenInfo {
 	tokens := make([]*entity.TokenInfo, 0)
 	data := tokenResp.Data
 	for index := range data {
@@ -278,7 +280,3 @@ func filterIcoAssetExpire(tokenResp *entity.TokenResp)  []*entity.TokenInfo {
 	}
 	return tokens
 }
-
-
-
-
