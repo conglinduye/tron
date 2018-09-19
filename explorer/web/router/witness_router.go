@@ -13,8 +13,8 @@ func witnessRegister(ginRouter *gin.Engine) {
 
 	ginRouter.GET("/api/witness", func(c *gin.Context) {
 		log.Debugf("Hello /api/witness")
-		resp, err := service.QueryWitness()
-		//resp, err := service.QueryWitnessBuffer()
+		//resp, err := service.QueryWitness()
+		resp, err := service.QueryWitnessBuffer()
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
