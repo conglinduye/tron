@@ -1,6 +1,8 @@
 package service
 
 import (
+	"github.com/golang/protobuf/proto"
+	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/util"
@@ -61,7 +63,20 @@ func QueryAuth(req *entity.Auth) (*entity.AuthResp, error) {
 		return nil, util.NewErrorMsg(util.Error_common_parameter_invalid)
 	}
 	jsonData := req.Transaction
-	utils.HexDecode(jsonData)
+	tranHexData := utils.HexDecode(jsonData)
+	transaction := &core.Transaction{}
+	if err := proto.Unmarshal(tranHexData, transaction); err != nil {
+		log.Errorf("pb unmarshal err:[%v];hexData:[%v]", err, tranHexData)
+		return nil, err
+	}
+	tranSignByteString := transaction.Signature[0]
+	log.Debugf("tranSignByteString:[%v]", tranSignByteString)
+	tranSignBase64 := utils.Base64Encode(tranSignByteString)
+	log.Debugf("tranSignBase64:[%v]", tranSignBase64)
+
+	rawHash := utils.CalcTransactionHash(transaction)
+	log.Debugf("rawHash:[%v]", rawHash)
+	//utils.VerifySign
 
 	return nil, nil
 }

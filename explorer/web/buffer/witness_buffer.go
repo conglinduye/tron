@@ -33,8 +33,10 @@ func getWitnessBuffer() *witnessBuffer {
 
 		go func() {
 			time.Sleep(30 * time.Second)
+			log.Debug("start witness buffer cache...")
 			_witnessBuffer.load()
 			_witnessBuffer.loadStatistic()
+			log.Debug("start witness buffer cache done")
 		}()
 	})
 	return _witnessBuffer
@@ -100,14 +102,17 @@ func (w *witnessBuffer) load() { //QueryWitness()
 		log.Errorf("load witness from db failed:%v\n", err)
 		return
 	}
-
+	log.Debugf("get witness list :[%#v]", witnessList)
 	totalVotes := module.QueryTotalVotes()
-	for index := range witnessList {
-		witnessInfo := witnessList[index]
-		witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal)/float64(witnessInfo.ProducedTotal) * 100
-		witnessInfo.VotesPercentage = float64(witnessInfo.Votes)/float64(totalVotes) * 100
-	}
+	for _, witnessInfo := range witnessList {
+		witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal) / float64(witnessInfo.ProducedTotal) * 100
+		witnessInfo.VotesPercentage = 0
+		if totalVotes > 0 {
+			witnessInfo.VotesPercentage = float64(witnessInfo.Votes) / float64(totalVotes) * 100
+		}
 
+	}
+	log.Debugf("after calc rate for  witness list :[%#v]", witnessList)
 	addrMap := make(map[string]*entity.WitnessInfo, len(witnessList))
 	sortList := make([]*entity.WitnessInfo, 0, len(witnessList))
 	for _, witness := range witnessList {
@@ -120,6 +125,7 @@ func (w *witnessBuffer) load() { //QueryWitness()
 	w.Lock()
 	w.addrMap = addrMap
 	w.sortList = sortList
+	log.Debugf("set buffer data done.")
 	w.Unlock()
 }
 
