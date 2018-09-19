@@ -28,12 +28,12 @@ func GetWitnessBuffer() *witnessBuffer {
 func getWitnessBuffer() *witnessBuffer {
 	onceWitnessBuffer.Do(func() {
 		_witnessBuffer = &witnessBuffer{}
-		_witnessBuffer.load()
+		//_witnessBuffer.load()
 		_witnessBuffer.loadStatistic()
 
 		go func() {
 			time.Sleep(30 * time.Second)
-			_witnessBuffer.load()
+			//_witnessBuffer.load()
 			_witnessBuffer.loadStatistic()
 		}()
 	})
