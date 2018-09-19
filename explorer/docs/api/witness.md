@@ -4,46 +4,53 @@
 
 input:param
 ```param
-eg: http://18.216.57.65:20110/api/witness
+eg: 
+http://18.216.57.65:20110/api/witness
 ```
 output:json
 ```json
 [
     {
-        "address":"TDo2qwRLEkTZCXzcotiEQLt2wLeTttKTnZ",//地址
-        "name":"TronSchool",//名称
-        "url":"http://www.tron.school/",//url
-        "producer":false,//是否出块
-        "latestBlockNumber":0,//最近快高
-        "latestSlotNumber":0,//岁进slot数
-        "missedTotal":0,//丢块总数
-        "producedTotal":0,//产出块总数
+        "address":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",//地址
+        "name":"Sesameseed",//名称
+        "url":"https://www.sesameseed.org",//url
+        "producer":true,//是否出块
+        "latestBlockNumber":2384082,//最近块高
+        "latestSlotNumber":512353377,//latestSlotNumber
+        "missedTotal":232,//丢块总数
+        "producedTotal":70983,//产出块总数
         "producedTrx":0,//获得trx
-        "votes":362616//得票数
+        "votes":497957011,//得票数
+        "producePercentage":99.67316117943733,//产块效率
+        "votesPercentage":6.264853641528314 //得票数占比
     },
     {
-        "address":"TMNUDeyr6ZEW8vHAUnaKi2Bbgi14TPq63q",
-        "name":"",
-        "url":"https://cobo.com",
-        "producer":false,
-        "latestBlockNumber":0,
-        "latestSlotNumber":0,
-        "missedTotal":0,
-        "producedTotal":0,
+        "address":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",
+        "name":"Sesameseed",
+        "url":"https://www.sesameseed.org",
+        "producer":true,
+        "latestBlockNumber":1198719,
+        "latestSlotNumber":511165405,
+        "missedTotal":5,
+        "producedTotal":27222,
         "producedTrx":0,
-        "votes":36030
+        "votes":301614076,
+        "producePercentage":99.98163250312247,
+        "votesPercentage":4.484890408037471
     },
     {
         "address":"TVMP5r12ymtNerq5KB4E8zAgLDmg2FqsEG",
         "name":"CryptoGirls",
         "url":"https://www.cryptogirls.ro/",
         "producer":true,
-        "latestBlockNumber":2247124,
-        "latestSlotNumber":512216280,
-        "missedTotal":19,
-        "producedTotal":60278,
+        "latestBlockNumber":1198722,
+        "latestSlotNumber":511165408,
+        "missedTotal":0,
+        "producedTotal":21378,
         "producedTrx":0,
-        "votes":201277560
+        "votes":191651818,
+        "producePercentage":100,
+        "votesPercentage":2.8497920641845083
     },...
 ]
 ```
@@ -59,7 +66,8 @@ output:json
 
 input:param
 ```param
-eg: http://18.216.57.65:20110/api/witness/maintenance-statistic
+eg: 
+http://18.216.57.65:20110/api/witness/maintenance-statistic
 ```
 output:json
 ```json
