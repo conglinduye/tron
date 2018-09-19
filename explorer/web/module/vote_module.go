@@ -32,6 +32,27 @@ func QueryTotalVotes() int64 {
 	return votes
 }
 
+//QueryRealTimeTotalVotes
+func QueryRealTimeTotalVotes(strSQL string) int64 {
+	log.Sql(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryRealTimeTotalVotes error :[%v]\n", err)
+		return 0
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryRealTimeTotalVotes dataPtr is nil ")
+		return 0
+	}
+	var votes = int64(0)
+	for dataPtr.NextT() {
+		votes = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalVotes"))
+	}
+
+	return votes
+}
+
+
 //QueryVoteLiveRealize 操作数据库
 func QueryVoteLiveRealize(strSQL string) (*entity.VoteLiveInfo, error) {
 	log.Sql(strSQL)
