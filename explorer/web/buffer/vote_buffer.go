@@ -97,7 +97,7 @@ func (w *voteBuffer) loadQueryVoteLive() { //QueryVoteLive()  实时投票数据
 		select to_address,sum(vote) as votes from tron.account_vote_result 
 		 group by to_address
 	) outvoter on outvoter.to_address=acc.address
-     where 1=1 and outvoter.votes>0 
+     where 1=1 and outvoter.votes>=0 
 	 order by outvoter.votes desc `)
 
 	liveInfo, err := module.QueryVoteLiveRealize(strSQL)

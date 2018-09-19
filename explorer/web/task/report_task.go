@@ -22,7 +22,7 @@ func SyncPersistYesterdayReport() {
 		log.Info("SyncPersistYesterdayReport start")
 		now := time.Now()
 		next := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-		next = now.Add(-8 * time.Hour).Add(24 * time.Hour).Add(1 * time.Second)
+		next = next.Add(-8 * time.Hour).Add(24 * time.Hour).Add(1 * time.Second)
 		log.Infof("SyncPersistYesterdayReport nextTime:%v, timestamp:%v", next, next.UnixNano() / 1e6)
 		t := time.NewTimer(next.Sub(now))
 		<-t.C

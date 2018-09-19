@@ -81,6 +81,15 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 	// filterIcoAssetExpire
 	tokenResp.Data = filterIcoAssetExpire(req, tokenResp)
 
+	if req.Owner != "" && req.Name != "" && !strings.HasPrefix(req.Name, "%") && !strings.HasSuffix(req.Name, "%") {
+		// QueryTotalTokenTransfers
+		totalTokenTransfers, _ := module.QueryTotalTokenTransfers(req.Name)
+		tokenResp.Data[0].TotalTransactions = totalTokenTransfers
+		// QueryTotalTokenHolders
+		totalTokenHolders, _ := module.QueryTotalTokenHolders(req.Name)
+		tokenResp.Data[0].NrOfTokenHolders = totalTokenHolders
+	}
+
 	// queryCreateTime
 	tokens := tokenResp.Data
 	for index := range tokens {
