@@ -215,6 +215,8 @@ func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 		b.trxList = b.trxList[0:b.maxConfirmedTrx]
 	}
 
+	tranList := make([]*entity.TransferInfo, 0, len(data))
+	// store blockID -> trxList, transList and transHash -> trans
 	if len(data) > 0 {
 		blockID := data[0].Block
 		blockTrx := make([]*entity.TransactionInfo, 0, 30)
@@ -225,6 +227,7 @@ func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 			if tran := b.getTransferFromTrx(trx); nil != tran {
 				b.tranHash.Store(tran.TransactionHash, tran)
 				blockTran = append(blockTran, tran)
+				tranList = append(tranList, tran)
 			}
 
 			if blockID != trx.Block {
@@ -244,6 +247,12 @@ func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 		}
 		b.cBlockTrx.Store(blockID, blockTrx)
 		b.cBlockTrans.Store(blockID, blockTran)
+	}
+
+	// transList
+	b.tranList = append(tranList, b.tranList...)
+	if len(b.tranList) > b.maxConfirmedTrx {
+		b.tranList = b.tranList[0:b.maxConfirmedTrx]
 	}
 }
 
@@ -427,10 +436,10 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 		count = count - retLen
 		filter = fmt.Sprintf("and block_id < '%v'", minBlockID)
 	}
-	limit = fmt.Sprintf("limit %v", count+100) // load from db +100  record
+	limit = fmt.Sprintf("limit %v, %v", offset, count) // load from db +100  record
 
 	retList := b.loadTransactionFromDB(filter, limit)
-	b.storeTrxDescListToRedis(retList, true)
+	// b.storeTrxDescListToRedis(retList, true)
 	redisList = append(redisList, retList[0:count]...)
 	log.Debugf("get trx db(offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
 

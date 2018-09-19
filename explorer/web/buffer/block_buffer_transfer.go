@@ -3,11 +3,13 @@ package buffer
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"sync/atomic"
 
 	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/entity"
+	"github.com/wlcy/tron/explorer/web/module"
 )
 
 func (b *blockBuffer) GetTransfers(offset, count int64) []*entity.TransferInfo {
@@ -109,7 +111,7 @@ func (b *blockBuffer) getRestTranRedis(blockID int64, offset, count int64) []*en
 
 	retLen := int64(len(redisList))
 	if retLen >= count {
-		log.Debugf("get trx redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
+		log.Debugf("get tran redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
 
 		return redisList
 	}
@@ -129,19 +131,12 @@ func (b *blockBuffer) getRestTranRedis(blockID int64, offset, count int64) []*en
 		count = count - retLen
 		filter = fmt.Sprintf("and block_id < '%v'", minBlockID)
 	}
-	limit = fmt.Sprintf("limit %v", count+100)
+	limit = fmt.Sprintf("limit %v, %v", offset, count)
 
-	retList := b.loadTransactionFromDB(filter, limit)
-
-	transList := make([]*entity.TransferInfo, 0, len(retList))
-	for _, trx := range retList {
-		if tran := b.getTransferFromTrx(trx); nil != tran {
-			transList = append(transList, tran)
-		}
-	}
-	b.storeTranDescListToRedis(transList, true)
-	redisList = append(redisList, transList[0:count]...)
-	log.Debugf("get tran db(offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
+	retList := b.loadTransferFromDB(filter, limit)
+	// b.storeTranDescListToRedis(retList, true)
+	redisList = append(redisList, retList[0:count]...)
+	log.Debugf("get tran (offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
 
 	return redisList
 }
@@ -194,4 +189,22 @@ func (b *blockBuffer) getTranDescListFromRedis(offset, count int64) (ret []*enti
 		}
 	}
 	return ret
+}
+
+func (b *blockBuffer) loadTransferFromDB(filter string, limit string) []*entity.TransferInfo {
+	strSQL := fmt.Sprintf(`
+		select block_id,owner_address,to_address,amount,
+		asset_name,trx_hash,
+		contract_type,confirmed,create_time
+		from tron.contract_transfer
+		where 1=1  `)
+
+	ret, err := module.QueryTransfersRealize(strSQL, filter, "order by block_id desc", limit, "")
+	if nil != err || nil == ret && 0 == len(ret.Data) {
+		log.Debugf("query trx failed:%v\n", err)
+		return nil
+	}
+
+	sort.SliceStable(ret.Data, func(i, j int) bool { return ret.Data[i].Block > ret.Data[i].Block })
+	return ret.Data
 }
