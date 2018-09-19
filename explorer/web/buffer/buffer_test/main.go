@@ -19,6 +19,7 @@ func main() {
 
 	// initRedis([]string{"127.0.0.1:6379"})
 	bb := buffer.GetBlockBuffer()
+	cc := buffer.GetWitnessBuffer()
 	_ = bb
 	cnt := 0
 	for cnt < 10 {
@@ -31,7 +32,9 @@ func main() {
 		// 	fmt.Printf("blockID:%v, %v-->%v\n", 2288184, idx, utils.ToJSONStr(trx))
 		// }
 		// getTrxHash()
-		getTrxs()
+		//getTrxs()
+
+		cc.GetWitness()
 
 		// fmt.Printf("\n### %v, %v, %v, %v\n\n", bb.GetMaxBlockID(), bb.GetMaxConfirmedBlockID(), bb.GetSolidityNodeMaxBlockID(), bb.GetFullNodeMaxBlockID())
 
