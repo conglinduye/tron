@@ -105,8 +105,11 @@ func (w *witnessBuffer) load() { //QueryWitness()
 	log.Debugf("get witness list :[%#v]", witnessList)
 	totalVotes := module.QueryTotalVotes()
 	for _, witnessInfo := range witnessList {
-		witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal) / float64(witnessInfo.ProducedTotal) * 100
+		witnessInfo.ProducePercentage = 0
 		witnessInfo.VotesPercentage = 0
+		if witnessInfo.ProducedTotal > 0 {
+			witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal) / float64(witnessInfo.ProducedTotal) * 100
+		}
 		if totalVotes > 0 {
 			witnessInfo.VotesPercentage = float64(witnessInfo.Votes) / float64(totalVotes) * 100
 		}
