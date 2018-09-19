@@ -218,9 +218,10 @@ func QueryVoterAvailableVotes(strSQL string) (float64, error) {
 }
 
 // QueryVoteWitness
-func QueryVoteWitness(strSQL string) ([]*entity.VoteWitness, error) {
-	log.Sql(strSQL)
-	dataPtr, err := mysql.QueryTableData(strSQL)
+func QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.VoteWitnessResp, error) {
+	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
+	log.Info(strFullSQL)
+	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryVoteWitness error :[%v]\n", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
@@ -229,6 +230,8 @@ func QueryVoteWitness(strSQL string) ([]*entity.VoteWitness, error) {
 		log.Errorf("QueryVoteWitness dataPtr is nil ")
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
+
+	voteWitnessResp := &entity.VoteWitnessResp{}
 	voteWitnessList := make([]*entity.VoteWitness, 0)
 
 	for dataPtr.NextT() {
@@ -240,20 +243,30 @@ func QueryVoteWitness(strSQL string) ([]*entity.VoteWitness, error) {
 
 		voteWitnessList = append(voteWitnessList, voteWitness)
 	}
-	return voteWitnessList, nil
+
+	var total = int64(len(voteWitnessList))
+	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
+	if err != nil {
+		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
+	}
+
+	voteWitnessResp.Total = total
+	voteWitnessResp.Data = voteWitnessList
+
+	return voteWitnessResp, nil
 }
 
-// QueryRealTimeVoteWitness
-func QueryRealTimeVoteWitness(strSQL string) (int64) {
+// QueryRealTimeVoteWitnessTotal
+func QueryRealTimeVoteWitnessTotal(strSQL string) (int64) {
 	var realTimeVotes = int64(0)
-	log.Sql(strSQL)
+	log.Info(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
-		log.Errorf("QueryRealTimeVoteWitness error :[%v]\n", err)
+		log.Errorf("QueryRealTimeVoteWitnessTotal error :[%v]\n", err)
 		return 0
 	}
 	if dataPtr == nil {
-		log.Errorf("QueryRealTimeVoteWitness dataPtr is nil ")
+		log.Errorf("QueryRealTimeVoteWitnessTotal dataPtr is nil ")
 		return 0
 	}
 	for dataPtr.NextT() {
