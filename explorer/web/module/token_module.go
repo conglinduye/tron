@@ -349,11 +349,11 @@ func QueryAllAssetIssue() ([]*entity.AssetIssue, error) {
 }
 
 // QueryParticipateAsset
-func QueryParticipateAsset(assetName string) (*entity.ParticipateAsset, error) {
+func QueryParticipateAsset(toAddress, assetName string) (*entity.ParticipateAsset, error) {
 	strSQL := fmt.Sprintf(`
 		select asset_name, sum(amount) as totalAmount
 		from contract_participate_asset
-		where asset_name = '%v'`, assetName)
+		where to_address = '%v' and asset_name = '%v'`, toAddress, assetName)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -432,13 +432,13 @@ func QueryAssetBalances(req *entity.Token) (*entity.AssetBalanceResp, error) {
 }
 
 // QueryAssetCreateTime
-func QueryAssetCreateTime(tokenName string) (int64, error) {
+func QueryAssetCreateTime(ownerAddress, tokenName string) (int64, error) {
 	var assetCreateTime = int64(0)
 	strSQL := fmt.Sprintf(` 
 	select c.create_time as createTime
 	from asset_issue a, contract_asset_issue b, blocks c
     where a.asset_name = b.asset_name and b.block_id = c.block_id 
-	and a.asset_name = '%v' `, tokenName)
+	and a.owner_address = '%v', a.asset_name = '%v'`, ownerAddress, tokenName)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {

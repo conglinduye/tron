@@ -85,7 +85,7 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 	tokens := tokenResp.Data
 	for index := range tokens {
 		token := tokens[index]
-		createTime := queryAssetCreateTime(token.Name)
+		createTime := queryAssetCreateTime(token.OwnerAddress, token.Name)
 		tokens[index].DateCreated = createTime
 	}
 
@@ -174,7 +174,7 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 
 
 	// queryCreateTime
-	createTime := queryAssetCreateTime(token.Name)
+	createTime := queryAssetCreateTime(token.OwnerAddress, token.Name)
 	token.DateCreated = createTime
 
 	// QueryTotalTokenTransfers
@@ -366,7 +366,7 @@ func SyncAssetIssueParticipated() {
 	}
 	for index := range assetIssues {
 		assetIssue := assetIssues[index]
-		participateAsset, _ := module.QueryParticipateAsset(assetIssue.AssetName)
+		participateAsset, _ := module.QueryParticipateAsset(assetIssue.OwnerAddress, assetIssue.AssetName)
 		if participateAsset.AssetName != "" && participateAsset.TotalAmount > assetIssue.Participated {
 			module.UpdateAssetIssue(assetIssue.AssetName, participateAsset.TotalAmount)
 		}
@@ -385,8 +385,8 @@ func QueryAssetBalances(req *entity.Token) (*entity.AssetBalanceResp, error){
 }
 
 // QueryAssetCreateTime
-func queryAssetCreateTime(tokenName string) int64 {
-	createTime, err := module.QueryAssetCreateTime(tokenName)
+func queryAssetCreateTime(ownerAddress, tokenName string) int64 {
+	createTime, err := module.QueryAssetCreateTime(ownerAddress, tokenName)
 	if err != nil {
 		log.Errorf("QueryAssetCreateTime list is nil or err:[%v]", err)
 		t := time.Now()
