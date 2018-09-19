@@ -32,12 +32,16 @@ func getMarketBuffer() *marketBuffer {
 		_marketBuffer = &marketBuffer{}
 		_marketBuffer.load()
 
-		go func() {
-			time.Sleep(5 * time.Second)
-			_marketBuffer.load()
-		}()
+		go marketBufferLoader()
 	})
 	return _marketBuffer
+}
+
+func marketBufferLoader() {
+	for {
+		_marketBuffer.load()
+		time.Sleep(5 * time.Second)
+	}
 }
 
 type marketBuffer struct {

@@ -32,6 +32,27 @@ func QueryTotalVotes() int64 {
 	return votes
 }
 
+//QueryRealTimeTotalVotes
+func QueryRealTimeTotalVotes(strSQL string) int64 {
+	log.Sql(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryRealTimeTotalVotes error :[%v]\n", err)
+		return 0
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryRealTimeTotalVotes dataPtr is nil ")
+		return 0
+	}
+	var votes = int64(0)
+	for dataPtr.NextT() {
+		votes = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalVotes"))
+	}
+
+	return votes
+}
+
+
 //QueryVoteLiveRealize 操作数据库
 func QueryVoteLiveRealize(strSQL string) (*entity.VoteLiveInfo, error) {
 	log.Sql(strSQL)
@@ -195,3 +216,49 @@ func QueryVoterAvailableVotes(strSQL string) (float64, error) {
 	result = float64(voterAvailableVotes) / 1000000
 	return result, nil
 }
+
+// QueryVoteWitness
+func QueryVoteWitness(strSQL string) ([]*entity.VoteWitness, error) {
+	log.Sql(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryVoteWitness error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryVoteWitness dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	voteWitnessList := make([]*entity.VoteWitness, 0)
+
+	for dataPtr.NextT() {
+		var voteWitness = &entity.VoteWitness{}
+		voteWitness.Address = dataPtr.GetField("address")
+		voteWitness.LastCycleVotes = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote_count"))
+		voteWitness.Name = dataPtr.GetField("account_name")
+		voteWitness.URL = dataPtr.GetField("url")
+
+		voteWitnessList = append(voteWitnessList, voteWitness)
+	}
+	return voteWitnessList, nil
+}
+
+// QueryRealTimeVoteWitness
+func QueryRealTimeVoteWitness(strSQL string) (int64) {
+	var realTimeVotes = int64(0)
+	log.Sql(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryRealTimeVoteWitness error :[%v]\n", err)
+		return 0
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryRealTimeVoteWitness dataPtr is nil ")
+		return 0
+	}
+	for dataPtr.NextT() {
+		realTimeVotes = mysql.ConvertDBValueToInt64(dataPtr.GetField("realTimeVotes"))
+	}
+	return realTimeVotes
+}
+

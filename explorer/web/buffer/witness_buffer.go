@@ -31,15 +31,18 @@ func getWitnessBuffer() *witnessBuffer {
 		_witnessBuffer.load()
 		_witnessBuffer.loadStatistic()
 
-		go func() {
-			time.Sleep(30 * time.Second)
-			log.Debug("start witness buffer cache...")
-			_witnessBuffer.load()
-			_witnessBuffer.loadStatistic()
-			log.Debug("start witness buffer cache done")
-		}()
+		go witnessBufferLoader()
 	})
 	return _witnessBuffer
+}
+
+func witnessBufferLoader() {
+	for {
+		_witnessBuffer.load()
+		_witnessBuffer.loadStatistic()
+		time.Sleep(30 * time.Second)
+
+	}
 }
 
 type witnessBuffer struct {
@@ -105,7 +108,7 @@ func (w *witnessBuffer) load() { //QueryWitness()
 
 	totalVotes := module.QueryTotalVotes()
 	for _, witnessInfo := range witnessList {
-		log.Debugf("get witness list :[%#v]", witnessInfo)
+		//log.Debugf("get witness list :[%#v]", witnessInfo)
 		witnessInfo.ProducePercentage = 0
 		witnessInfo.VotesPercentage = 0
 		if witnessInfo.ProducedTotal > 0 {
@@ -120,7 +123,7 @@ func (w *witnessBuffer) load() { //QueryWitness()
 	addrMap := make(map[string]*entity.WitnessInfo, len(witnessList))
 	sortList := make([]*entity.WitnessInfo, 0, len(witnessList))
 	for _, witness := range witnessList {
-		log.Debugf("after calc rate for  witness list :[%#v]", witness)
+		//log.Debugf("after calc rate for  witness list :[%#v]", witness)
 		addrMap[witness.Address] = witness
 		sortList = append(sortList, witness)
 	}

@@ -28,12 +28,15 @@ func getAccountTokenBuffer() *accountTokenBuffer {
 		_accountTokenBuffer = &accountTokenBuffer{}
 		_accountTokenBuffer.getAccountTokenBuffer()
 
-		go func() {
-			time.Sleep(5 * time.Second)
-			_accountTokenBuffer.getAccountTokenBuffer()
-		}()
+		go accountBufferLoader()
 	})
 	return _accountTokenBuffer
+}
+func accountBufferLoader() {
+	for {
+		_accountTokenBuffer.getAccountTokenBuffer()
+		time.Sleep(5 * time.Second)
+	}
 }
 
 type accountTokenBuffer struct {

@@ -86,3 +86,15 @@ type CandidateInfo struct {
 	CandidateUrl		string 	`json:"candidateUrl"`			// candidateUrl
 }
 
+//VoteWitness 节点投票信息
+type VoteWitness struct {
+	Address     		string `json:"address"`
+	Name        		string `json:"name"`
+	URL         		string `json:"url"`
+	HasPage     		bool   `json:"hasPage"`
+	LastCycleVotes      int64  `json:"lastCycleVotes"`
+	RealTimeVotes		int64 	`json:"realTimeVotes"`
+	ChangeCycle 		int32  `json:"change_cycle"`
+	ChangeDay   		int32  `json:"change_day"`
+}
+

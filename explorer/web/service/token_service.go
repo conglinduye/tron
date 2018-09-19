@@ -54,9 +54,9 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 	}
 	if req.Name != "" {
 		if strings.HasPrefix(req.Name, "%") && strings.HasSuffix(req.Name, "%") {
-			filterSQL = fmt.Sprintf(" and asset_name like '%v'", req.Name)
+			filterSQL = fmt.Sprintf(" and  asset_name like '%v'", req.Name)
 		} else {
-			filterSQL = fmt.Sprintf(" and asset_name='%v'", req.Name)
+			filterSQL = fmt.Sprintf(" and  asset_name='%v'", req.Name)
 		}
 	}
 	if req.Status == "ico" {
@@ -80,6 +80,15 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 
 	// filterIcoAssetExpire
 	tokenResp.Data = filterIcoAssetExpire(req, tokenResp)
+
+	if req.Owner != "" && req.Name != "" && !strings.HasPrefix(req.Name, "%") && !strings.HasSuffix(req.Name, "%") {
+		// QueryTotalTokenTransfers
+		totalTokenTransfers, _ := module.QueryTotalTokenTransfers(req.Name)
+		tokenResp.Data[0].TotalTransactions = totalTokenTransfers
+		// QueryTotalTokenHolders
+		totalTokenHolders, _ := module.QueryTotalTokenHolders(req.Name)
+		tokenResp.Data[0].NrOfTokenHolders = totalTokenHolders
+	}
 
 	// queryCreateTime
 	tokens := tokenResp.Data
@@ -157,7 +166,7 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 			from asset_issue
 			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') `)
 
-	filterSQL = fmt.Sprintf(" and asset_name='%v'", name)
+	filterSQL = fmt.Sprintf(" and binary asset_name='%v'", name)
 
 	token, err := module.QueryTokenRealize(strSQL, filterSQL)
 	if err != nil {
@@ -214,7 +223,7 @@ func QueryTokenBalance(address, tokenName string) (*entity.TokenBalanceInfo, err
 		select address, asset_name, creator_address, balance
 		from account_asset_balance
 		where 1=1 `)
-	filterSQL = fmt.Sprintf(" and address='%v' and asset_name='%v'", address, tokenName)
+	filterSQL = fmt.Sprintf(" and address='%v' and binary asset_name='%v'", address, tokenName)
 
 	return module.QueryTokenBalanceRealize(strSQL, filterSQL)
 }
@@ -368,7 +377,7 @@ func SyncAssetIssueParticipated() {
 		assetIssue := assetIssues[index]
 		participateAsset, _ := module.QueryParticipateAsset(assetIssue.OwnerAddress, assetIssue.AssetName)
 		if participateAsset.AssetName != "" && participateAsset.TotalAmount > assetIssue.Participated {
-			module.UpdateAssetIssue(assetIssue.AssetName, participateAsset.TotalAmount)
+			module.UpdateAssetIssue(assetIssue.OwnerAddress, assetIssue.AssetName, participateAsset.TotalAmount)
 		}
 	}
 

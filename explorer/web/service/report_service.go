@@ -45,7 +45,7 @@ func QueryReport() (*entity.ReportResp, error) {
 
 	last := totalReportOverviews[len(totalReportOverviews) - 1]
 	t := time.Now()
-	t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC).Add(-8 * time.Hour).Add(-24 * time.Hour)
+	t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC).Add(-24 * time.Hour)
 	dateTime := t1.UnixNano() / 1e6
 	if dateTime != last.Date {
 		SyncPersistYesterdayReport()
@@ -110,11 +110,10 @@ func SyncInitReport() {
 	count, _ := module.QueryTotalStatistics()
 	if count <= 0 {
 		now := time.Now()
-		now = time.Date(now.Year(), now.Month(), now.Day(), 0,0,0,0, time.UTC).Add(-8 * time.Hour)
+		now = time.Date(now.Year(), now.Month(), now.Day(), 0,0,0,0, time.UTC)
 
 		t,_ := time.Parse("20060102150405", "20180625000000")
 		t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC)
-		t1 = t1.Add(-8 * time.Hour)
 		t2 := t1.Add(24 * time.Hour)
 		nowTime := now.UnixNano() / 1e6
 		startTime := t1.UnixNano() / 1e6
@@ -142,7 +141,6 @@ func SyncInitReport() {
 func SyncPersistYesterdayReport() {
 	t := time.Now()
 	t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC)
-	t1 = t1.Add(-8 * time.Hour)
 	t3 := t1.Add(-24 * time.Hour)
 	dateTime := t3.UnixNano() / 1e6
 
@@ -212,7 +210,6 @@ func SyncCacheHistoryReport() {
 func SyncCacheTodayReport() {
 	t := time.Now()
 	t1 := time.Date(t.Year(), t.Month(), t.Day(), 0,0,0,0, time.UTC)
-	t1 = t1.Add(-8 * time.Hour)
 	t2 := t
 	startTime := t1.UnixNano() / 1e6
 	endTime := t2.UnixNano() / 1e6

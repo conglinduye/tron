@@ -32,15 +32,8 @@ func getVoteBuffer() *voteBuffer {
 		_voteBuffer.getMaintenanceTimeStamp()
 		_voteBuffer.loadQueryVoteCurrentCycle()
 
-		go func() {
-			time.Sleep(30 * time.Second)
-			_voteBuffer.loadQueryVoteLive()
-		}()
-		go func() {
-			time.Sleep(60 * time.Second)
-			_voteBuffer.getMaintenanceTimeStamp()
-			_voteBuffer.loadQueryVoteCurrentCycle()
-		}()
+		go voteLiveBufferLoader()
+		go voteCycleBufferLoader()
 	})
 	return _voteBuffer
 }
@@ -53,6 +46,20 @@ type voteBuffer struct {
 	voteCurrentCycle *entity.VoteCurrentCycleResp
 
 	nextMaintenanceTime int64
+}
+
+func voteLiveBufferLoader() {
+	for {
+		_voteBuffer.loadQueryVoteLive()
+		time.Sleep(30 * time.Second)
+	}
+}
+func voteCycleBufferLoader() {
+	for {
+		_voteBuffer.getMaintenanceTimeStamp()
+		_voteBuffer.loadQueryVoteCurrentCycle()
+		time.Sleep(60 * time.Second)
+	}
 }
 
 func (w *voteBuffer) GetVoteLive() (voteLive map[string]*entity.LiveInfo, ok bool) {
@@ -97,7 +104,7 @@ func (w *voteBuffer) loadQueryVoteLive() { //QueryVoteLive()  实时投票数据
 		select to_address,sum(vote) as votes from tron.account_vote_result 
 		 group by to_address
 	) outvoter on outvoter.to_address=acc.address
-     where 1=1 and outvoter.votes>0 
+     where 1=1 and outvoter.votes>=0 
 	 order by outvoter.votes desc `)
 
 	liveInfo, err := module.QueryVoteLiveRealize(strSQL)
