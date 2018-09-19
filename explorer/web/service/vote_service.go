@@ -13,6 +13,7 @@ import (
 	"sort"
 )
 
+
 //QueryVoteLiveBuffer 从buffer中获取实时投票数据
 func QueryVoteLiveBuffer() (*entity.VoteLiveInfo, error) {
 	var voteLive = &entity.VoteLiveInfo{}
@@ -211,8 +212,11 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 		realTimeVotes := queryRealTimeVoteWitnessTotal(voteWitness.Address)
 		voteWitness.RealTimeVotes = realTimeVotes
 		voteWitness.ChangeVotes = voteWitness.RealTimeVotes - voteWitness.LastCycleVotes
+		if voteWitness.URL != "" {
+			voteWitness.HasPage = true
+		}
 		if totalVotes != 0 {
-			voteWitness.VotesPercentage = float64(voteWitness.LastCycleVotes) / float64(totalVotes)
+			voteWitness.VotesPercentage = float64(voteWitness.RealTimeVotes) / float64(totalVotes)
 		}
 	}
 

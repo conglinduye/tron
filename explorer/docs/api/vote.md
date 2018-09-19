@@ -1,3 +1,52 @@
+## 查询节点投票信息
+- url:/api/vote/witness
+- method:get
+
+input:param
+```param
+&limit=40                                   //每页40条记录
+&start=0                                    //记录的起始序号
+&address=TTW663tQYJTTCtHh6DWKAfexRhPMf2DxQ1 //地址
+
+eg:
+http://18.216.57.65:20110/api/vote/witness?start=0&limit=40
+```
+output:json
+```json
+
+{
+    "total":143,
+    "totalVotes":7852792991,
+    "data":[
+        {
+            "address":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",//地址
+            "name":"Sesameseed",//名称
+            "url":"https://www.sesameseed.org",//url
+            "hasPage":true,//是否有page
+            "lastCycleVotes":510451563,//上一轮投票数
+            "realTimeVotes":508640696,//实时投票数
+            "changeVotes":-1810867,//变化票数
+            "votesPercentage":0.06500254923121276,//投票占比
+            "change_cycle":1,//6小时票数排位变化
+            "change_day":1 //12小时票数排位变化
+        },
+        {
+            "address":"TV6qcwSp38uESiDczxxb7zbJX1h2LfDs78",
+            "name":"TronsTronics",
+            "url":"https://tronstronics.com",
+            "hasPage":false,
+            "lastCycleVotes":466345134,
+            "realTimeVotes":463860453,
+            "changeVotes":-2484681,
+            "votesPercentage":0.059385894233360416,
+            "change_cycle":0,
+            "change_day":0
+        },...
+    ]
+}
+```
+
+
 ## 查询投票信息
 - url:/api/vote
 - method:get
