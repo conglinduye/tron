@@ -86,15 +86,33 @@ type CandidateInfo struct {
 	CandidateUrl		string 	`json:"candidateUrl"`			// candidateUrl
 }
 
+//VoteWitnessReq
+type VoteWitnessReq struct {
+	Limit     string  `json:"limit,omitempty"`     	// 每页记录数
+	Start     string  `json:"start,omitempty"`     	// 记录的起始序号
+	Address   string  `json:"address,omitempty"` 	// 地址
+
+}
+
+
+//VoteWitnessResp
+type VoteWitnessResp struct {
+	Total		int64								`json:"total"`
+	TotalVotes	int64								`json:"totalVotes"`
+	Data    	[]*VoteWitness						`json:"data"`
+}
+
 //VoteWitness 节点投票信息
 type VoteWitness struct {
-	Address     		string `json:"address"`
-	Name        		string `json:"name"`
-	URL         		string `json:"url"`
-	HasPage     		bool   `json:"hasPage"`
-	LastCycleVotes      int64  `json:"lastCycleVotes"`
-	RealTimeVotes		int64 	`json:"realTimeVotes"`
-	ChangeCycle 		int32  `json:"change_cycle"`
-	ChangeDay   		int32  `json:"change_day"`
+	Address     		string 		`json:"address"`
+	Name        		string 		`json:"name"`
+	URL         		string 		`json:"url"`
+	HasPage     		bool   		`json:"hasPage"`
+	LastCycleVotes      int64  		`json:"lastCycleVotes"`
+	RealTimeVotes		int64 		`json:"realTimeVotes"`
+	ChangeVotes			int64		`json:"changeVotes"`
+	VotesPercentage		float64		`json:"votesPercentage"`
+	ChangeCycle 		int32  		`json:"change_cycle"`
+	ChangeDay   		int32  		`json:"change_day"`
 }
 

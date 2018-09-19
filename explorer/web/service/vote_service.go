@@ -10,7 +10,9 @@ import (
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 	"github.com/wlcy/tron/explorer/lib/util"
+	"sort"
 )
+
 
 //QueryVoteLiveBuffer 从buffer中获取实时投票数据
 func QueryVoteLiveBuffer() (*entity.VoteLiveInfo, error) {
@@ -180,32 +182,53 @@ func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
 }
 
 // QueryVoteWitness
-func QueryVoteWitness() ([]*entity.VoteWitness, error) {
+func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, error) {
+	var filterSQL, sortSQL, pageSQL string
 	strSQL := fmt.Sprintf(`
 		select witt.address,witt.vote_count, witt.url,acc.account_name
 		from witness witt
 		left join tron_account acc on acc.address=witt.address
-		where 1=1 order by witt.vote_count desc `)
+		where 1=1 `)
 
-	voteWitnessList, err := module.QueryVoteWitness(strSQL)
+	if req.Address != "" {
+		filterSQL = fmt.Sprintf(" and witt.address='%v'", req.Address)
+	}
+	sortSQL = "order by witt.vote_count desc"
+
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
+	voteWitnessResp, err := module.QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL)
 	if err != nil {
 		log.Errorf("QueryVoteWitness strSQL:%v, err:[%v]",strSQL, err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 
+	totalVotes := module.QueryTotalVotes()
+	voteWitnessResp.TotalVotes = totalVotes
+
+	voteWitnessList:= voteWitnessResp.Data
 	for index := range voteWitnessList {
 		voteWitness := voteWitnessList[index]
-		queryRealTimeVoteWitness(voteWitness.Address, voteWitness)
+		realTimeVotes := queryRealTimeVoteWitnessTotal(voteWitness.Address)
+		voteWitness.RealTimeVotes = realTimeVotes
+		voteWitness.ChangeVotes = voteWitness.RealTimeVotes - voteWitness.LastCycleVotes
+		if voteWitness.URL != "" {
+			voteWitness.HasPage = true
+		}
+		if totalVotes != 0 {
+			voteWitness.VotesPercentage = float64(voteWitness.RealTimeVotes) / float64(totalVotes)
+		}
 	}
 
-	return voteWitnessList, nil
+	sort.SliceStable(voteWitnessList, func(i, j int) bool { return voteWitnessList[i].RealTimeVotes > voteWitnessList[j].RealTimeVotes })
+
+	return voteWitnessResp, nil
 }
 
 // queryRealTimeVoteWitness
-func queryRealTimeVoteWitness(toAddress string, voteWitness *entity.VoteWitness) {
-	strSQL := fmt.Sprintf(`select sum(vote) as from account_vote_result where to_address = '%v' `, toAddress)
-
-	realTimeVotes := module.QueryRealTimeVoteWitness(strSQL)
-	voteWitness.RealTimeVotes = realTimeVotes
+func queryRealTimeVoteWitnessTotal(toAddress string) int64 {
+	strSQL := fmt.Sprintf(`select sum(vote) as realTimeVotes from account_vote_result where to_address = '%v' `, toAddress)
+	realTimeVotes := module.QueryRealTimeVoteWitnessTotal(strSQL)
+	return realTimeVotes
 }
 
