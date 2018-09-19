@@ -130,7 +130,7 @@ func QueryTotalTokenTransfers(tokenName string) (int64, error) {
 	strSQL := fmt.Sprintf(`
     select count(1) as totalTokenTransfers
 	from contract_asset_transfer
-	where asset_name = '%v' `, tokenName)
+	where binary asset_name = '%v' `, tokenName)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -155,7 +155,7 @@ func QueryTotalTokenHolders(tokenName string) (int64, error) {
 	strSQL := fmt.Sprintf(` 
 	select count(1) as totalTokenHolders
 	from account_asset_balance 
-	where asset_name = '%v' `, tokenName)
+	where binary asset_name = '%v' `, tokenName)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -353,7 +353,7 @@ func QueryParticipateAsset(toAddress, assetName string) (*entity.ParticipateAsse
 	strSQL := fmt.Sprintf(`
 		select asset_name, sum(amount) as totalAmount
 		from contract_participate_asset
-		where to_address = '%v' and asset_name = '%v'`, toAddress, assetName)
+		where to_address = '%v' and binary asset_name = '%v'`, toAddress, assetName)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -376,10 +376,10 @@ func QueryParticipateAsset(toAddress, assetName string) (*entity.ParticipateAsse
 }
 
 // UpdateAssetIssue
-func UpdateAssetIssue(assetName string, participated int64) error {
+func UpdateAssetIssue(address string, assetName string, participated int64) error {
 	strSQL := fmt.Sprintf(`
-	update asset_issue set participated=%v where asset_name='%v'`,
-		participated, assetName)
+	update asset_issue set participated=%v where owner_address='%v', binary asset_name='%v'`,
+		participated, address, assetName)
 	log.Sql(strSQL)
 	_, _, err := mysql.ExecuteSQLCommand(strSQL, true)
 	if err != nil {
@@ -395,7 +395,7 @@ func QueryAssetBalances(req *entity.Token) (*entity.AssetBalanceResp, error) {
 	strSQL := fmt.Sprintf(` 
 	select address, asset_name, balance
 	from account_asset_balance 
-	where asset_name = '%v' order by balance desc `, req.Name)
+	where binary asset_name = '%v' order by balance desc `, req.Name)
 	pageSQL := fmt.Sprintf(` limit %v, %v `, req.Start, req.Limit)
 	fullSQL := strSQL + pageSQL
 	log.Sql(fullSQL)
@@ -438,7 +438,7 @@ func QueryAssetCreateTime(ownerAddress, tokenName string) (int64, error) {
 	select c.create_time as createTime
 	from asset_issue a, contract_asset_issue b, blocks c
     where a.asset_name = b.asset_name and b.block_id = c.block_id 
-	and a.owner_address = '%v', a.asset_name = '%v'`, ownerAddress, tokenName)
+	and a.owner_address = '%v', binary a.asset_name = '%v'`, ownerAddress, tokenName)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
