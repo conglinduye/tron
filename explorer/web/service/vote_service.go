@@ -126,7 +126,7 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 
 	queryVotesSubHandle(votesResp)
 
-	totalVotes := module.QueryTotalVotes()
+	totalVotes := QueryRealTimeTotalVotes(req)
 	votesResp.TotalVotes = totalVotes
 
 	return votesResp, nil
@@ -161,5 +161,21 @@ func queryVotesSubHandle(votesResp *entity.VotesResp) {
 			votesInfo.VoterAvailableVotes = voterAvailableVotes
 		}
 	}
+}
+
+
+func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
+	filterSQL := ""
+	strSQL := fmt.Sprintf(`
+			select sum(vote) as totalVotes from account_vote_result  where 1=1 `)
+	if req.Voter != "" {
+		filterSQL = fmt.Sprintf(" and address='%v'", req.Voter)
+	}
+	if req.Candidate != "" {
+		filterSQL = fmt.Sprintf(" and to_address='%v'", req.Candidate)
+	}
+
+	totalVotes := module.QueryRealTimeTotalVotes(strSQL + filterSQL)
+	 return totalVotes
 }
 
