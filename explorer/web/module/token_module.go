@@ -353,7 +353,7 @@ func QueryParticipateAsset(toAddress, assetName string) (*entity.ParticipateAsse
 	strSQL := fmt.Sprintf(`
 		select asset_name, sum(amount) as totalAmount
 		from contract_participate_asset
-		where to_address = '%v' and binary asset_name = '%v'`, toAddress, assetName)
+		where to_address = '%v' and asset_name = '%v'`, toAddress, assetName)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -378,7 +378,7 @@ func QueryParticipateAsset(toAddress, assetName string) (*entity.ParticipateAsse
 // UpdateAssetIssue
 func UpdateAssetIssue(address string, assetName string, participated int64) error {
 	strSQL := fmt.Sprintf(`
-	update asset_issue set participated=%v where owner_address='%v', binary asset_name='%v'`,
+	update asset_issue set participated=%v where owner_address='%v', asset_name='%v'`,
 		participated, address, assetName)
 	log.Sql(strSQL)
 	_, _, err := mysql.ExecuteSQLCommand(strSQL, true)
@@ -438,7 +438,7 @@ func QueryAssetCreateTime(ownerAddress, tokenName string) (int64, error) {
 	select c.create_time as createTime
 	from asset_issue a, contract_asset_issue b, blocks c
     where a.asset_name = b.asset_name and b.block_id = c.block_id 
-	and a.owner_address = '%v', binary a.asset_name = '%v'`, ownerAddress, tokenName)
+	and a.owner_address = '%v', a.asset_name = '%v'`, ownerAddress, tokenName)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {

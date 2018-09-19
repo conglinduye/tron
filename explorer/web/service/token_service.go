@@ -47,16 +47,16 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 and binary asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') `)
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') `)
 
 	if req.Owner != "" {
 		filterSQL = fmt.Sprintf(" and owner_address='%v'", req.Owner)
 	}
 	if req.Name != "" {
 		if strings.HasPrefix(req.Name, "%") && strings.HasSuffix(req.Name, "%") {
-			filterSQL = fmt.Sprintf(" and binary asset_name like '%v'", req.Name)
+			filterSQL = fmt.Sprintf(" and  asset_name like '%v'", req.Name)
 		} else {
-			filterSQL = fmt.Sprintf(" and binary asset_name='%v'", req.Name)
+			filterSQL = fmt.Sprintf(" and  asset_name='%v'", req.Name)
 		}
 	}
 	if req.Status == "ico" {

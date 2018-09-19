@@ -179,3 +179,33 @@ func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
 	 return totalVotes
 }
 
+// QueryVoteWitness
+func QueryVoteWitness() ([]*entity.VoteWitness, error) {
+	strSQL := fmt.Sprintf(`
+		select witt.address,witt.vote_count, witt.url,acc.account_name
+		from witness witt
+		left join tron_account acc on acc.address=witt.address
+		where 1=1 order by witt.vote_count desc `)
+
+	voteWitnessList, err := module.QueryVoteWitness(strSQL)
+	if err != nil {
+		log.Errorf("QueryVoteWitness strSQL:%v, err:[%v]",strSQL, err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	for index := range voteWitnessList {
+		voteWitness := voteWitnessList[index]
+		queryRealTimeVoteWitness(voteWitness.Address, voteWitness)
+	}
+
+	return voteWitnessList, nil
+}
+
+// queryRealTimeVoteWitness
+func queryRealTimeVoteWitness(toAddress string, voteWitness *entity.VoteWitness) {
+	strSQL := fmt.Sprintf(`select sum(vote) as from account_vote_result where to_address = '%v' `, toAddress)
+
+	realTimeVotes := module.QueryRealTimeVoteWitness(strSQL)
+	voteWitness.RealTimeVotes = realTimeVotes
+}
+
