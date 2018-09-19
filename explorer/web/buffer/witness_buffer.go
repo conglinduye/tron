@@ -95,16 +95,17 @@ func (w *witnessBuffer) load() { //QueryWitness()
 			witt.latest_block_num,witt.latest_slot_num,witt.is_job
 			from witness witt
 			left join tron_account acc on acc.address=witt.address
-			where 1=1 `)
+			where 1=1 order by witt.vote_count desc`)
 
 	witnessList, err := module.QueryWitnessRealize(strSQL)
 	if nil != err {
 		log.Errorf("load witness from db failed:%v\n", err)
 		return
 	}
-	log.Debugf("get witness list :[%#v]", witnessList)
+
 	totalVotes := module.QueryTotalVotes()
 	for _, witnessInfo := range witnessList {
+		log.Debugf("get witness list :[%#v]", witnessInfo)
 		witnessInfo.ProducePercentage = 0
 		witnessInfo.VotesPercentage = 0
 		if witnessInfo.ProducedTotal > 0 {
@@ -115,10 +116,11 @@ func (w *witnessBuffer) load() { //QueryWitness()
 		}
 
 	}
-	log.Debugf("after calc rate for  witness list :[%#v]", witnessList)
+
 	addrMap := make(map[string]*entity.WitnessInfo, len(witnessList))
 	sortList := make([]*entity.WitnessInfo, 0, len(witnessList))
 	for _, witness := range witnessList {
+		log.Debugf("after calc rate for  witness list :[%#v]", witness)
 		addrMap[witness.Address] = witness
 		sortList = append(sortList, witness)
 	}
