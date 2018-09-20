@@ -115,19 +115,29 @@ func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error
 		log.Errorf("QueryAccountRealize dataPtr is nil ")
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
-	var account = &entity.AccountDetail{}
+
 	var oldBalance = make([]*entity.BalanceInfoDB, 0)
 	var apiBalance = make([]*entity.BalanceInfo, 0)
 	var frozenInfo = &entity.Frozen{Total: 0, Balances: apiBalance}
 	var represent = &entity.Represent{}
+	var balance = &entity.Balance{}
+	var balances = make([]*entity.Balance, 0)
+	var bandwidth = &entity.BandwidthInfo{}
 	var totalFrozen = int64(0)
 
 	accountTokenMap := make(map[string][]*entity.Balance, 0) //保存每个账户的token信息
-
+	var account = &entity.AccountDetail{
+		Representative: represent,
+		Name:           "",
+		Address:        "",
+		Bandwidth:      bandwidth,
+		Balances:       balances,
+		Balance:        0,
+		TokenBalances:  balances,
+		Frozen:         frozenInfo,
+	}
 	//填充数据
 	for dataPtr.NextT() {
-		var balance = &entity.Balance{}
-		var bandwidth = &entity.BandwidthInfo{}
 		if account.Address == "" {
 			account.Address = dataPtr.GetField("address")
 			account.Name = dataPtr.GetField("account_name")

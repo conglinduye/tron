@@ -62,6 +62,8 @@ func accountRegister(ginRouter *gin.Engine) {
 
 	//修改超级代表github信息
 	ginRouter.POST("/api/account/:address/sr", func(c *gin.Context) {
+		//获取header
+		token := c.Request.Header.Get("X-Key")
 		req := &entity.SuperAccountInfo{}
 		if c.BindJSON(req) == nil {
 			if req == nil {
@@ -69,8 +71,8 @@ func accountRegister(ginRouter *gin.Engine) {
 				c.JSON(http.StatusInternalServerError, http.ErrBodyNotAllowed)
 			}
 		}
-		log.Debugf("Hello /api/account/:%#v//sr", req)
-		resp, err := service.UpdateAccountSr(req)
+		log.Debugf("Hello /api/account/:%#v//sr, header token:[%v]", req, token)
+		resp, err := service.UpdateAccountSr(req, token)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
