@@ -20,13 +20,13 @@ type TrxIndex struct {
 
 var step int64 = 100000
 
-func getIndex() []*TrxIndex {
-	ret, err := loadIdx()
+func getIndex(tableName string) []*TrxIndex {
+	ret, err := loadIdx(tableName)
 	var needStore bool
 	if nil != err || 0 == len(ret) {
 		needStore = true
 		// ret, err = genTransactionIndex()
-		ret, err = genTransactionIndex2(0, 0, 0)
+		ret, err = genTransactionIndex2(0, 0, 0, tableName)
 	}
 
 	fmt.Printf("needStore:%v, ret:%v, err:%v\n", needStore, len(ret), err)
@@ -35,16 +35,16 @@ func getIndex() []*TrxIndex {
 	}
 
 	if needStore {
-		storeIdx(ret)
+		storeIdx(ret, tableName)
 	}
 	totalTrn = ret[0].Count
 	return ret
 }
 
-func genTransactionIndex() ([]*TrxIndex, error) {
+func genTransactionIndex(tableName string) ([]*TrxIndex, error) {
 
-	strSQL1 := `select trx_hash, block_id from transactions where block_id >= ? order by block_id asc limit ?, 1`
-	strSQL2 := `select trx_hash, block_id from transactions where block_id = ?`
+	strSQL1 := fmt.Sprintf(`select trx_hash, block_id from %v where block_id >= ? order by block_id asc limit ?, 1`, tableName)
+	strSQL2 := fmt.Sprintf(`select trx_hash, block_id from %v where block_id = ?`, tableName)
 
 	dbb := getMysqlDB()
 
@@ -128,22 +128,24 @@ func genTransactionIndex() ([]*TrxIndex, error) {
 		// return err
 	}
 
-	printIndex(index)
+	printIndex(index, tableName)
 
 	return index, nil
 }
 
-func storeIdx(index []*TrxIndex) error {
+func storeIdx(index []*TrxIndex, tableName string) error {
 	data, err := json.Marshal(index)
 	if nil != err {
 		fmt.Printf("gen index data failed:%v\n", err)
 		return err
 	}
 
-	idxFile, err := os.Create(fmt.Sprintf("%v", *gIndexFile))
+	fName := fmt.Sprintf("%v_%v", tableName, *gIndexFile)
+
+	idxFile, err := os.Create(fName)
 
 	if nil != err {
-		fmt.Printf("create file %v failed:%v\n", *gIndexFile, err)
+		fmt.Printf("create file %v failed:%v\n", fName, err)
 		return err
 	}
 	defer idxFile.Close()
@@ -153,18 +155,19 @@ func storeIdx(index []*TrxIndex) error {
 
 	n, err := w.Write(data)
 	if n != len(data) || nil != err {
-		fmt.Printf("write file err:%v, byte need to write:%v, actual write:%v\n", err, len(data), n)
+		fmt.Printf("write file %v err:%v, byte need to write:%v, actual write:%v\n", fName, err, len(data), n)
 		return err
 	}
 
 	return nil
 }
 
-func loadIdx() ([]*TrxIndex, error) {
-	idxFile, err := os.Open(*gIndexFile)
+func loadIdx(tableName string) ([]*TrxIndex, error) {
+	fName := fmt.Sprintf("%v_%v", tableName, *gIndexFile)
+	idxFile, err := os.Open(fName)
 
 	if nil != err {
-		fmt.Printf("open file %v failed:%v\n", *gIndexFile, err)
+		fmt.Printf("open file %v failed:%v\n", fName, err)
 		return nil, err
 	}
 	defer idxFile.Close()
@@ -188,8 +191,9 @@ var totalTrn int64 = 1430347
 
 func searchIdxIF() {
 
-	index := getIndex()
-	index, _ = updateIndex(index)
+	tableName := *gTable
+	index := getIndex(tableName)
+	index, _ = updateIndex(index, tableName)
 
 	var offset, count int64
 	for {
@@ -198,7 +202,7 @@ func searchIdxIF() {
 		if 2 < n || nil != err {
 			break
 		}
-		fmt.Println(searchIdx(offset, count, index))
+		fmt.Println(searchIdx(offset, count, index, tableName))
 		fmt.Printf("\n-----------\n")
 
 	}
@@ -207,7 +211,7 @@ func searchIdxIF() {
 
 }
 
-func searchIdx(offset, count int64, index []*TrxIndex) string {
+func searchIdx(offset, count int64, index []*TrxIndex, tableName string) string {
 	if offset >= totalTrn {
 		fmt.Printf("invalid offset:%v, total count:%v, index range:[0, %v]\n", offset, totalTrn, totalTrn-1)
 		return ""
@@ -225,12 +229,12 @@ func searchIdx(offset, count int64, index []*TrxIndex) string {
 	fmt.Printf("offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
 
 	idx := index[ascOffsetIdx]
-	return fmt.Sprintf("select trx_hash, block_id from transactions where block_id >= '%v' order by block_id asc limit %v, %v;\n",
-		idx.BlockID, idx.Offset+ascInnerOffsetIdx, count)
+	return fmt.Sprintf("select trx_hash, block_id from %v where block_id >= '%v' order by block_id asc limit %v, %v;\n",
+		tableName, idx.BlockID, idx.Offset+ascInnerOffsetIdx, count)
 
 }
 
-func updateIndex(index []*TrxIndex) ([]*TrxIndex, bool) {
+func updateIndex(index []*TrxIndex, tableName string) ([]*TrxIndex, bool) {
 	db := getMysqlDB()
 
 	txn, err := db.Begin()
@@ -239,12 +243,12 @@ func updateIndex(index []*TrxIndex) ([]*TrxIndex, bool) {
 		return index, false
 	}
 
-	row := txn.QueryRow("select count(*) from transactions")
+	row := txn.QueryRow(fmt.Sprintf("select count(*) from %v", tableName))
 
 	var total int64
 	err = row.Scan(&total)
 	if nil != err {
-		fmt.Printf("scan transaction count failed:%v\n", err)
+		fmt.Printf("scan %v count failed:%v\n", tableName, err)
 		return index, false
 	}
 
@@ -254,17 +258,17 @@ func updateIndex(index []*TrxIndex) ([]*TrxIndex, bool) {
 	round := int64(len(index))
 
 	if int64(len(index)) > maxIdx {
-		fmt.Printf("updateIndex: current max transaction:%v, max index:%v, current index length:%v, do not need update\n", total, maxIdx, round)
+		fmt.Printf("updateIndex: current records count in %v:%v, max index:%v, current index length:%v, do not need update\n", tableName, total, maxIdx, round)
 		return index, false
 	}
-	fmt.Printf("updateIndex: current max transaction:%v, max index:%v, current index length:%v, updating index ......\n", total, maxIdx, round)
+	fmt.Printf("updateIndex: current records count in %v:%v, max index:%v, current index length:%v, updating index ......\n", tableName, total, maxIdx, round)
 
 	var newIndex []*TrxIndex
 	if 0 < round {
 		idx := index[round-1]
-		newIndex, err = genTransactionIndex2(round, idx.BlockID, idx.Offset)
+		newIndex, err = genTransactionIndex2(round, idx.BlockID, idx.Offset, tableName)
 	} else {
-		newIndex, err = genTransactionIndex2(0, 0, 0)
+		newIndex, err = genTransactionIndex2(0, 0, 0, tableName)
 	}
 	if nil != err || 0 == len(newIndex) {
 		return index, false
@@ -275,18 +279,18 @@ func updateIndex(index []*TrxIndex) ([]*TrxIndex, bool) {
 		index[0].Count = total
 		index[1].Count = step
 	}
-	storeIdx(index)
+	storeIdx(index, tableName)
 
 	return index, true
 
 }
 
-func genTransactionIndex2(round, blockID, offset int64) ([]*TrxIndex, error) {
+func genTransactionIndex2(round, blockID, offset int64, tableName string) ([]*TrxIndex, error) {
 
-	fmt.Printf("genTransactionIndex2, start round:%v, block_id:%v, offset:%v\n", round, blockID, offset)
+	fmt.Printf("genTransactionIndex2 for table:%v, start round:%v, block_id:%v, offset:%v\n", tableName, round, blockID, offset)
 
-	strSQL1 := `select trx_hash, block_id from transactions where block_id >= ? order by block_id asc limit ?, 1`
-	strSQL2 := `select trx_hash, block_id from transactions where block_id = ?`
+	strSQL1 := fmt.Sprintf(`select trx_hash, block_id from %v where block_id >= ? order by block_id asc limit ?, 1`, tableName)
+	strSQL2 := fmt.Sprintf(`select trx_hash, block_id from %v where block_id = ?`, tableName)
 
 	dbb := getMysqlDB()
 
@@ -376,20 +380,20 @@ func genTransactionIndex2(round, blockID, offset int64) ([]*TrxIndex, error) {
 		// return err
 	}
 
-	printIndex(index)
+	printIndex(index, tableName)
 
 	return index, nil
 }
 
-func printIndex(index []*TrxIndex) {
-	fmt.Printf("total index:%v\n", len(index))
+func printIndex(index []*TrxIndex, tableName string) {
+	fmt.Printf("table:%v, total index:%v\n", tableName, len(index))
 	for id, idx := range index {
 		fmt.Printf("%v-->%#v\n", id, idx)
-		fmt.Printf("position:%v --> select trx_hash, block_id from transactions where block_id >= '%v' order by block_id asc limit %v, 1;\n", idx.StartPosition, idx.BlockID, idx.Offset)
+		fmt.Printf("position:%v --> select trx_hash, block_id from %v where block_id >= '%v' order by block_id asc limit %v, 1;\n", idx.StartPosition, tableName, idx.BlockID, idx.Offset)
 	}
 }
 
-func storeIdxToDB(index []*TrxIndex) {
+func storeIdxToDB(index []*TrxIndex, tableName string) {
 	ddb := getMysqlDB()
 
 	txn, err := ddb.Begin()
@@ -397,7 +401,7 @@ func storeIdxToDB(index []*TrxIndex) {
 		return
 	}
 
-	strSQL1 := "insert into transactions_index (start_pos, block_id, inner_offset, total_record) values (?, ?, ?, ?)"
+	strSQL1 := fmt.Sprintf("insert into %v_index (start_pos, block_id, inner_offset, total_record) values (?, ?, ?, ?)", tableName)
 
 	stmt1, err := txn.Prepare(strSQL1)
 	if nil != err {
@@ -406,7 +410,7 @@ func storeIdxToDB(index []*TrxIndex) {
 	}
 	defer stmt1.Close()
 
-	strSQL2 := "delete from transactions_index where start_pos >=0"
+	strSQL2 := fmt.Sprintf("delete from %v_index where start_pos >=0", tableName)
 	stmt2, err := txn.Prepare(strSQL2)
 	if nil != err {
 		fmt.Printf("prepare SLQ (%v) failed:%v\n", strSQL2, err)
@@ -423,7 +427,7 @@ func storeIdxToDB(index []*TrxIndex) {
 	for _, idx := range index {
 		_, err := stmt1.Exec(idx.StartPosition, idx.BlockID, idx.Offset, idx.Count)
 		if nil != err {
-			fmt.Printf("insert transactions_index %#v failed:%v\n", idx, err)
+			fmt.Printf("insert %v_index %#v failed:%v\n", tableName, idx, err)
 		}
 	}
 
