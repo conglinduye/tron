@@ -177,7 +177,7 @@ func UpdateAccountSr(req *entity.SuperAccountInfo, token string) (*entity.SuperA
 func QueryAccountSr(req *entity.SuperAccountInfo) (*entity.SuperAccountInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
-		select address,url from tron.wlcy_witness_create_info
+		select address,github_link as url from tron.wlcy_sr_account
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
