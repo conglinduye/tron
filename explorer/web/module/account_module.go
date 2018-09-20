@@ -143,8 +143,8 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 			account.Name = dataPtr.GetField("account_name")
 			account.Balance = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalBalance"))
 			represent.Allowance = mysql.ConvertDBValueToInt64(dataPtr.GetField("allowance"))
-			isJob := dataPtr.GetField("is_job")
-			if isJob == "1" {
+			isWitness := dataPtr.GetField("is_witness")
+			if isWitness == "1" {
 				represent.Enabled = true
 			}
 			represent.LastWithDrawTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("latest_withdraw_time"))

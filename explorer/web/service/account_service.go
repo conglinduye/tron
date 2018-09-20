@@ -120,7 +120,7 @@ func QueryAccount(req *entity.Accounts) (*entity.AccountDetail, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
 	select account_name,acc.address,acc.balance as totalBalance,frozen,create_time,latest_operation_time,votes ,
-		wit.url,wit.is_job,acc.allowance,acc.latest_withdraw_time,
+		wit.url,wit.is_job,acc.allowance,acc.latest_withdraw_time,acc.is_witness,
 		acc.net_usage,acc.free_net_limit,acc.net_used,acc.net_limit,acc.asset_net_used,acc.asset_net_limit,
         ass.asset_name as token_name,ass.creator_address,ass.balance
     from tron.tron_account acc
