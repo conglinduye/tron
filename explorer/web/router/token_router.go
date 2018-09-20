@@ -189,7 +189,9 @@ func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
 func handleTokenRespData(resp *entity.TokenResp) {
 	tokenInfoList := make([]*entity.TokenInfo, 0, len(resp.Data))
 	for _, tokenInfo := range resp.Data {
-		tokenInfoList = append(tokenInfoList, tokenInfo)
+		newTokenInfo := new(entity.TokenInfo)
+		*newTokenInfo = *tokenInfo
+		tokenInfoList = append(tokenInfoList, newTokenInfo)
 	}
 	resp.Data = tokenInfoList
 }
