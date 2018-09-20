@@ -34,6 +34,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 		  `expire_time` bigint NOT NULL DEFAULT 0 COMMENT '交易过期时间',
 		  `modified_time` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '记录更新时间',
 		  `real_timestamp` bigint not null default 0 comment 'transaction 的timestamp',
+		  `raw_data` varchar(500) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'transaction raw data.data',
 		  PRIMARY KEY (`trx_hash`,`block_id`),
 		  KEY `idx_transactions_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -41,7 +42,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 		PARTITIONS 100 */
 	/*
 	 */
-	sqlstr := "insert into transactions (trx_hash, block_id, contract_type, contract_data, result_data, real_timestamp, expire_time, owner_address, create_time) values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	sqlstr := "insert into transactions (trx_hash, block_id, contract_type, contract_data, result_data, real_timestamp, expire_time, owner_address, create_time, raw_data) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	stmt, err := txn.Prepare(sqlstr)
 	if nil != err {
 		fmt.Printf("prepare store transaction SQL failed:%v\n", err)
@@ -79,6 +80,7 @@ func storeTransactions(trans []*core.Transaction) bool {
 				tran.RawData.Expiration,
 				toAddr,
 				blockCreateTime,
+				utils.HexEncode(tran.RawData.Data),
 			)
 			if err != nil {
 				fmt.Printf("ERROR: store transaction failed!%v, trx_hash:%v, blockID:%v\n", err, trxHash, blockID) //,utils.ToJSONStr(tran))
