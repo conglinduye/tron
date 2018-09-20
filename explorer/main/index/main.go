@@ -56,7 +56,8 @@ func test() {
 
 func daemon() {
 	signalHandle()
-	index := getIndex()
+	var index []*TrxIndex
+	var ok bool
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -64,8 +65,9 @@ func daemon() {
 
 	updateLoop:
 		for {
-			index = updateIndex(index)
-			storeIdxToDB(index)
+			if index, ok = updateIndex(index); ok {
+				storeIdxToDB(index)
+			}
 
 			select {
 			case <-ticker.C:

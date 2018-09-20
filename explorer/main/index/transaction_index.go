@@ -189,7 +189,7 @@ var totalTrn int64 = 1430347
 func searchIdxIF() {
 
 	index := getIndex()
-	index = updateIndex(index)
+	index, _ = updateIndex(index)
 
 	var offset, count int64
 	for {
@@ -230,13 +230,13 @@ func searchIdx(offset, count int64, index []*TrxIndex) string {
 
 }
 
-func updateIndex(index []*TrxIndex) []*TrxIndex {
+func updateIndex(index []*TrxIndex) ([]*TrxIndex, bool) {
 	db := getMysqlDB()
 
 	txn, err := db.Begin()
 	if nil != err {
 		fmt.Printf("Create db txn failed:%v\n", txn)
-		return index
+		return index, false
 	}
 
 	row := txn.QueryRow("select count(*) from transactions")
@@ -245,7 +245,7 @@ func updateIndex(index []*TrxIndex) []*TrxIndex {
 	err = row.Scan(&total)
 	if nil != err {
 		fmt.Printf("scan transaction count failed:%v\n", err)
-		return index
+		return index, false
 	}
 
 	totalTrn = total
@@ -253,10 +253,11 @@ func updateIndex(index []*TrxIndex) []*TrxIndex {
 	var maxIdx = total / step
 	round := int64(len(index))
 
-	fmt.Printf("updateIndex: current max transaction:%v, max index:%v, current index length:%v\n", total, maxIdx, round)
-	if int64(len(index)) >= maxIdx {
-		return index
+	if int64(len(index)) > maxIdx {
+		fmt.Printf("updateIndex: current max transaction:%v, max index:%v, current index length:%v, do not need update\n", total, maxIdx, round)
+		return index, false
 	}
+	fmt.Printf("updateIndex: current max transaction:%v, max index:%v, current index length:%v, updating index ......\n", total, maxIdx, round)
 
 	var newIndex []*TrxIndex
 	if 0 < round {
@@ -266,7 +267,7 @@ func updateIndex(index []*TrxIndex) []*TrxIndex {
 		newIndex, err = genTransactionIndex2(0, 0, 0)
 	}
 	if nil != err || 0 == len(newIndex) {
-		return index
+		return index, false
 	}
 
 	index = append(index, newIndex...)
@@ -276,7 +277,7 @@ func updateIndex(index []*TrxIndex) []*TrxIndex {
 	}
 	storeIdx(index)
 
-	return index
+	return index, true
 
 }
 
