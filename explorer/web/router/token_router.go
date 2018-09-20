@@ -41,7 +41,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 		}
 
 		// handleTokenRespData
-		handleTokenRespData(tokenResp)
+		tokenResp = handleTokenRespData(tokenResp)
 
 		if tokenReq.Owner != "" && tokenReq.Name != "" && !strings.HasPrefix(tokenReq.Name, "%") && !strings.HasSuffix(tokenReq.Name, "%") {
 			// QueryTotalTokenTransfers
@@ -186,12 +186,15 @@ func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
 }
 
 // handleTokenRespData
-func handleTokenRespData(resp *entity.TokenResp) {
+func handleTokenRespData(resp *entity.TokenResp) *entity.TokenResp {
+	newResp := &entity.TokenResp{}
 	tokenInfoList := make([]*entity.TokenInfo, 0, len(resp.Data))
 	for _, tokenInfo := range resp.Data {
 		newTokenInfo := new(entity.TokenInfo)
 		*newTokenInfo = *tokenInfo
 		tokenInfoList = append(tokenInfoList, newTokenInfo)
 	}
-	resp.Data = tokenInfoList
+	newResp.Total = int64(len(tokenInfoList))
+	newResp.Data = tokenInfoList
+	return newResp
 }
