@@ -378,7 +378,7 @@ func QueryParticipateAsset(toAddress, assetName string) (*entity.ParticipateAsse
 // UpdateAssetIssue
 func UpdateAssetIssue(address string, assetName string, participated int64) error {
 	strSQL := fmt.Sprintf(`
-	update asset_issue set participated=%v where owner_address='%v', asset_name='%v'`,
+	update asset_issue set participated=%v where owner_address='%v' and asset_name='%v'`,
 		participated, address, assetName)
 	log.Sql(strSQL)
 	_, _, err := mysql.ExecuteSQLCommand(strSQL, true)
