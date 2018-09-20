@@ -36,7 +36,7 @@ func TestQueryAccount(t *testing.T) {
 	req.Limit = "5"
 	req.Start = "0"
 	*/
-	req.Address = "T9yDddzXNFeQyn3Eam1QcVzm85ekYaUkKz"
+	req.Address = "TSNbzxac4WhxN91XvaUfPTKP2jNT18mP6T"
 
 	resp, err := QueryAccount(req)
 	if err != nil {
