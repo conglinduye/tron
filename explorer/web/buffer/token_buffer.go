@@ -43,14 +43,16 @@ func tokenInfoBufferLoader() {
 	}
 }
 
-func (w *tokenBuffer) GetCommonTokenResp() (*entity.TokenResp) {
+func (w *tokenBuffer) GetCommonTokenResp() (tokenResp *entity.TokenResp) {
+	w.RLock()
 	if w.commonTokenResp == nil {
 		log.Debugf("GetCommonTokenResp from buffer nil, data reload")
 		w.loadCommonQueryTokens()
 		log.Debugf("GetCommonTokenResp from buffer, buffer data updated ")
 	}
-
-	return w.commonTokenResp
+	tokenResp = w.commonTokenResp
+	w.RUnlock()
+	return
 }
 
 // loadCommonQueryTokens
@@ -82,14 +84,16 @@ func (w *tokenBuffer) loadCommonQueryTokens() {
 }
 
 // GetIcoTokenResp
-func (w *tokenBuffer)  GetIcoTokenResp() (*entity.TokenResp) {
+func (w *tokenBuffer)  GetIcoTokenResp() (tokenResp *entity.TokenResp) {
+	w.RLock()
 	if w.icoTokenResp == nil {
 		log.Debugf("GetIcoTokenResp from buffer nil, data reload")
 		w.loadIcoQueryTokens()
 		log.Debugf("GetIcoTokenResp from buffer, buffer data updated ")
 	}
-
-	return w.icoTokenResp
+	tokenResp = w.icoTokenResp
+	w.RUnlock()
+	return
 }
 
 // loadIcoQueryTokens
