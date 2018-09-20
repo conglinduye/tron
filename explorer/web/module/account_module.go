@@ -115,7 +115,7 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 		log.Errorf("QueryAccountRealize dataPtr is nil ")
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
-
+	var account = &entity.AccountDetail{}
 	var oldBalance = make([]*entity.BalanceInfoDB, 0)
 	var apiBalance = make([]*entity.BalanceInfo, 0)
 	var frozenInfo = &entity.Frozen{Total: 0, Balances: apiBalance}
@@ -126,90 +126,92 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 	var totalFrozen = int64(0)
 
 	accountTokenMap := make(map[string][]*entity.Balance, 0) //保存每个账户的token信息
-	var account = &entity.AccountDetail{
-		Representative: represent,
-		Name:           "",
-		Address:        address,
-		Bandwidth:      bandwidth,
-		Balances:       balances,
-		Balance:        0,
-		TokenBalances:  balances,
-		Frozen:         frozenInfo,
-	}
-	//填充数据
-	for dataPtr.NextT() {
-		if account.Address == "" {
-			account.Address = dataPtr.GetField("address")
-			account.Name = dataPtr.GetField("account_name")
-			account.Balance = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalBalance"))
-			represent.Allowance = mysql.ConvertDBValueToInt64(dataPtr.GetField("allowance"))
-			isWitness := dataPtr.GetField("is_witness")
-			if isWitness == "1" {
-				represent.Enabled = true
+	if dataPtr.ResNum() == 0 {
+		account = &entity.AccountDetail{
+			Representative: represent,
+			Name:           "",
+			Address:        address,
+			Bandwidth:      bandwidth,
+			Balances:       balances,
+			Balance:        0,
+			TokenBalances:  balances,
+			Frozen:         frozenInfo,
+		}
+	} else {
+		//填充数据
+		for dataPtr.NextT() {
+			if account.Address == "" {
+				account.Address = dataPtr.GetField("address")
+				account.Name = dataPtr.GetField("account_name")
+				account.Balance = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalBalance"))
+				represent.Allowance = mysql.ConvertDBValueToInt64(dataPtr.GetField("allowance"))
+				isWitness := dataPtr.GetField("is_witness")
+				if isWitness == "1" {
+					represent.Enabled = true
+				}
+				represent.LastWithDrawTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("latest_withdraw_time"))
+				represent.URL = dataPtr.GetField("url")
+				account.Representative = represent
+				//acc.net_usage,acc.free_net_limit,acc.net_used,acc.net_limit,acc.asset_net_used,acc.asset_net_limit,
+				bandwidth.FreeNetUsed = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_usage"))
+				bandwidth.FreeNetLimit = mysql.ConvertDBValueToInt64(dataPtr.GetField("free_net_limit"))
+				bandwidth.FreeNetRemaining = bandwidth.FreeNetLimit - bandwidth.FreeNetUsed
+				bandwidth.FreeNetPercentage = 0
+				if bandwidth.FreeNetLimit > 0 {
+					bandwidth.FreeNetPercentage = float64(bandwidth.FreeNetUsed) / float64(bandwidth.FreeNetLimit)
+				}
+				bandwidth.NetUsed = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_used"))
+				bandwidth.NetLimit = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_limit"))
+				bandwidth.NetRemaining = bandwidth.NetLimit - bandwidth.NetUsed
+				bandwidth.NetPercentage = 0
+				if bandwidth.NetLimit > 0 {
+					bandwidth.NetPercentage = float64(bandwidth.NetUsed) / float64(bandwidth.NetLimit)
+				}
+				assetNetUsed := dataPtr.GetField("asset_net_used")
+				assetNetLimit := dataPtr.GetField("asset_net_limit")
+				bandwidth.Assets = getAssetNetInfo(assetNetUsed, assetNetLimit)
+				account.Bandwidth = bandwidth
+				//[{"frozen_balance":4306000000,"expire_time":1534794417000}]
+				frozen := dataPtr.GetField("frozen")
+				if frozen != "" {
+					if err := json.Unmarshal([]byte(frozen), &oldBalance); err != nil {
+						log.Errorf("Unmarshal data failed:[%v]-[%v]", err, frozen)
+					}
+				}
+
+				for _, blanceFrozen := range oldBalance {
+					apiFrozen := &entity.BalanceInfo{}
+					apiFrozen.Amount = blanceFrozen.Amount
+					apiFrozen.Expires = blanceFrozen.Expires
+					apiBalance = append(apiBalance, apiFrozen)
+					totalFrozen += blanceFrozen.Amount
+				}
+				frozenInfo.Total = totalFrozen
+				frozenInfo.Balances = apiBalance
+				account.Frozen = frozenInfo
 			}
-			represent.LastWithDrawTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("latest_withdraw_time"))
-			represent.URL = dataPtr.GetField("url")
-			account.Representative = represent
-			//acc.net_usage,acc.free_net_limit,acc.net_used,acc.net_limit,acc.asset_net_used,acc.asset_net_limit,
-			bandwidth.FreeNetUsed = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_usage"))
-			bandwidth.FreeNetLimit = mysql.ConvertDBValueToInt64(dataPtr.GetField("free_net_limit"))
-			bandwidth.FreeNetRemaining = bandwidth.FreeNetLimit - bandwidth.FreeNetUsed
-			bandwidth.FreeNetPercentage = 0
-			if bandwidth.FreeNetLimit > 0 {
-				bandwidth.FreeNetPercentage = float64(bandwidth.FreeNetUsed) / float64(bandwidth.FreeNetLimit)
-			}
-			bandwidth.NetUsed = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_used"))
-			bandwidth.NetLimit = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_limit"))
-			bandwidth.NetRemaining = bandwidth.NetLimit - bandwidth.NetUsed
-			bandwidth.NetPercentage = 0
-			if bandwidth.NetLimit > 0 {
-				bandwidth.NetPercentage = float64(bandwidth.NetUsed) / float64(bandwidth.NetLimit)
-			}
-			assetNetUsed := dataPtr.GetField("asset_net_used")
-			assetNetLimit := dataPtr.GetField("asset_net_limit")
-			bandwidth.Assets = getAssetNetInfo(assetNetUsed, assetNetLimit)
-			account.Bandwidth = bandwidth
-			//[{"frozen_balance":4306000000,"expire_time":1534794417000}]
-			frozen := dataPtr.GetField("frozen")
-			if frozen != "" {
-				if err := json.Unmarshal([]byte(frozen), &oldBalance); err != nil {
-					log.Errorf("Unmarshal data failed:[%v]-[%v]", err, frozen)
+
+			balance.Name = dataPtr.GetField("token_name")
+			balance.Balance = mysql.ConvertDBValueToFloat64(dataPtr.GetField("balance"))
+
+			if account.Address != "" {
+				if tokenInfo, ok := accountTokenMap[account.Address]; ok {
+					tokenInfo = append(tokenInfo, balance)
+					accountTokenMap[account.Address] = tokenInfo
+				} else {
+					tokenArr := make([]*entity.Balance, 0)
+					tokenArr = append(tokenArr, balance)
+					accountTokenMap[account.Address] = tokenArr
 				}
 			}
-
-			for _, blanceFrozen := range oldBalance {
-				apiFrozen := &entity.BalanceInfo{}
-				apiFrozen.Amount = blanceFrozen.Amount
-				apiFrozen.Expires = blanceFrozen.Expires
-				apiBalance = append(apiBalance, apiFrozen)
-				totalFrozen += blanceFrozen.Amount
-			}
-			frozenInfo.Total = totalFrozen
-			frozenInfo.Balances = apiBalance
-			account.Frozen = frozenInfo
 		}
 
-		balance.Name = dataPtr.GetField("token_name")
-		balance.Balance = mysql.ConvertDBValueToFloat64(dataPtr.GetField("balance"))
-
-		if account.Address != "" {
-			if tokenInfo, ok := accountTokenMap[account.Address]; ok {
-				tokenInfo = append(tokenInfo, balance)
-				accountTokenMap[account.Address] = tokenInfo
-			} else {
-				tokenArr := make([]*entity.Balance, 0)
-				tokenArr = append(tokenArr, balance)
-				accountTokenMap[account.Address] = tokenArr
-			}
+		//拼接tokeninfo列表
+		if tokenInfo, ok := accountTokenMap[account.Address]; ok {
+			account.TokenBalances = tokenInfo
+			account.Balances = tokenInfo
 		}
 	}
-
-	//拼接tokeninfo列表
-	if tokenInfo, ok := accountTokenMap[account.Address]; ok {
-		account.TokenBalances = tokenInfo
-		account.Balances = tokenInfo
-	}
-
 	return account, nil
 
 }
