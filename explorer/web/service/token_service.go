@@ -24,8 +24,7 @@ import (
 // QueryCommonTokensBuffer
 func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
-	commonTokenResp, _ := tokenBuffer.GetCommonTokenResp()
-
+	commonTokenResp := tokenBuffer.GetCommonTokenResp()
 	return commonTokenResp, nil
 
 }
@@ -33,10 +32,27 @@ func QueryCommonTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 // QueryIcoTokensBuffer
 func QueryIcoTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
-	icoTokenResp, _ := tokenBuffer.GetIcoTokenResp()
-
+	icoTokenResp := tokenBuffer.GetIcoTokenResp()
 	return icoTokenResp, nil
 
+}
+
+// QueryTokensDetail
+func QueryTokensDetail(address, name string) ([]*entity.TokenInfo, int64) {
+	newTokenInfoList := make([]*entity.TokenInfo, 0)
+	tokenInfo := &entity.TokenInfo{}
+	tokenBuffer := buffer.GetTokenBuffer()
+	tokenInfoList := tokenBuffer.GetTokensDetail()
+	for _, temp := range tokenInfoList {
+		if temp.OwnerAddress == address && temp.Name == name {
+			tokenInfo = temp
+			tokenInfo.Index = 1
+			newTokenInfoList = append(newTokenInfoList, tokenInfo)
+			break
+		}
+	}
+	total := len(tokenInfoList)
+	return newTokenInfoList, int64(total)
 }
 
 //QueryTokens
@@ -47,7 +63,7 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') `)
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople') `)
 
 	if req.Owner != "" {
 		filterSQL = fmt.Sprintf(" and owner_address='%v'", req.Owner)
@@ -81,14 +97,14 @@ func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 	// filterIcoAssetExpire
 	tokenResp.Data = filterIcoAssetExpire(req, tokenResp)
 
-	if req.Owner != "" && req.Name != "" && !strings.HasPrefix(req.Name, "%") && !strings.HasSuffix(req.Name, "%") {
+	/*if req.Owner != "" && req.Name != "" && !strings.HasPrefix(req.Name, "%") && !strings.HasSuffix(req.Name, "%") {
 		// QueryTotalTokenTransfers
 		totalTokenTransfers, _ := module.QueryTotalTokenTransfers(req.Name)
 		tokenResp.Data[0].TotalTransactions = totalTokenTransfers
 		// QueryTotalTokenHolders
 		totalTokenHolders, _ := module.QueryTotalTokenHolders(req.Name)
 		tokenResp.Data[0].NrOfTokenHolders = totalTokenHolders
-	}
+	}*/
 
 	// queryCreateTime
 	tokens := tokenResp.Data
@@ -187,10 +203,10 @@ func QueryToken(name string) (*entity.TokenInfo, error) {
 	token.DateCreated = createTime
 
 	// QueryTotalTokenTransfers
-	totalTokenTransfers, _ := module.QueryTotalTokenTransfers(name)
+	totalTokenTransfers, _ := QueryTotalTokenTransfers(name)
 	token.TotalTransactions = totalTokenTransfers
 	// QueryTotalTokenHolders
-	totalTokenHolders, _ := module.QueryTotalTokenHolders(name)
+	totalTokenHolders, _ := QueryTotalTokenHolders(name)
 	token.NrOfTokenHolders = totalTokenHolders
 
 	tokenAddressList := make([]string, 0)
@@ -223,7 +239,7 @@ func QueryTokenBalance(address, tokenName string) (*entity.TokenBalanceInfo, err
 		select address, asset_name, creator_address, balance
 		from account_asset_balance
 		where 1=1 `)
-	filterSQL = fmt.Sprintf(" and address='%v' and binary asset_name='%v'", address, tokenName)
+	filterSQL = fmt.Sprintf(" and address='%v' and asset_name='%v'", address, tokenName)
 
 	return module.QueryTokenBalanceRealize(strSQL, filterSQL)
 }
@@ -417,4 +433,14 @@ func filterIcoAssetExpire(req *entity.Token, tokenResp *entity.TokenResp) []*ent
 		}
 	}
 	return tokens
+}
+
+// QueryTotalTokenTransfers
+func QueryTotalTokenTransfers(tokenName string) (int64, error) {
+	return module.QueryTotalTokenTransfers(tokenName)
+}
+
+// QueryTotalTokenHolders
+func QueryTotalTokenHolders(tokenName string) (int64, error) {
+	return module.QueryTotalTokenHolders(tokenName)
 }

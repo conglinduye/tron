@@ -7,7 +7,7 @@ import (
 )
 
 func SyncAssetIssueParticipated() {
-	for range time.Tick(1 * time.Hour) {
+	for range time.Tick(30 * time.Minute) {
 		start := time.Now()
 		log.Info("SyncAssetIssueParticipated start")
 		service.SyncAssetIssueParticipated()

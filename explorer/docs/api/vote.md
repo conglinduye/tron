@@ -1,18 +1,11 @@
-## 查询节点投票信息
+## 查询节点投票列表信息
 - url:/api/vote/witness
 - method:get
 
 input:param
 ```param
-&limit=40                                   //每页40条记录
-&start=0                                    //记录的起始序号
-&address=TTW663tQYJTTCtHh6DWKAfexRhPMf2DxQ1 //地址
-
 eg:
-http://18.216.57.65:20110/api/vote/witness?start=0&limit=40
-
-http://18.216.57.65:20110/api/vote/witness?start=0&limit=40&address=TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp
-
+http://18.216.57.65:20110/api/vote/witness
 ```
 output:json
 ```json
@@ -20,6 +13,18 @@ output:json
 {
     "total":143,
     "totalVotes":7852792991,
+     "fastestRise":{ //排名上升变化最快的节点
+            "address":"TJgmwx9TYaqujmdthJkjaLyWXrwTCmmTan",
+            "name":"ZADEA-MadeInItaly",
+            "url":"www",
+            "hasPage":true,
+            "lastCycleVotes":84350,
+            "realTimeVotes":2240028,
+            "changeVotes":2155678,
+            "votesPercentage":0.001074783688738554,
+            "change_cycle":56,//前端页面拿该值显示变化位数
+            "change_day":56
+        }
     "data":[
         {
             "address":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",//地址
@@ -29,7 +34,7 @@ output:json
             "lastCycleVotes":510451563,//上一轮投票数
             "realTimeVotes":508640696,//实时投票数
             "changeVotes":-1810867,//变化票数
-            "votesPercentage":0.06500254923121276,//投票占比
+            "votesPercentage":6.500254923121276,//投票占比
             "change_cycle":1,//6小时票数排位变化
             "change_day":1 //12小时票数排位变化
         },
@@ -41,7 +46,7 @@ output:json
             "lastCycleVotes":466345134,
             "realTimeVotes":463860453,
             "changeVotes":-2484681,
-            "votesPercentage":0.059385894233360416,
+            "votesPercentage":5.9385894233360416,
             "change_cycle":0,
             "change_day":0
         },...
@@ -49,6 +54,34 @@ output:json
 }
 ```
 
+## 查询节点投票信息
+- url:/api/vote/witness/:address
+- method:get
+
+input:param
+```param
+eg:
+http://18.216.57.65:20110/api/vote/witness/TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp
+```
+output:json
+```json
+      
+{
+    "success":true,
+    "data":{
+        "address":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",
+        "name":"Sesameseed",
+        "url":"https://www.sesameseed.org",
+        "hasPage":true,
+        "lastCycleVotes":505712168,
+        "realTimeVotes":506759341,
+        "changeVotes":1047173,
+        "votesPercentage":0.06443760395530662,
+        "change_cycle":0,
+        "change_day":0
+    }
+}
+```
 
 ## 查询投票信息
 - url:/api/vote

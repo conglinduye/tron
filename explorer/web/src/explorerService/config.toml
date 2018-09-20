@@ -20,6 +20,10 @@ tokenTemplate = "/data/images/tokenTemplate/"
 imgURL        = "http://coin.top/tokenLogo"
 tokenTemplateFile = "http://coin.top/tokenTemplate/TronscanTokenInformationSubmissionTemplate.xlsx"
 
+[common]
+httpWebKey="WoiYeI5brZy4S8wQfVz7M5BczMkIhnugYW5QIibNgnWsAsktgHn5"
+netType="mainnet"
+
 [Redis]
 host = "127.0.0.1:6379"
 pass = ""

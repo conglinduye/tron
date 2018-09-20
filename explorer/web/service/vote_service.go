@@ -11,8 +11,14 @@ import (
 	"github.com/wlcy/tron/explorer/web/module"
 	"github.com/wlcy/tron/explorer/lib/util"
 	"sort"
+	"encoding/json"
+	"github.com/wlcy/tron/explorer/lib/config"
+	"gopkg.in/redis.v4"
 )
 
+
+const lately_cycle_vote_witness_ranking_key ="lately.cycle.vote.witness.ranking.key"
+const lately_day_vote_witness_ranking_key ="lately.day.vote.witness.ranking.key"
 
 //QueryVoteLiveBuffer 从buffer中获取实时投票数据
 func QueryVoteLiveBuffer() (*entity.VoteLiveInfo, error) {
@@ -185,9 +191,10 @@ func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
 func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, error) {
 	var filterSQL, sortSQL, pageSQL string
 	strSQL := fmt.Sprintf(`
-		select witt.address,witt.vote_count, witt.url,acc.account_name
+		select witt.address,witt.vote_count, srac.github_link,acc.account_name
 		from witness witt
 		left join tron_account acc on acc.address=witt.address
+		left join wlcy_sr_account srac on acc.address=srac.address
 		where 1=1 `)
 
 	if req.Address != "" {
@@ -195,7 +202,7 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 	}
 	sortSQL = "order by witt.vote_count desc"
 
-	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+	//pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
 	voteWitnessResp, err := module.QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL)
 	if err != nil {
@@ -216,11 +223,25 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 			voteWitness.HasPage = true
 		}
 		if totalVotes != 0 {
-			voteWitness.VotesPercentage = float64(voteWitness.RealTimeVotes) / float64(totalVotes)
+			voteWitness.VotesPercentage = float64(voteWitness.LastCycleVotes) / float64(totalVotes) * 100
 		}
 	}
 
 	sort.SliceStable(voteWitnessList, func(i, j int) bool { return voteWitnessList[i].RealTimeVotes > voteWitnessList[j].RealTimeVotes })
+
+	// getVoteWitnessRankingChange
+	getVoteWitnessRankingChange(voteWitnessList)
+
+	sortList := make([]*entity.VoteWitness, 0, len(voteWitnessList))
+	for index := range voteWitnessList {
+		voteWitness := voteWitnessList[index]
+		sortList = append(sortList, voteWitness)
+	}
+
+	if len(sortList) > 0 {
+		sort.SliceStable(sortList, func(i, j int) bool { return sortList[i].ChangeCycle > sortList[j].ChangeCycle })
+		voteWitnessResp.FastestRise = *sortList[0]
+	}
 
 	return voteWitnessResp, nil
 }
@@ -232,3 +253,146 @@ func queryRealTimeVoteWitnessTotal(toAddress string) int64 {
 	return realTimeVotes
 }
 
+// getVoteWitnessRankingChange
+func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
+	var latelyDayVoteWitnessRankingValue, latelyCycleVoteWitnessRankingValue string
+	var err error
+	latelyDayVoteWitnessRankingValue, err = config.RedisCli.Get(lately_day_vote_witness_ranking_key).Result()
+	if err == redis.Nil {
+		SyncVoteWitnessRanking()
+		latelyDayVoteWitnessRankingValue, _ = config.RedisCli.Get(lately_day_vote_witness_ranking_key).Result()
+	} else if err != nil {
+		log.Errorf("getVoteWitnessRankingChange redis get latelyDayVoteWitnessRankingValue error :[%v]\n", err)
+		return
+	}
+
+	latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+
+	latelyDayVoteWitnessRankingList := make([]*entity.VoteWitnessRanking, 0)
+	err = json.Unmarshal([]byte(latelyDayVoteWitnessRankingValue), &latelyDayVoteWitnessRankingList)
+	if err != nil {
+		log.Errorf("getVoteWitnessRankingChange json.Unmarshal latelyDayVoteWitnessRankingList error :[%v]\n", err)
+		return
+	}
+
+	latelyCycleVoteWitnessRankingList := make([]*entity.VoteWitnessRanking, 0)
+	err = json.Unmarshal([]byte(latelyCycleVoteWitnessRankingValue), &latelyCycleVoteWitnessRankingList)
+	if err != nil {
+		log.Errorf("getVoteWitnessRankingChange json.Unmarshal latelyCycleVoteWitnessRankingList error :[%v]\n", err)
+		return
+	}
+
+	for index := range voteWitnessList {
+		voteWitness := voteWitnessList[index]
+		changeCycle :=  getChangeRanking(voteWitness.Address, int32(index + 1), latelyCycleVoteWitnessRankingList)
+		voteWitness.ChangeCycle = changeCycle
+		changeDay := getChangeRanking(voteWitness.Address, int32(index + 1), latelyDayVoteWitnessRankingList)
+		voteWitness.ChangeDay = changeDay
+	}
+
+}
+
+//
+func  getChangeRanking(address string, currentRanking int32, voteWitnessRankingList []*entity.VoteWitnessRanking) int32 {
+	for index := range voteWitnessRankingList {
+		voteWitnessRanking := voteWitnessRankingList[index]
+		if voteWitnessRanking.Address == address {
+			return voteWitnessRanking.Ranking - currentRanking
+		}
+	}
+	return 0
+}
+
+
+//syncLatelyCycleVoteWitnessRanking
+func syncLatelyCycleVoteWitnessRanking() {
+	strSQL := fmt.Sprintf(`select address, vote_count from witness order by vote_count desc `)
+
+	voteWitnessRankingList, err := module.QueryVoteWitnessRanking(strSQL)
+
+	if err != nil {
+		log.Errorf("syncLatelyCycleVoteWitnessRanking strSQL:%v, err:[%v]",strSQL,  err)
+		return
+	}
+
+	for index := range voteWitnessRankingList {
+		voteWitnessRankingList[index].Ranking = int32(index+1)
+	}
+
+	value, err := json.Marshal(voteWitnessRankingList)
+	if err != nil {
+		log.Errorf("syncLatelyCycleVoteWitnessRanking json.Marshal err:[%v]", err)
+		return
+	}
+
+	err = config.RedisCli.Set(lately_cycle_vote_witness_ranking_key, string(value), 0).Err()
+	if err != nil {
+		log.Errorf("syncLatelyCycleVoteWitnessRanking set lately_cycle_vote_witness_ranking_key err:[%v]", err)
+	}
+}
+
+// SyncVoteWitnessRanking
+func SyncVoteWitnessRanking() {
+	var latelyDayVoteWitnessRankingValue, latelyCycleVoteWitnessRankingValue string
+	var err error
+	latelyDayVoteWitnessRankingValue, err = config.RedisCli.Get(lately_day_vote_witness_ranking_key).Result()
+	if err == redis.Nil {
+		latelyCycleVoteWitnessRankingValue, err = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+		if err == redis.Nil {
+			syncLatelyCycleVoteWitnessRanking()
+			latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+		} else if err != nil  {
+			log.Errorf("syncVoteWitnessRanking redis get latelyCycleVoteWitnessRankingValue error :[%v]\n", err)
+			return
+		}
+
+		latelyDayVoteWitnessRankingValue = latelyCycleVoteWitnessRankingValue
+
+	} else if err != nil {
+		log.Errorf("syncVoteWitnessRanking redis get latelyDayVoteWitnessRankingValue error :[%v]\n", err)
+		return
+	}
+
+	latelyCycleVoteWitnessRankingValue, err = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+	if err == redis.Nil {
+		syncLatelyCycleVoteWitnessRanking()
+		latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+	} else if err != nil {
+		log.Errorf("syncVoteWitnessRanking redis get latelyCycleVoteWitnessRankingValue error :[%v]\n", err)
+		return
+	}
+
+	latelyDayVoteWitnessRankingValue = latelyCycleVoteWitnessRankingValue
+
+	err = config.RedisCli.Set(lately_day_vote_witness_ranking_key, string(latelyDayVoteWitnessRankingValue), 0).Err()
+	if err != nil {
+		log.Errorf("syncVoteWitnessRanking set lately_day_vote_witness_ranking_key err:[%v]", err)
+	}
+	syncLatelyCycleVoteWitnessRanking()
+
+}
+
+// QueryVoteWitnessDetail
+func QueryVoteWitnessDetail(address string) (*entity.VoteWitnessDetail, error) {
+	voteWitnessDetail := &entity.VoteWitnessDetail{}
+	voteWitness := &entity.VoteWitness{}
+	req := &entity.VoteWitnessReq{}
+	req.Address = address
+	voteWitnessResp, err := QueryVoteWitness(req)
+	if err != nil {
+		log.Errorf("QueryVoteWitnessDetail error :[%v]\n", err)
+		voteWitnessDetail.Success = false
+		voteWitnessDetail.Data = voteWitness
+		return voteWitnessDetail, err
+	}
+
+	voteWitnessDetail.Success = true
+	if len(voteWitnessResp.Data) != 0 {
+		voteWitness = voteWitnessResp.Data[0]
+		voteWitnessDetail.Data = voteWitness
+	} else {
+		voteWitnessDetail.Success = false
+	}
+	return voteWitnessDetail, nil
+
+}

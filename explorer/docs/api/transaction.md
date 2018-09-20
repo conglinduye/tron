@@ -81,7 +81,7 @@ output:json
 }
 ```
 
-## 创建交易-TODO
+## 创建交易
 - url:/api/transaction
 - method:POST
 
@@ -104,15 +104,16 @@ output:json
             {
                 "contractType":"TransferContract",
                 "contractTypeId":1,
-                "from":"TWsm8HtU2A5eEzoT8ev8yaoFjHsXLLrckb",
-                "to":"TP9cjznZ4rGL3Hav7d8zPg6HX6cXdWecMc",
+                "owner_address":"TWsm8HtU2A5eEzoT8ev8yaoFjHsXLLrckb",
+                "to_address":"TP9cjznZ4rGL3Hav7d8zPg6HX6cXdWecMc",
                 "amount":1000000
             }
         ],
         "data":"HAHA",
         "signatures":[
             {
-                "bytes":"G4OiOc2LGjmYtW30VmfiMLa+0TwQiJvtRW9AcW3FVY9YcV3R4x3fV0Gcb9X0hkxb2JleIDBsRGCfo8TtVW2m3OY=",
+                //"bytes":"G4OiOc2LGjmYtW30VmfiMLa+0TwQiJvtRW9AcW3FVY9YcV3R4x3fV0Gcb9X0hkxb2JleIDBsRGCfo8TtVW2m3OY=",
+                "bytes":"g6I5zYsaOZi1bfRWZ+Iwtr7RPBCIm+1Fb0BxbcVVj1hxXdHjHd9XQZxv1fSGTFvYmV4gMGxEYJ+jxO1Vbabc5gA=",
                 "address":"TWsm8HtU2A5eEzoT8ev8yaoFjHsXLLrckb"
             }
         ]

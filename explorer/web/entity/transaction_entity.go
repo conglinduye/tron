@@ -41,3 +41,38 @@ type TransactionInfo struct {
 type PostTransaction struct {
 	Transaction string `json:"transaction"` // 总记录数
 }
+
+//PostTransactionResp  创建交易返回数据
+type PostTransactionResp struct {
+	Success     bool           `json:"success"`     //:true,
+	Code        string         `json:"code"`        //:"SUCCESS",
+	Message     string         `json:"message"`     //:"",
+	Transaction *PostTransData `json:"transaction"` //:{
+}
+
+//PostTransData ...
+type PostTransData struct {
+	Hash       string        `json:"hash"`       //:"0afa11cbfa9b4707b1308addc48ea31201157a989db92fe75750c068f0cc14e0",
+	Timestamp  int64         `json:"timestamp"`  //:0,
+	Contracts  interface{}   `json:"contracts"`  //
+	Data       string        `json:"data"`       //:"HAHA",
+	Signatures []*Signatures `json:"signatures"` //
+}
+
+//TransContract ...
+type TransContract struct {
+	ContractType   string `json:"contractType"`   //:"TransferContract",
+	ContractTypeID int64  `json:"contractTypeId"` //:1,
+	From           string `json:"owner_address"`  //:"TWsm8HtU2A5eEzoT8ev8yaoFjHsXLLrckb",
+	To             string `json:"to_address"`     //:"TP9cjznZ4rGL3Hav7d8zPg6HX6cXdWecMc",
+	Amount         int64  `json:"amount"`         //:1000000
+}
+
+//Signatures ...
+type Signatures struct {
+	Bytes   string `json:"bytes"`   //:"G4OiOc2LGjmYtW30VmfiMLa+0TwQiJvtRW9AcW3FVY9YcV3R4x3fV0Gcb9X0hkxb2JleIDBsRGCfo8TtVW2m3OY=",
+	Bytes1  string `json:"bytes1"`  //
+	Bytes2  string `json:"bytes2"`  //
+	Bytes3  string `json:"bytes3"`  //
+	Address string `json:"address"` //:"TWsm8HtU2A5eEzoT8ev8yaoFjHsXLLrckb"
+}

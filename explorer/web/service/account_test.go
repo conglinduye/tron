@@ -36,7 +36,7 @@ func TestQueryAccount(t *testing.T) {
 	req.Limit = "5"
 	req.Start = "0"
 	*/
-	req.Address = "T9yDddzXNFeQyn3Eam1QcVzm85ekYaUkKz"
+	req.Address = "TSNbzxac4WhxN91XvaUfPTKP2jNT18mP6T"
 
 	resp, err := QueryAccount(req)
 	if err != nil {
@@ -76,7 +76,7 @@ func TestUpdateAccountSr(t *testing.T) {
 	req.Address = "2287351"
 	req.GithubLink = "testurl1"
 
-	resp, err := UpdateAccountSr(req)
+	resp, err := UpdateAccountSr(req, "token")
 	if err != nil {
 		log.Error(err)
 	}
@@ -101,4 +101,17 @@ func TestQueryAccountSr(t *testing.T) {
 	ss, _ := mysql.JSONObjectToString(resp)
 	log.Printf("total:%v", ss)
 
+}
+
+func TestGenWebToken(t *testing.T) {
+	address := "RTFGHJK6GCVHHByui765CVBCVBVB"
+	ss, err := GenWebToken(address)
+	log.Printf("%v-%v", ss, err) //eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiUlRGR0hKSzZHQ1ZISEJ5dWk3NjVDVkJDVkJWQiJ9.zCZU-28PsQJ_GwLsZdBbGcT6ZrsTQmXsTpUDltdnfiM
+}
+
+func TestVerifyWebToken(t *testing.T) {
+	address := "RTFGHJK6GCVHHByui765CVBCVBVB"
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiUlRGR0hKSzZHQ1ZISEJ5dWk3NjVDVkJDVkJWQiJ9.zCZU-28PsQJ_GwLsZdBbGcT6ZrsTQmXsTpUDltdnfiM"
+	tt := VerifyWebToken(address, token)
+	log.Printf("%v", tt) //true
 }

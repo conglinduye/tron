@@ -44,6 +44,7 @@ func main() {
 	buffer.GetMarketBuffer()
 	buffer.GetVoteBuffer()
 	buffer.GetAccountTokenBuffer()
+	buffer.GetTokenBuffer()
 
 
 
@@ -58,6 +59,10 @@ func main() {
 	go task.SyncPersistYesterdayReport()
 
 	go task.SyncAssetIssueParticipated()
+
+	go task.SyncVoteWitnessRanking()
+
+
 
 	router.Start(conf.Address, conf.Objectpool)
 

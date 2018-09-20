@@ -51,3 +51,8 @@ type Auth struct {
 type AuthResp struct {
 	Token string `json:"token"` //:99.99
 }
+
+//Address 地址签名结构
+type Address struct {
+	Address string `json:"address"` //
+}

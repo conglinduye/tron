@@ -1,5 +1,7 @@
 package entity
 
+import jwt "github.com/dgrijalva/jwt-go"
+
 //Accounts 查询账户列表的请求参数
 type Accounts struct {
 	Sort    string `json:"sort,omitempty"`    // 按照区块高度倒序
@@ -110,4 +112,10 @@ type AccountTransactionNum struct {
 	Transactions    int64 `json:"transactions"`     //:: "827",
 	TransactionsOut int64 `json:"transactions_out"` //:: "230",
 	TransactionIn   int64 `json:"transactions_in"`  //:: "597"
+}
+
+//WebTokenClaims jwt校验
+type WebTokenClaims struct {
+	Address string `json:"address"`
+	jwt.StandardClaims
 }

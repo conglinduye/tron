@@ -290,7 +290,7 @@ output:json
 }
 ```
 
-## 验签-TODO
+## 验签
 - url:/api/auth
 - method:POST
 
@@ -307,7 +307,7 @@ output:json
 }
 ```
 返回的key用途：
-调用【修改超级代表github信息】接口时，将key设置请求头中，用于修改前的校验
+调用【修改超级代表github信息】接口时，将key设置请求头【X-Keys】中，用于修改前的校验
 
 
 ## 修改超级代表github信息
