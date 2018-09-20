@@ -191,7 +191,7 @@ func PostTransaction(req *entity.PostTransaction, dryRun string) (*entity.PostTr
 		log.Errorf("pb unmarshal err:[%v];hexData:[%v]", err, tranHexData)
 		return postResult, err
 	}
-	if dryRun == "1" {
+	if dryRun != "1" {
 		//向主网发布广播
 		client := grpcclient.GetRandomWallet()
 		result, err := client.BroadcastTransaction(transaction)

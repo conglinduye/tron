@@ -32,7 +32,7 @@ func (w *Wallet) CreateTransaction2() (*api.TransactionExtention, error) {
 
 // BroadcastTransaction ...
 func (w *Wallet) BroadcastTransaction(trx *core.Transaction) (*api.Return, error) {
-	ctx, cancel := getTimeoutContext(defaultTimeout)
+	ctx, cancel := getTimeoutContext(1000000000000)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 
