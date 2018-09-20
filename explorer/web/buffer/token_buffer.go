@@ -39,7 +39,7 @@ func tokenInfoBufferLoader() {
 	for {
 		_tokenBuffer.loadCommonQueryTokens()
 		_tokenBuffer.loadIcoQueryTokens()
-		time.Sleep(35 * time.Second)
+		time.Sleep(50 * time.Second)
 	}
 }
 
