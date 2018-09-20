@@ -37,6 +37,24 @@ func QueryIcoTokensBuffer(req *entity.Token) (*entity.TokenResp, error) {
 
 }
 
+// QueryTokensDetail
+func QueryTokensDetail(address, name string) ([]*entity.TokenInfo, int64) {
+	newTokenInfoList := make([]*entity.TokenInfo, 0)
+	tokenInfo := &entity.TokenInfo{}
+	tokenBuffer := buffer.GetTokenBuffer()
+	tokenInfoList := tokenBuffer.GetTokensDetail()
+	for _, temp := range tokenInfoList {
+		if temp.OwnerAddress == address && temp.Name == name {
+			tokenInfo = temp
+			tokenInfo.Index = 1
+			newTokenInfoList = append(newTokenInfoList, tokenInfo)
+			break
+		}
+	}
+	total := len(tokenInfoList)
+	return newTokenInfoList, int64(total)
+}
+
 //QueryTokens
 func QueryTokens(req *entity.Token) (*entity.TokenResp, error) {
 	var filterSQL, sortSQL string
