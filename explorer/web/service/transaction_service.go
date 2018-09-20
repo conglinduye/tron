@@ -177,7 +177,7 @@ func QueryTransaction(req *entity.Transactions) (*entity.TransactionInfo, error)
 }
 
 //PostTransaction 创建交易
-func PostTransaction(req *entity.PostTransaction) (*entity.PostTransactionResp, error) {
+func PostTransaction(req *entity.PostTransaction, dryRun string) (*entity.PostTransactionResp, error) {
 	postResult := &entity.PostTransactionResp{}
 	if req.Transaction == "" {
 		log.Errorf("no transaction received")
@@ -191,17 +191,20 @@ func PostTransaction(req *entity.PostTransaction) (*entity.PostTransactionResp, 
 		log.Errorf("pb unmarshal err:[%v];hexData:[%v]", err, tranHexData)
 		return postResult, err
 	}
-	//向主网发布广播
-	client := grpcclient.GetRandomWallet()
-	result, err := client.BroadcastTransaction(transaction)
-	if err != nil {
-		log.Errorf("call broadcastTransaction err[%v],transaction:[%#v]", err, transaction)
-		return postResult, err
+	if dryRun == "1" {
+		//向主网发布广播
+		client := grpcclient.GetRandomWallet()
+		result, err := client.BroadcastTransaction(transaction)
+		if err != nil {
+			log.Errorf("call broadcastTransaction err[%v],transaction:[%#v]", err, transaction)
+			return postResult, err
+		}
+		//解析主网接口返回
+		postResult.Code = result.Code.String()
+		postResult.Message = string(result.Message)
+		postResult.Success = result.Result
 	}
-	//解析主网接口返回
-	postResult.Code = result.Code.String()
-	postResult.Message = string(result.Message)
-	postResult.Success = result.Result
+
 	//计算前端需要的信息
 	postData := &entity.PostTransData{}
 	postData.Hash = utils.HexEncode(utils.CalcTransactionHash(transaction))

@@ -103,7 +103,7 @@ func querytokenBalanceInfo(address string) (map[string]int64, error) {
 }
 
 //QueryAccountRealize 操作数据库
-func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error) {
+func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDetail, error) {
 	strFullSQL := strSQL + " " + filterSQL
 	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
@@ -129,7 +129,7 @@ func QueryAccountRealize(strSQL, filterSQL string) (*entity.AccountDetail, error
 	var account = &entity.AccountDetail{
 		Representative: represent,
 		Name:           "",
-		Address:        "",
+		Address:        address,
 		Bandwidth:      bandwidth,
 		Balances:       balances,
 		Balance:        0,

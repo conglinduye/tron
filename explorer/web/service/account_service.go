@@ -132,7 +132,7 @@ func QueryAccount(req *entity.Accounts) (*entity.AccountDetail, error) {
 	if req.Address != "" {
 		filterSQL = fmt.Sprintf(" and (acc.address='%v' or acc.account_name='%v')", req.Address, req.Address)
 	}
-	return module.QueryAccountRealize(strSQL, filterSQL)
+	return module.QueryAccountRealize(strSQL, filterSQL, req.Address)
 }
 
 //QueryAccountMedia 查询账户媒体信息 	//number=2135998
