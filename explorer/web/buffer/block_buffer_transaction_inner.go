@@ -445,7 +445,11 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 
 	retList := b.loadTransactionFromDB(filter, order, limit)
 	// b.storeTrxDescListToRedis(retList, true)
-	redisList = append(redisList, retList[0:count]...)
+	if len(retList) > int(count) {
+		redisList = append(redisList, retList[0:count]...)
+	} else {
+		redisList = append(redisList, retList...)
+	}
 	log.Debugf("get trx db(offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
 
 	return redisList

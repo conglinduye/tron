@@ -8,6 +8,7 @@ import (
 
 	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 )
@@ -133,9 +134,15 @@ func (b *blockBuffer) getRestTranRedis(blockID int64, offset, count int64) []*en
 	}
 	limit = fmt.Sprintf("limit %v, %v", offset, count)
 
-	retList := b.loadTransferFromDB(filter, limit)
+	filter, order, limit := b.getTransactionIndexOffset(offset+int64(len(redisList))+int64(len(b.trxList)), count)
+
+	retList := b.loadTransferFromDB(filter, order, limit)
 	// b.storeTranDescListToRedis(retList, true)
-	redisList = append(redisList, retList[0:count]...)
+	if len(retList) > int(count) {
+		redisList = append(redisList, retList[0:count]...)
+	} else {
+		redisList = append(redisList, retList...)
+	}
 	log.Debugf("get tran (offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
 
 	return redisList
@@ -191,7 +198,7 @@ func (b *blockBuffer) getTranDescListFromRedis(offset, count int64) (ret []*enti
 	return ret
 }
 
-func (b *blockBuffer) loadTransferFromDB(filter string, limit string) []*entity.TransferInfo {
+func (b *blockBuffer) loadTransferFromDB(filter string, order string, limit string) []*entity.TransferInfo {
 	strSQL := fmt.Sprintf(`
 		select block_id,owner_address,to_address,amount,
 		asset_name,trx_hash,
@@ -199,7 +206,10 @@ func (b *blockBuffer) loadTransferFromDB(filter string, limit string) []*entity.
 		from tron.contract_transfer
 		where 1=1  `)
 
-	ret, err := module.QueryTransfersRealize(strSQL, filter, "order by block_id desc", limit, "")
+	if len(order) == 0 {
+		order = "order by block_id desc"
+	}
+	ret, err := module.QueryTransfersRealize(strSQL, filter, order, limit, "")
 	if nil != err || nil == ret && 0 == len(ret.Data) {
 		log.Debugf("query trx failed:%v\n", err)
 		return nil
@@ -207,4 +217,63 @@ func (b *blockBuffer) loadTransferFromDB(filter string, limit string) []*entity.
 
 	sort.SliceStable(ret.Data, func(i, j int) bool { return ret.Data[i].Block > ret.Data[i].Block })
 	return ret.Data
+}
+
+func (b *blockBuffer) getTransferIndexOffset(offset, count int64) (filter string, order string, limit string) {
+	order = " order by block_id asc "
+	limit = fmt.Sprintf("limit %v, %v", 0, count)
+
+	index := b.tranIndex.GetIndex()
+	totalTrn := b.tranIndex.GetTotal()
+	step := b.tranIndex.GetStep()
+
+	if offset >= totalTrn {
+		fmt.Printf("invalid offset:%v, total count:%v, index range:[0, %v]\n", offset, totalTrn, totalTrn-1)
+		return
+	}
+
+	ascOffset := totalTrn - offset - 1
+	ascOffsetIdx := ascOffset / step
+	ascInnerOffsetIdx := ascOffset % step
+
+	if ascOffsetIdx >= int64(len(index)) {
+		fmt.Printf("invalid offset:%v, err index:%v\n", offset, ascOffset)
+		return "", "", ""
+	}
+
+	fmt.Printf("offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
+
+	idx := index[ascOffsetIdx]
+	filter = fmt.Sprintf(" and block_id >= '%v'", idx.BlockID)
+	limit = fmt.Sprintf(" limit %v, %v", idx.Offset+ascInnerOffsetIdx, count)
+	return
+}
+
+func (b *blockBuffer) loadTransferIndex() {
+
+	sqlStr := "select start_pos, block_id, inner_offset, total_record from contract_transfer_index order by start_pos"
+
+	rows, err := mysql.QueryTableData(sqlStr)
+	if nil != err {
+		log.Errorf("load contract_transfer_index failed:%v\n", err)
+		return
+	}
+
+	index := make([]*indexPos, 0, 10000)
+	for rows.NextT() {
+		idx := new(indexPos)
+		idx.Position = mysql.ConvertStringToInt64(rows.GetField("start_pos"), 0)
+		idx.BlockID = mysql.ConvertStringToInt64(rows.GetField("block_id"), 0)
+		idx.Offset = mysql.ConvertStringToInt64(rows.GetField("inner_offset"), 0)
+		idx.Count = mysql.ConvertStringToInt64(rows.GetField("total_record"), 0)
+		index = append(index, idx)
+	}
+
+	if len(index) > 1 {
+		b.tranIndex.Lock()
+		b.tranIndex.total = index[0].Count
+		b.tranIndex.index = index
+		b.tranIndex.step = index[1].Count
+		b.tranIndex.Unlock()
+	}
 }

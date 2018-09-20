@@ -59,7 +59,8 @@ type blockBuffer struct {
 	transferCount    int64 //total transaction record
 
 	// index
-	trxIndex dbIndex
+	trxIndex  dbIndex
+	tranIndex dbIndex
 }
 
 func (b *blockBuffer) getSolidityNodeMaxBlockID() bool {
@@ -258,6 +259,22 @@ func (b *blockBuffer) readBuffer(numStart int64, numEnd int64) []*entity.BlockIn
 }
 
 func (b *blockBuffer) backgroundWorker() {
+	go b.backgroundLoader()
+	go b.backgroundIndexLoader()
+
+}
+
+func (b *blockBuffer) backgroundIndexLoader() {
+	minInterval := time.Duration(30) * time.Second
+	for {
+		b.loadTransactionIndex()
+		b.loadTransferIndex()
+
+		time.Sleep(minInterval)
+	}
+}
+
+func (b *blockBuffer) backgroundLoader() {
 	minInterval := time.Duration(10) * time.Second
 	for {
 		ts := time.Now()
