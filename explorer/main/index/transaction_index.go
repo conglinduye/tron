@@ -242,6 +242,7 @@ func updateIndex(index []*TrxIndex, tableName string) ([]*TrxIndex, bool) {
 		fmt.Printf("Create db txn failed:%v\n", txn)
 		return index, false
 	}
+	defer txn.Commit()
 
 	row := txn.QueryRow(fmt.Sprintf("select count(*) from %v", tableName))
 
@@ -400,6 +401,7 @@ func storeIdxToDB(index []*TrxIndex, tableName string) {
 	if nil != err {
 		return
 	}
+	defer txn.Commit()
 
 	strSQL1 := fmt.Sprintf("insert into %v_index (start_pos, block_id, inner_offset, total_record) values (?, ?, ?, ?)", tableName)
 
@@ -430,7 +432,4 @@ func storeIdxToDB(index []*TrxIndex, tableName string) {
 			fmt.Printf("insert %v_index %#v failed:%v\n", tableName, idx, err)
 		}
 	}
-
-	txn.Commit()
-
 }
