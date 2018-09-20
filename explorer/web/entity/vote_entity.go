@@ -97,9 +97,10 @@ type VoteWitnessReq struct {
 
 //VoteWitnessResp
 type VoteWitnessResp struct {
-	Total		int64								`json:"total"`
-	TotalVotes	int64								`json:"totalVotes"`
-	Data    	[]*VoteWitness						`json:"data"`
+	Total				int64					`json:"total"`
+	TotalVotes			int64					`json:"totalVotes"`
+	Data    			[]*VoteWitness			`json:"data"`
+	FastestRise			VoteWitness				`json:"fastestRise"`
 }
 
 //VoteWitness 节点投票信息
@@ -116,3 +117,15 @@ type VoteWitness struct {
 	ChangeDay   		int32  		`json:"change_day"`
 }
 
+// VoteWitnessRanking
+type VoteWitnessRanking struct {
+	Address     		string 		`json:"address"`
+	Ranking				int32		`json:ranking`
+}
+
+//VoteWitnessDetail
+type VoteWitnessDetail struct {
+	Success 				bool					`json:"success"`
+	Data 					*VoteWitness			`json:"data"`
+
+}

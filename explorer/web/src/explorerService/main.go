@@ -59,6 +59,10 @@ func main() {
 
 	go task.SyncAssetIssueParticipated()
 
+	go task.SyncVoteWitnessRanking()
+
+
+
 	router.Start(conf.Address, conf.Objectpool)
 
 }

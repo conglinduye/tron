@@ -71,15 +71,17 @@ func voteRegister(ginRouter *gin.Engine) {
 		req.Limit = c.Query("limit")
 		req.Address = c.Query("address")
 
-		if req.Start == "" || req.Limit == "" {
-			req.Start = "0"
-			req.Limit = "20"
-		}
 		resp, err := service.QueryVoteWitness(req)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
 		}
+		c.JSON(http.StatusOK, resp)
+	})
+
+	ginRouter.GET("/api/vote/witness/:address", func(c *gin.Context) {
+		address := c.Param("address")
+		resp, _ := service.QueryVoteWitnessDetail(address)
 		c.JSON(http.StatusOK, resp)
 	})
 

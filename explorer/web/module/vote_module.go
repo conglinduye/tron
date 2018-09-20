@@ -275,3 +275,27 @@ func QueryRealTimeVoteWitnessTotal(strSQL string) (int64) {
 	return realTimeVotes
 }
 
+// QueryVoteWitnessRanking
+func QueryVoteWitnessRanking(strSQL string) ([]*entity.VoteWitnessRanking, error) {
+	log.Info(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryVoteWitnessRanking error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryVoteWitnessRanking dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	voteWitnessRankingList := make([]*entity.VoteWitnessRanking, 0)
+
+	for dataPtr.NextT() {
+		var voteWitnessRanking = &entity.VoteWitnessRanking{}
+		voteWitnessRanking.Address = dataPtr.GetField("address")
+		voteWitnessRankingList = append(voteWitnessRankingList, voteWitnessRanking)
+	}
+
+	return voteWitnessRankingList, nil
+}
+
