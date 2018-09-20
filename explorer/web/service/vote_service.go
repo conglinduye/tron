@@ -389,6 +389,8 @@ func QueryVoteWitnessDetail(address string) (*entity.VoteWitnessDetail, error) {
 	if len(voteWitnessResp.Data) != 0 {
 		voteWitness = voteWitnessResp.Data[0]
 		voteWitnessDetail.Data = voteWitness
+	} else {
+		voteWitnessDetail.Success = false
 	}
 	return voteWitnessDetail, nil
 
