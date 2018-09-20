@@ -57,6 +57,9 @@ type blockBuffer struct {
 
 	transactionCount int64 //total transaction record
 	transferCount    int64 //total transaction record
+
+	// index
+	trxIndex dbIndex
 }
 
 func (b *blockBuffer) getSolidityNodeMaxBlockID() bool {

@@ -207,7 +207,7 @@ func (b *blockBuffer) cleanConfirmedTranBufferFromUncTranList() {
 }
 
 func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
-	data := b.loadTransactionFromDB(filter, limit)
+	data := b.loadTransactionFromDB(filter, "", limit)
 
 	sort.SliceStable(data, func(i, j int) bool { return data[i].Block > data[i].Block })
 	b.trxList = append(data, b.trxList...)
@@ -292,7 +292,7 @@ func (b *blockBuffer) getTransferFromTrx(trx *entity.TransactionInfo) *entity.Tr
 	return nil
 }
 
-func (b *blockBuffer) loadTransactionFromDB(filter string, limit string) []*entity.TransactionInfo {
+func (b *blockBuffer) loadTransactionFromDB(filter string, order string, limit string) []*entity.TransactionInfo {
 	strSQL := fmt.Sprintf(`
 			select block_id,owner_address,to_address,
 			trx_hash,contract_data,result_data,fee,
@@ -300,7 +300,10 @@ func (b *blockBuffer) loadTransactionFromDB(filter string, limit string) []*enti
 			from tron.transactions
 			where 1=1 `)
 
-	ret, err := module.QueryTransactionsRealize(strSQL, filter, "order by block_id desc", limit)
+	if len(order) == 0 {
+		order = "order by block_id desc"
+	}
+	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, limit)
 	if nil != err || nil == ret && 0 == len(ret.Data) {
 		log.Debugf("query trx failed:%v\n", err)
 		return nil
@@ -438,7 +441,9 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 	}
 	limit = fmt.Sprintf("limit %v, %v", offset, count) // load from db +100  record
 
-	retList := b.loadTransactionFromDB(filter, limit)
+	filter, order, limit := b.getTransactionIndexOffset(offset+int64(len(redisList))+int64(len(b.trxList)), count)
+
+	retList := b.loadTransactionFromDB(filter, order, limit)
 	// b.storeTrxDescListToRedis(retList, true)
 	redisList = append(redisList, retList[0:count]...)
 	log.Debugf("get trx db(offset:%v, count:%v), read db Len:%v\n", offset, count, len(retList))
@@ -509,5 +514,64 @@ func (b *blockBuffer) sweepTransactionRedisList() {
 		_redisCli.LTrim(TrxRedisDescListKey, 0, int64(b.maxConfirmedTrx)*2) // clean transaction redis
 
 		_redisCli.LTrim(TranRedisDescListKey, 0, int64(b.maxConfirmedTrx)*2) // clean transfer redis
+	}
+}
+
+func (b *blockBuffer) getTransactionIndexOffset(offset, count int64) (filter string, order string, limit string) {
+	order = " order by block_id asc "
+	limit = fmt.Sprintf("limit %v, %v", 0, count)
+
+	index := b.trxIndex.GetIndex()
+	totalTrn := b.trxIndex.GetTotal()
+	step := b.trxIndex.GetStep()
+
+	if offset >= totalTrn {
+		fmt.Printf("invalid offset:%v, total count:%v, index range:[0, %v]\n", offset, totalTrn, totalTrn-1)
+		return
+	}
+
+	ascOffset := totalTrn - offset - 1
+	ascOffsetIdx := ascOffset / step
+	ascInnerOffsetIdx := ascOffset % step
+
+	if ascOffsetIdx >= int64(len(index)) {
+		fmt.Printf("invalid offset:%v, err index:%v\n", offset, ascOffset)
+		return "", "", ""
+	}
+
+	fmt.Printf("offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
+
+	idx := index[ascOffsetIdx]
+	filter = fmt.Sprintf(" and block_id >= '%v'", idx.BlockID)
+	limit = fmt.Sprintf(" limit %v, %v", idx.Offset+ascInnerOffsetIdx, count)
+	return
+}
+
+func (b *blockBuffer) loadTransactionIndex() {
+
+	sqlStr := "select start_pos, block_id, inner_offset, total_record from transactions_index order by start_pos"
+
+	rows, err := mysql.QueryTableData(sqlStr)
+	if nil != err {
+		log.Errorf("load transactions_index failed:%v\n", err)
+		return
+	}
+
+	index := make([]*indexPos, 0, 10000)
+	for rows.NextT() {
+		idx := new(indexPos)
+		idx.Position = mysql.ConvertStringToInt64(rows.GetField("start_pos"), 0)
+		idx.BlockID = mysql.ConvertStringToInt64(rows.GetField("block_id"), 0)
+		idx.Offset = mysql.ConvertStringToInt64(rows.GetField("inner_offset"), 0)
+		idx.Count = mysql.ConvertStringToInt64(rows.GetField("total_record"), 0)
+		index = append(index, idx)
+	}
+
+	if len(index) > 1 {
+		b.trxIndex.Lock()
+		b.trxIndex.total = index[0].Count
+		b.trxIndex.index = index
+		b.trxIndex.step = index[1].Count
+		b.trxIndex.Unlock()
 	}
 }
