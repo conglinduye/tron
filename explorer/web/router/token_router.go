@@ -54,8 +54,8 @@ func tokenRegister(ginRouter *gin.Engine) {
 			c.JSON(errCode, err)
 			return
 		}
-		tokenInfos := tokenResp.Data
-		length := len(tokenInfos)
+		tokenInfoList := tokenResp.Data
+		length := len(tokenInfoList)
 		tokenResp.Total = int64(length)
 		start := mysql.ConvertStringToInt(tokenReq.Start, 0)
 		limit := mysql.ConvertStringToInt(tokenReq.Limit, 0)
@@ -63,9 +63,9 @@ func tokenRegister(ginRouter *gin.Engine) {
 			tokenResp.Data = make([]*entity.TokenInfo, 0)
 		} else {
 			if start + limit < length {
-				tokenResp.Data = tokenInfos[start:start+limit]
+				tokenResp.Data = tokenInfoList[start:start+limit]
 			} else {
-				tokenResp.Data = tokenInfos[start:length]
+				tokenResp.Data = tokenInfoList[start:length]
 			}
 		}
 		handleTokensIndex(tokenReq, tokenResp)
