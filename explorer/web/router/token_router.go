@@ -29,15 +29,25 @@ func tokenRegister(ginRouter *gin.Engine) {
 
 		tokenResp := &entity.TokenResp{}
 		var err error = nil
-		/*if tokenReq.Owner == "" && tokenReq.Name == "" && tokenReq.Status == "" {
+		if tokenReq.Owner == "" && tokenReq.Name == "" && tokenReq.Status == "" {
+			log.Info("service.QueryCommonTokensBuffer")
 			tokenResp, err = service.QueryCommonTokensBuffer(tokenReq)
 		} else if tokenReq.Status != "" && tokenReq.Status == "ico" {
+			log.Info("service.QueryIcoTokensBuffer")
 			tokenResp, err = service.QueryIcoTokensBuffer(tokenReq)
 		} else {
+			log.Info("service.QueryTokens")
 			tokenResp, err = service.QueryTokens(tokenReq)
-		}*/
+		}
 
-		tokenResp, err = service.QueryTokens(tokenReq)
+		if tokenReq.Owner != "" && tokenReq.Name != "" && !strings.HasPrefix(tokenReq.Name, "%") && !strings.HasSuffix(tokenReq.Name, "%") {
+			// QueryTotalTokenTransfers
+			totalTokenTransfers, _ := service.QueryTotalTokenTransfers(tokenReq.Name)
+			tokenResp.Data[0].TotalTransactions = totalTokenTransfers
+			// QueryTotalTokenHolders
+			totalTokenHolders, _ := service.QueryTotalTokenHolders(tokenReq.Name)
+			tokenResp.Data[0].NrOfTokenHolders = totalTokenHolders
+		}
 
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)

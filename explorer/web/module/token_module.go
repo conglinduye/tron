@@ -438,7 +438,7 @@ func QueryAssetCreateTime(ownerAddress, tokenName string) (int64, error) {
 	select c.create_time as createTime
 	from asset_issue a, contract_asset_issue b, blocks c
     where a.asset_name = b.asset_name and b.block_id = c.block_id 
-	and a.owner_address = '%v', a.asset_name = '%v'`, ownerAddress, tokenName)
+	and a.owner_address = '%v' and a.asset_name = '%v'`, ownerAddress, tokenName)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
