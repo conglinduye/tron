@@ -232,7 +232,10 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 	getVoteWitnessRankingChange(voteWitnessList)
 
 	sortList := make([]*entity.VoteWitness, 0, len(voteWitnessList))
-	sortList = voteWitnessList
+	for index := range voteWitnessList {
+		voteWitness := voteWitnessList[index]
+		sortList = append(sortList, voteWitness)
+	}
 
 	if len(sortList) > 0 {
 		sort.SliceStable(sortList, func(i, j int) bool { return sortList[i].ChangeCycle > sortList[j].ChangeCycle })
