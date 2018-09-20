@@ -52,6 +52,7 @@ func transactionRegister(ginRouter *gin.Engine) {
 	})
 
 	ginRouter.POST("/api/transaction", func(c *gin.Context) {
+		dryRun := c.Query("dry-run")
 		req := &entity.PostTransaction{}
 		if c.BindJSON(req) == nil {
 			if req == nil {
@@ -59,8 +60,8 @@ func transactionRegister(ginRouter *gin.Engine) {
 				c.JSON(http.StatusInternalServerError, http.ErrBodyNotAllowed)
 			}
 		}
-		log.Debugf("Hello /api/transaction")
-		resp, err := service.PostTransaction(req)
+		log.Debugf("Hello /api/transaction:dryRun:[%v]", dryRun)
+		resp, err := service.PostTransaction(req, dryRun)
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
