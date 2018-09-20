@@ -3,7 +3,7 @@
 - method:get
 
 input:param
-
+```param
 eg:
 http://18.216.57.65:20110/api/vote/witness
 ```
@@ -60,7 +60,6 @@ output:json
 
 input:param
 ```param
-
 eg:
 http://18.216.57.65:20110/api/vote/witness/TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp
 ```
