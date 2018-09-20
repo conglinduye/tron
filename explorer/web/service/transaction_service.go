@@ -1,10 +1,17 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/tronprotocol/grpc-gateway/core"
+	"github.com/wlcy/tron/explorer/core/grpcclient"
+	"github.com/wlcy/tron/explorer/core/utils"
+	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
+	"github.com/wlcy/tron/explorer/lib/util"
 
 	"github.com/wlcy/tron/explorer/web/buffer"
 
@@ -170,12 +177,74 @@ func QueryTransaction(req *entity.Transactions) (*entity.TransactionInfo, error)
 }
 
 //PostTransaction 创建交易
-/*func PostTransaction(req *entity.PostTransaction) (*entity.TransactionInfo, error) {
+func PostTransaction(req *entity.PostTransaction) (*entity.PostTransactionResp, error) {
+	postResult := &entity.PostTransactionResp{}
 	if req.Transaction == "" {
 		log.Errorf("no transaction received")
-		return nil, util.NewErrorMsg(util.Error_common_request_json_no_data)
+		return postResult, util.NewErrorMsg(util.Error_common_request_json_no_data)
+	}
+	//将请求转码为transaction结构
+	jsonData := req.Transaction
+	tranHexData := utils.HexDecode(jsonData)
+	transaction := &core.Transaction{}
+	if err := proto.Unmarshal(tranHexData, transaction); err != nil || transaction.RawData == nil {
+		log.Errorf("pb unmarshal err:[%v];hexData:[%v]", err, tranHexData)
+		return postResult, err
+	}
+	//向主网发布广播
+	client := grpcclient.GetRandomWallet()
+	result, err := client.BroadcastTransaction(transaction)
+	if err != nil {
+		log.Errorf("call broadcastTransaction err[%v],transaction:[%#v]", err, transaction)
+		return postResult, err
+	}
+	//解析主网接口返回
+	postResult.Code = result.Code.String()
+	postResult.Message = string(result.Message)
+	postResult.Success = result.Result
+	//计算前端需要的信息
+	postData := &entity.PostTransData{}
+	postData.Hash = utils.HexEncode(utils.CalcTransactionHash(transaction))
+	postData.Timestamp = transaction.RawData.Timestamp
+	contracts := make([]interface{}, 0)
+	contractNew := &entity.TransContract{}
+	for _, contractOri := range transaction.GetRawData().Contract {
+		if contractOri == nil {
+			continue
+		}
+		_, transferContract := utils.GetContractInfoStr2(1, contractOri.Parameter.Value)
+		if err := json.Unmarshal([]byte(transferContract), contractNew); err != nil {
+			log.Errorf("json unmarshal err:[%v];hexData:[%v]", err, transferContract)
+			contracts = append(contracts, transferContract)
+			//return postResult, err
+		} else {
+			contractNew.ContractType = "TransferContract"
+			contractNew.ContractTypeID = 1
+			contracts = append(contracts, contractNew)
+		}
+	}
+	postData.Contracts = contracts
+	postData.Data = string(transaction.RawData.Data)
+	signs := make([]*entity.Signatures, 0)
+
+	pubKey, _ := utils.GetSignedPublicKey(transaction)
+	address, err := utils.GetTronBase58Address(utils.HexEncode(pubKey))
+	if nil != err {
+		return postResult, err
+	}
+	for _, signOri := range transaction.Signature {
+		sign := &entity.Signatures{}
+		sign.Bytes = utils.Base64Encode(signOri)
+		//sign.Bytes1 = base64.RawStdEncoding.EncodeToString(signOri)
+		//sign.Bytes2 = base64.RawURLEncoding.EncodeToString(signOri)
+		//sign.Bytes3 = base64.StdEncoding.EncodeToString(signOri)
+		sign.Address = address
+		signs = append(signs, sign)
 	}
 
-	return module.QueryTransactionRealize(strSQL, filterSQL)
+	postData.Signatures = signs
+	postResult.Transaction = postData
+	ss, _ := mysql.JSONObjectToString(postResult)
+	log.Debugf("Post transaction result:[%v]", ss)
+	return postResult, nil
 }
-*/

@@ -4,6 +4,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/utils"
+	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/buffer"
@@ -14,7 +15,11 @@ import (
 func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 	var solidityProcess, fullnodeProcess float64
 	var systemStatusResp = &entity.SystemStatusResp{}
-	netType := &entity.Network{Type: "mainnet"} //暂时写死，用的都是主网数据
+	netConfig := config.NetType
+	if netConfig == "" {
+		netConfig = "mainnet"
+	}
+	netType := &entity.Network{Type: netConfig} //从配置文件中获取网络配置
 
 	blockBuffer := buffer.GetBlockBuffer()
 
@@ -69,15 +74,30 @@ func QueryAuth(req *entity.Auth) (*entity.AuthResp, error) {
 		log.Errorf("pb unmarshal err:[%v];hexData:[%v]", err, tranHexData)
 		return nil, err
 	}
-	tranSignByteString := transaction.Signature[0]
-	log.Debugf("tranSignByteString:[%v]", tranSignByteString)
-	tranSignBase64 := utils.Base64Encode(tranSignByteString)
-	log.Debugf("tranSignBase64:[%v]", tranSignBase64)
-
+	//获取rawHash
 	rawHash := utils.CalcTransactionHash(transaction)
 	log.Debugf("rawHash:[%v]", rawHash)
-	//utils.VerifySign
-
+	//计算地址
+	pubKey, _ := utils.GetSignedPublicKey(transaction)
+	signatureAddress, err := utils.GetTronBase58Address(utils.HexEncode(pubKey))
+	log.Debugf("signatureAddress:[%v]", signatureAddress)
+	if nil != err {
+		return nil, err
+	}
+	//解析transaction中的contract为witnessUpdateContract结构
+	witnessUpdateContract := &core.WitnessUpdateContract{}
+	contractData := transaction.RawData.Contract[0].Parameter.Value
+	if err := proto.Unmarshal(contractData, witnessUpdateContract); err != nil || witnessUpdateContract == nil {
+		log.Errorf("pb unmarshal to WitnessUpdateContract err:[%v];contractData:[%v]", err, contractData)
+		return nil, err
+	}
+	witnessOwnerAddress := utils.Base58EncodeAddr(witnessUpdateContract.OwnerAddress)
+	log.Debugf("witnessOwnerAddress:[%v],signatureAddress:[%v]", witnessOwnerAddress, signatureAddress)
+	if witnessOwnerAddress == signatureAddress { //验证通过，计算token
+		newToken, err := GenWebToken(signatureAddress)
+		log.Debugf("gen web newToken:[%v],err:[%v]", newToken, err)
+		return &entity.AuthResp{Token: newToken}, err
+	}
 	return nil, nil
 }
 

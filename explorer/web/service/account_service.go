@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/wlcy/tron/explorer/lib/config"
+
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/lib/util"
@@ -112,7 +115,7 @@ func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 	//return module.QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL)
 }
 
-//QueryAccount 精确查询  	//number=2135998   TODO  cache
+//QueryAccount 精确查询  	//number=2135998   添加数据库索引
 func QueryAccount(req *entity.Accounts) (*entity.AccountDetail, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
@@ -148,9 +151,13 @@ func QueryAccountMedia(req *entity.Accounts) (*entity.AccountMediaInfo, error) {
 }
 
 //UpdateAccountSr 更新超级账户github信息 	//number=2135998
-func UpdateAccountSr(req *entity.SuperAccountInfo) (*entity.SuperAccountInfo, error) {
+func UpdateAccountSr(req *entity.SuperAccountInfo, token string) (*entity.SuperAccountInfo, error) {
 	var id int64
 	var err error
+	if !VerifyWebToken(req.Address, token) {
+		log.Errorf("UpdateAccountSr verifyWebToken err. address:[%v],token:[%v]", req.Address, token)
+		return nil, util.NewErrorMsg(util.Error_user_token_invalid)
+	}
 	var srAccount = &entity.SuperAccountInfo{}
 	if module.CheckSrAccountExist(req.Address) { // 更新
 		id, err = module.UpdateSrAccount(req.Address, req.GithubLink)
@@ -195,4 +202,42 @@ func QueryAccountStats(address string) (*entity.AccountTransactionNum, error) {
 	 limit 0,1`, address, address, address)
 
 	return module.QueryAccountStatsRealize(strSQL)
+}
+
+//VerifyWebToken token验证
+func VerifyWebToken(address, token string) bool {
+
+	//校验token
+	key := config.HttpWebKey
+	if key == "" {
+		key = "WoiYeI5brZy4S8wQfVz7M5BczMkIhnugYW5QIibNgnWsAsktgHn5"
+	}
+	tokenRes, err := jwt.ParseWithClaims(token, &entity.WebTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(key), nil
+	})
+
+	if claims, ok := tokenRes.Claims.(*entity.WebTokenClaims); ok && tokenRes.Valid {
+		log.Debugf("%v", claims.Address)
+		if claims.Address == address {
+			return true
+		}
+	} else {
+		log.Debug(err)
+	}
+	return false
+}
+
+//GenWebToken 生成webtoken
+func GenWebToken(signatureAddress string) (string, error) {
+	key := config.HttpWebKey
+	if key == "" {
+		key = "WoiYeI5brZy4S8wQfVz7M5BczMkIhnugYW5QIibNgnWsAsktgHn5"
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &entity.WebTokenClaims{Address: signatureAddress})
+	newToken, err := token.SignedString([]byte(key))
+	if err != nil {
+		log.Errorf("create token error:[%v]", err)
+	}
+	log.Debugf("%v %v", newToken, err)
+	return newToken, err
 }

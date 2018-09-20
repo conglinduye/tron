@@ -28,6 +28,8 @@ var ImgURL string
 var Address string
 var TokenTemplateFile string
 
+var HttpWebKey, NetType string
+
 // LoadConfig read config from file and init dspFrontServer run environment variable
 //  call before Start pool.Server()
 // 	if return is not nil, should not start pool.Server()
@@ -50,6 +52,10 @@ func LoadConfig(confFile string) error {
 
 	if err = initToken(config); nil != err {
 		log.Errorf("get token config failed:[%v]!", err)
+		return err
+	}
+	if err = initCommon(config); nil != err {
+		log.Errorf("get common config failed:[%v]!", err)
 		return err
 	}
 
@@ -99,6 +105,16 @@ func initToken(config *toml.Tree) error {
 	ImgURL = config.GetDefault(fmt.Sprintf("%v.imgURL", NodeName), "http://coin.top/tokenLogo").(string)
 	TokenTemplateFile = config.GetDefault(fmt.Sprintf("%v.tokenTemplateFile", NodeName), "http://coin.top/tokenTemplate/TronscanTokenInformationSubmissionTemplate.xlsx").(string)
 	log.Printf("defaultPath:[%v], tokenTemplate:[%v],imgURL:[%v],tokenTemplateFile:[%v]", DefaultPath, TokenTemplate, ImgURL, TokenTemplateFile)
+
+	return nil
+}
+
+//initCommon 初始化common参数
+func initCommon(config *toml.Tree) error {
+	const NodeName = "common"
+	HttpWebKey = config.GetDefault(fmt.Sprintf("%v.httpWebKey", NodeName), "WoiYeI5brZy4S8wQfVz7M5BczMkIhnugYW5QIibNgnWsAsktgHn5").(string)
+	NetType = config.GetDefault(fmt.Sprintf("%v.netType", NodeName), "testnet").(string)
+	log.Printf("HttpWebKey:[%v], NetType:[%v]", HttpWebKey, NetType)
 
 	return nil
 }
