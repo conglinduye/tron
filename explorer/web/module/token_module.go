@@ -395,7 +395,7 @@ func QueryAssetBalances(req *entity.Token) (*entity.AssetBalanceResp, error) {
 	strSQL := fmt.Sprintf(` 
 	select address, asset_name, balance
 	from account_asset_balance 
-	where binary asset_name = '%v' order by balance desc `, req.Name)
+	where  asset_name = '%v' order by balance desc `, req.Name)
 	pageSQL := fmt.Sprintf(` limit %v, %v `, req.Start, req.Limit)
 	fullSQL := strSQL + pageSQL
 	log.Sql(fullSQL)
