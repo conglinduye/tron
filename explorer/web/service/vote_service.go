@@ -191,9 +191,10 @@ func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
 func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, error) {
 	var filterSQL, sortSQL, pageSQL string
 	strSQL := fmt.Sprintf(`
-		select witt.address,witt.vote_count, witt.url,acc.account_name
+		select witt.address,witt.vote_count, srac.github_link,acc.account_name
 		from witness witt
 		left join tron_account acc on acc.address=witt.address
+		left join wlcy_sr_account srac on acc.address=srac.address
 		where 1=1 `)
 
 	if req.Address != "" {
