@@ -186,7 +186,10 @@ func loadIdx() ([]*TrxIndex, error) {
 
 var totalTrn int64 = 1430347
 
-func searchIdxIF(index []*TrxIndex) {
+func searchIdxIF() {
+
+	index := getIndex()
+	index = updateIndex(index)
 
 	var offset, count int64
 	for {

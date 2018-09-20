@@ -3,11 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
 var gIndexFile = flag.String("index", "index.idx", "file store the index info")
 var gDSN = flag.String("dsn", "tron:tron@tcp(mine:3306)/tron", "msyql dsn")
-var gWork = flag.String("work", "update", "work need to do\n\tupdate: update current index\n\tsearch: gen search sql\n\ttest: run test")
+var gWork = flag.String("work", "update", "work need to do, could be:\n\tupdate: update current index\n\tsearch: gen search sql\n\ttest: run test\n\tdaemon: run as daemon until receive signal")
 
 func main() {
 	flag.Parse()
@@ -19,7 +24,7 @@ func main() {
 	case "update":
 		updateIndexIF()
 	case "search":
-		searchIdxIF(getIndex())
+		searchIdxIF()
 	case "test":
 		test()
 	case "daemon":
@@ -50,12 +55,55 @@ func test() {
 }
 
 func daemon() {
+	signalHandle()
 	index := getIndex()
-	for {
-		index = updateIndex(index)
-		storeIdxToDB(index)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ticker := time.NewTicker(30 * time.Second)
 
-		// time.Sleep(30 * time.Second)
-		return
+	updateLoop:
+		for {
+			index = updateIndex(index)
+			storeIdxToDB(index)
+
+			select {
+			case <-ticker.C:
+				continue
+			case <-quit:
+				break updateLoop
+			}
+		}
+		ticker.Stop()
+	}()
+
+	<-quit
+
+	fmt.Printf("Daemon Quit\n")
+	wg.Wait()
+}
+
+var quit = make(chan struct{}) // quit signal channel
+var wg sync.WaitGroup
+
+func signalHandle() {
+	sigs := make(chan os.Signal, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigs
+		if !needQuit() {
+			close(quit)
+		}
+	}()
+}
+
+func needQuit() bool {
+	select {
+	case <-quit:
+		return true
+	default:
+		return false
 	}
 }
