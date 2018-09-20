@@ -15,8 +15,9 @@ var onceTokenBuffer sync.Once
 
 type tokenBuffer struct {
 	sync.RWMutex
-	commonTokenResp *entity.TokenResp
-	icoTokenResp    *entity.TokenResp
+	commonTokenResp 		*entity.TokenResp
+	icoTokenResp    		*entity.TokenResp
+	tokenInfoDetailList		[]*entity.TokenInfo
 }
 
 func GetTokenBuffer() *tokenBuffer {
@@ -28,13 +29,24 @@ func getTokenBuffer() *tokenBuffer {
 		_tokenBuffer = &tokenBuffer{}
 		_tokenBuffer.loadCommonQueryTokens()
 		_tokenBuffer.loadIcoQueryTokens()
+		_tokenBuffer.loadQueryTokensDetail()
 
 		go tokenInfoBufferLoader()
+
+		go tokenInfoDetailBufferLoader()
 	})
 
 	return _tokenBuffer
 
 }
+
+func tokenInfoDetailBufferLoader() {
+	for {
+		_tokenBuffer.loadQueryTokensDetail()
+		time.Sleep(301 * time.Second)
+	}
+}
+
 func tokenInfoBufferLoader() {
 	for {
 		_tokenBuffer.loadCommonQueryTokens()
@@ -130,6 +142,60 @@ func (w *tokenBuffer) loadIcoQueryTokens() {
 	w.Unlock()
 
 }
+
+// GetTokensDetail
+func (w *tokenBuffer) GetTokensDetail() (tokenInfoList []*entity.TokenInfo) {
+	w.RLock()
+	if w.tokenInfoDetailList == nil {
+		log.Debugf("GetTokensDetail from buffer nil, data reload")
+		w.loadQueryTokensDetail()
+		log.Debugf("GetTokensDetail from buffer, buffer data updated ")
+	}
+	newTokenInfoList := make([]*entity.TokenInfo, 0, len(w.tokenInfoDetailList))
+	for _, tokenInfo := range w.tokenInfoDetailList {
+		newTokenInfo := new(entity.TokenInfo)
+		*newTokenInfo = *tokenInfo
+		newTokenInfoList = append(newTokenInfoList, newTokenInfo)
+	}
+	tokenInfoList = newTokenInfoList
+	w.RUnlock()
+	return
+}
+
+// loadQueryTokensDetail
+func (w *tokenBuffer) loadQueryTokensDetail() {
+	strSQL := fmt.Sprintf(`
+			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
+			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
+			from asset_issue
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople') 
+			order by participated desc `)
+
+	tokenResp, err := module.QueryTokensRealize(strSQL, "", "", "")
+	if err != nil {
+		log.Errorf("loadQueryTokensDetail list is nil or err:[%v]", err)
+	}
+	if len(tokenResp.Data) == 0 {
+		return
+	}
+	subHandle(tokenResp)
+
+	tokenInfoList := tokenResp.Data
+	for index := range tokenInfoList {
+		tokenInfo := tokenInfoList[index]
+		// QueryTotalTokenTransfers
+		totalTokenTransfers, _ := module.QueryTotalTokenTransfers(tokenInfo.Name)
+		tokenInfo.TotalTransactions = totalTokenTransfers
+		// QueryTotalTokenHolders
+		totalTokenHolders, _ := module.QueryTotalTokenHolders(tokenInfo.Name)
+		tokenInfo.NrOfTokenHolders = totalTokenHolders
+	}
+
+	w.Lock()
+	w.tokenInfoDetailList = tokenInfoList
+	w.Unlock()
+}
+
 
 // subHandle
 func subHandle(tokenResp *entity.TokenResp) {

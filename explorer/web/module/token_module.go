@@ -130,8 +130,8 @@ func QueryTotalTokenTransfers(tokenName string) (int64, error) {
 	strSQL := fmt.Sprintf(`
     select count(1) as totalTokenTransfers
 	from contract_asset_transfer
-	where binary asset_name = '%v' `, tokenName)
-	log.Sql(strSQL)
+	where  asset_name = '%v' `, tokenName)
+	log.Info(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalTokenTransfers error :[%v]\n", err)
@@ -155,8 +155,8 @@ func QueryTotalTokenHolders(tokenName string) (int64, error) {
 	strSQL := fmt.Sprintf(` 
 	select count(1) as totalTokenHolders
 	from account_asset_balance 
-	where binary asset_name = '%v' `, tokenName)
-	log.Sql(strSQL)
+	where asset_name = '%v' `, tokenName)
+	log.Info(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalTokenHolders error :[%v]\n", err)

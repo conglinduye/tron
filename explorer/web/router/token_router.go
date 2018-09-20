@@ -35,6 +35,13 @@ func tokenRegister(ginRouter *gin.Engine) {
 		} else if tokenReq.Status != "" && tokenReq.Status == "ico" {
 			log.Info("service.QueryIcoTokensBuffer")
 			tokenResp, err = service.QueryIcoTokensBuffer(tokenReq)
+		} else if tokenReq.Owner != "" && tokenReq.Name != "" {
+			log.Info("service.QueryTokensDetail")
+			tokenInfoList, total := service.QueryTokensDetail(tokenReq.Owner, tokenReq.Name)
+			tokenResp.Total = total
+			tokenResp.Data = tokenInfoList
+			c.JSON(http.StatusOK, tokenResp)
+			return
 		} else {
 			log.Info("service.QueryTokens")
 			tokenResp, err = service.QueryTokens(tokenReq)
