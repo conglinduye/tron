@@ -222,7 +222,7 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 			voteWitness.HasPage = true
 		}
 		if totalVotes != 0 {
-			voteWitness.VotesPercentage = float64(voteWitness.LastCycleVotes) / float64(totalVotes)
+			voteWitness.VotesPercentage = float64(voteWitness.LastCycleVotes) / float64(totalVotes) * 100
 		}
 	}
 

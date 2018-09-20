@@ -12,7 +12,7 @@ func SyncVoteWitnessRanking() {
 	for {
 		start := time.Now()
 		log.Info("SyncVoteWitnessRanking start")
-		next = next.Add(6 * time.Hour)
+		next = next.Add(6 * time.Hour).Add( 1 * time.Minute)
 		log.Infof("SyncVoteWitnessRanking nextTime:%v, timestamp:%v", next, next.UnixNano()/1e6)
 		t := time.NewTimer(next.Sub(now))
 		<-t.C

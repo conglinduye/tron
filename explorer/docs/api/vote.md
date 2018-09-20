@@ -21,7 +21,7 @@ output:json
             "lastCycleVotes":84350,
             "realTimeVotes":2240028,
             "changeVotes":2155678,
-            "votesPercentage":0.00001074783688738554,
+            "votesPercentage":0.001074783688738554,
             "change_cycle":56,//前端页面拿该值显示变化位数
             "change_day":56
         }
@@ -34,7 +34,7 @@ output:json
             "lastCycleVotes":510451563,//上一轮投票数
             "realTimeVotes":508640696,//实时投票数
             "changeVotes":-1810867,//变化票数
-            "votesPercentage":0.06500254923121276,//投票占比
+            "votesPercentage":6.500254923121276,//投票占比
             "change_cycle":1,//6小时票数排位变化
             "change_day":1 //12小时票数排位变化
         },
@@ -46,7 +46,7 @@ output:json
             "lastCycleVotes":466345134,
             "realTimeVotes":463860453,
             "changeVotes":-2484681,
-            "votesPercentage":0.059385894233360416,
+            "votesPercentage":5.9385894233360416,
             "change_cycle":0,
             "change_day":0
         },...

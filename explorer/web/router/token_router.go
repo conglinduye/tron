@@ -29,23 +29,36 @@ func tokenRegister(ginRouter *gin.Engine) {
 
 		tokenResp := &entity.TokenResp{}
 		var err error = nil
-		/*if tokenReq.Owner == "" && tokenReq.Name == "" && tokenReq.Status == "" {
+		if tokenReq.Owner == "" && tokenReq.Name == "" && tokenReq.Status == "" {
+			log.Info("service.QueryCommonTokensBuffer")
 			tokenResp, err = service.QueryCommonTokensBuffer(tokenReq)
 		} else if tokenReq.Status != "" && tokenReq.Status == "ico" {
+			log.Info("service.QueryIcoTokensBuffer")
 			tokenResp, err = service.QueryIcoTokensBuffer(tokenReq)
 		} else {
+			log.Info("service.QueryTokens")
 			tokenResp, err = service.QueryTokens(tokenReq)
-		}*/
+		}
 
-		tokenResp, err = service.QueryTokens(tokenReq)
+		// handleTokenRespData
+		tokenResp = handleTokenRespData(tokenResp)
+
+		if tokenReq.Owner != "" && tokenReq.Name != "" && !strings.HasPrefix(tokenReq.Name, "%") && !strings.HasSuffix(tokenReq.Name, "%") {
+			// QueryTotalTokenTransfers
+			totalTokenTransfers, _ := service.QueryTotalTokenTransfers(tokenReq.Name)
+			tokenResp.Data[0].TotalTransactions = totalTokenTransfers
+			// QueryTotalTokenHolders
+			totalTokenHolders, _ := service.QueryTotalTokenHolders(tokenReq.Name)
+			tokenResp.Data[0].NrOfTokenHolders = totalTokenHolders
+		}
 
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
 			return
 		}
-		tokenInfos := tokenResp.Data
-		length := len(tokenInfos)
+		tokenInfoList := tokenResp.Data
+		length := len(tokenInfoList)
 		tokenResp.Total = int64(length)
 		start := mysql.ConvertStringToInt(tokenReq.Start, 0)
 		limit := mysql.ConvertStringToInt(tokenReq.Limit, 0)
@@ -53,9 +66,9 @@ func tokenRegister(ginRouter *gin.Engine) {
 			tokenResp.Data = make([]*entity.TokenInfo, 0)
 		} else {
 			if start + limit < length {
-				tokenResp.Data = tokenInfos[start:start+limit]
+				tokenResp.Data = tokenInfoList[start:start+limit]
 			} else {
-				tokenResp.Data = tokenInfos[start:length]
+				tokenResp.Data = tokenInfoList[start:length]
 			}
 		}
 		handleTokensIndex(tokenReq, tokenResp)
@@ -170,4 +183,18 @@ func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
 		atomic.AddInt32(&index, 1)
 		tokenInfo.Index = index
 	}
+}
+
+// handleTokenRespData
+func handleTokenRespData(resp *entity.TokenResp) *entity.TokenResp {
+	newResp := &entity.TokenResp{}
+	tokenInfoList := make([]*entity.TokenInfo, 0, len(resp.Data))
+	for _, tokenInfo := range resp.Data {
+		newTokenInfo := new(entity.TokenInfo)
+		*newTokenInfo = *tokenInfo
+		tokenInfoList = append(tokenInfoList, newTokenInfo)
+	}
+	newResp.Total = int64(len(tokenInfoList))
+	newResp.Data = tokenInfoList
+	return newResp
 }

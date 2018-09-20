@@ -44,6 +44,7 @@ func main() {
 	buffer.GetMarketBuffer()
 	buffer.GetVoteBuffer()
 	buffer.GetAccountTokenBuffer()
+	buffer.GetTokenBuffer()
 
 
 

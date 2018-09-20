@@ -39,18 +39,18 @@ func tokenInfoBufferLoader() {
 	for {
 		_tokenBuffer.loadCommonQueryTokens()
 		_tokenBuffer.loadIcoQueryTokens()
-		time.Sleep(20 * time.Second)
+		time.Sleep(35 * time.Second)
 	}
 }
 
-func (w *tokenBuffer) GetCommonTokenResp() (commonTokenResp *entity.TokenResp, ok bool) {
+func (w *tokenBuffer) GetCommonTokenResp() (tokenResp *entity.TokenResp) {
 	w.RLock()
 	if w.commonTokenResp == nil {
 		log.Debugf("GetCommonTokenResp from buffer nil, data reload")
 		w.loadCommonQueryTokens()
 		log.Debugf("GetCommonTokenResp from buffer, buffer data updated ")
 	}
-	commonTokenResp = w.commonTokenResp
+	tokenResp = w.commonTokenResp
 	w.RUnlock()
 	return
 }
@@ -61,7 +61,7 @@ func (w *tokenBuffer) loadCommonQueryTokens() {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') 
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople') 
 			order by participated desc `)
 
 	commonTokenResp, err := module.QueryTokensRealize(strSQL, "", "", "")
@@ -69,6 +69,9 @@ func (w *tokenBuffer) loadCommonQueryTokens() {
 		log.Errorf("loadCommonQueryTokens list is nil or err:[%v]", err)
 	}
 	if len(commonTokenResp.Data) == 0 {
+		w.Lock()
+		w.icoTokenResp = commonTokenResp
+		w.Unlock()
 		return
 	}
 
@@ -81,14 +84,14 @@ func (w *tokenBuffer) loadCommonQueryTokens() {
 }
 
 // GetIcoTokenResp
-func (w *tokenBuffer) GetIcoTokenResp() (icoTokenResp *entity.TokenResp, ok bool) {
+func (w *tokenBuffer)  GetIcoTokenResp() (tokenResp *entity.TokenResp) {
 	w.RLock()
 	if w.icoTokenResp == nil {
 		log.Debugf("GetIcoTokenResp from buffer nil, data reload")
 		w.loadIcoQueryTokens()
 		log.Debugf("GetIcoTokenResp from buffer, buffer data updated ")
 	}
-	icoTokenResp = w.icoTokenResp
+	tokenResp = w.icoTokenResp
 	w.RUnlock()
 	return
 }
@@ -99,7 +102,7 @@ func (w *tokenBuffer) loadIcoQueryTokens() {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin') `)
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople') `)
 
 	t := time.Now()
 	dateTime := t.UnixNano() / 1e6
@@ -112,6 +115,9 @@ func (w *tokenBuffer) loadIcoQueryTokens() {
 		log.Errorf("loadIcoQueryTokens list is nil or err:[%v]", err)
 	}
 	if len(icoTokenResp.Data) == 0 {
+		w.Lock()
+		w.icoTokenResp = icoTokenResp
+		w.Unlock()
 		return
 	}
 
@@ -250,7 +256,7 @@ func queryTokenBalance(address, tokenName string) (*entity.TokenBalanceInfo, err
 		select address, asset_name, creator_address, balance
 		from account_asset_balance
 		where 1=1 `)
-	filterSQL = fmt.Sprintf(" and address='%v' and asset_name='%v'", address, tokenName)
+	filterSQL = fmt.Sprintf(" and address='%v' and binary asset_name='%v'", address, tokenName)
 
 	return module.QueryTokenBalanceRealize(strSQL, filterSQL)
 }
