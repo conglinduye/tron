@@ -120,7 +120,7 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 	var apiBalance = make([]*entity.BalanceInfo, 0)
 	var frozenInfo = &entity.Frozen{Total: 0, Balances: apiBalance}
 	var represent = &entity.Represent{}
-	var balance = &entity.Balance{}
+	//var balance = &entity.Balance{}
 	var balances = make([]*entity.Balance, 0)
 	var bandwidth = &entity.BandwidthInfo{}
 	var totalFrozen = int64(0)
@@ -190,7 +190,7 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 				frozenInfo.Balances = apiBalance
 				account.Frozen = frozenInfo
 			}
-
+			balance := &entity.Balance{}
 			balance.Name = dataPtr.GetField("token_name")
 			balance.Balance = mysql.ConvertDBValueToFloat64(dataPtr.GetField("balance"))
 
