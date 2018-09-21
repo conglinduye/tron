@@ -321,7 +321,7 @@ func queryTokenBalance(address, tokenName string) (*entity.TokenBalanceInfo, err
 		select address, asset_name, creator_address, balance
 		from account_asset_balance
 		where 1=1 `)
-	filterSQL = fmt.Sprintf(" and address='%v' and binary asset_name='%v'", address, tokenName)
+	filterSQL = fmt.Sprintf(" and address='%v' and asset_name='%v'", address, tokenName)
 
 	return module.QueryTokenBalanceRealize(strSQL, filterSQL)
 }

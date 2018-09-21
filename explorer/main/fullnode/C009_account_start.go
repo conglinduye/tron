@@ -49,8 +49,24 @@ func syncAccount() {
 	fmt.Printf("### total account syncrhonzed:%-10v, bad address:%-10v, cost:%v, synchronize to db .....\n", len(accList), len(restAddr), time.Since(ts))
 
 	ts1 := time.Now()
-	storeAccount(accList, nil)
+	blukStoreAccount(accList)
 	fmt.Printf("### store account size:%-10v to DB cost:%v\n", len(accList), time.Since(ts1))
+}
+
+func blukStoreAccount(accList []*account) {
+	pos := 0
+	remain := len(accList)
+	for remain > 0 {
+		if remain >= maxTransPerTxn {
+			storeAccount(accList[pos:pos+maxTransPerTxn], nil)
+			pos += maxTransPerTxn
+			remain -= maxTransPerTxn
+			continue
+		}
+		storeAccount(accList[pos:pos+remain], nil)
+		pos += remain
+		remain -= remain
+	}
 }
 
 type account struct {
