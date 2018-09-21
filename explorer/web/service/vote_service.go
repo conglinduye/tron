@@ -188,7 +188,7 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 		filterSQL = fmt.Sprintf(" and witt.address='%v'", req.Address)
 	}
 	//sortSQL = "order by witt.vote_count desc"
-	sortSQL = "order by votes.realTimeVotes"
+	sortSQL = "order by votes.realTimeVotes desc"
 	//pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
 	curCycle := buffer.GetVoteBuffer().GetVoteCurrentCycle()
