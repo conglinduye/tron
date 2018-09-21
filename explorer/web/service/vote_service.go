@@ -202,7 +202,7 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 	if req.Address != "" {
 		filterSQL = fmt.Sprintf(" and witt.address='%v'", req.Address)
 	}
-	sortSQL = "votes.realTimeVotes desc"
+	sortSQL = "order by votes.realTimeVotes desc"
 
 	//pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
