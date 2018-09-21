@@ -14,8 +14,6 @@ import (
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/router"
-	"github.com/wlcy/tron/explorer/web/buffer"
-	"github.com/wlcy/tron/explorer/web/task"
 )
 
 // config file
@@ -44,21 +42,8 @@ func main() {
 		conf.Mysql.User, conf.Mysql.Pass)
 	*/
 
-	//init buffer
-	buffer.GetBlockBuffer()
-	buffer.GetWitnessBuffer()
-	buffer.GetMarketBuffer()
-	buffer.GetVoteBuffer()
-	buffer.GetAccountTokenBuffer()
-	buffer.GetTokenBuffer()
+	go Async()
 
-	go task.SyncCacheTodayReport()
-
-	go task.SyncPersistYesterdayReport()
-
-	go task.SyncAssetIssueParticipated()
-
-	go task.SyncVoteWitnessRanking()
 
 	router.Start(conf.Address, conf.Objectpool)
 
