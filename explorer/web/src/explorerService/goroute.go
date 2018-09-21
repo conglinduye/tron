@@ -6,7 +6,6 @@ import (
 )
 
 func Async() {
-	//init buffer
 	go buffer.GetBlockBuffer()
 	go buffer.GetWitnessBuffer()
 	go buffer.GetMarketBuffer()

@@ -24,6 +24,9 @@ import (
 func QueryCommonTokenListBuffer() ([]*entity.TokenInfo, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
 	commonTokenList := tokenBuffer.GetCommonTokenList()
+	if commonTokenList == nil {
+		commonTokenList = make([]*entity.TokenInfo, 0)
+	}
 	return commonTokenList, nil
 
 }
@@ -32,6 +35,9 @@ func QueryCommonTokenListBuffer() ([]*entity.TokenInfo, error) {
 func QueryIcoTokenListBuffer() ([]*entity.TokenInfo, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
 	icoTokenList := tokenBuffer.GetIcoTokenList()
+	if icoTokenList == nil {
+		icoTokenList = make([]*entity.TokenInfo, 0)
+	}
 	return icoTokenList, nil
 
 }
@@ -40,6 +46,9 @@ func QueryIcoTokenListBuffer() ([]*entity.TokenInfo, error) {
 func QueryTokenDetailListBuffer() ([]*entity.TokenInfo, error) {
 	tokenBuffer := buffer.GetTokenBuffer()
 	tokenDetailList := tokenBuffer.GetTokensDetailList()
+	if tokenDetailList == nil {
+		tokenDetailList = make([]*entity.TokenInfo, 0)
+	}
 	return tokenDetailList, nil
 
 }

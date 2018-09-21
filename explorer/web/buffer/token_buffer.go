@@ -27,12 +27,7 @@ func GetTokenBuffer() *tokenBuffer {
 func getTokenBuffer() *tokenBuffer {
 	onceTokenBuffer.Do(func() {
 		_tokenBuffer = &tokenBuffer{}
-		_tokenBuffer.loadQueryCommonTokenList()
-		_tokenBuffer.loadQueryIcoTokenList()
-		_tokenBuffer.loadQueryTokensDetailList()
-
 		go tokenListBufferLoader()
-
 		go tokenDetailListBufferLoader()
 	})
 
@@ -41,25 +36,20 @@ func getTokenBuffer() *tokenBuffer {
 
 func tokenListBufferLoader() {
 	for {
-		_tokenBuffer.loadQueryCommonTokenList()
-		_tokenBuffer.loadQueryIcoTokenList()
+		go _tokenBuffer.loadQueryCommonTokenList()
+		go _tokenBuffer.loadQueryIcoTokenList()
 		time.Sleep(61 * time.Second)
 	}
 }
 
 func tokenDetailListBufferLoader() {
 	for {
-		_tokenBuffer.loadQueryTokensDetailList()
+		go _tokenBuffer.loadQueryTokensDetailList()
 		time.Sleep(301 * time.Second)
 	}
 }
 
 func (w *tokenBuffer) GetCommonTokenList() (commonTokenList []*entity.TokenInfo) {
-	if w.commonTokenList == nil {
-		log.Debugf("GetCommonTokenList from buffer nil, data reload")
-		w.loadQueryCommonTokenList()
-		log.Debugf("GetCommonTokenList from buffer, buffer data updated ")
-	}
 	w.RLock()
 	commonTokenList = w.commonTokenList
 	w.RUnlock()
@@ -96,11 +86,6 @@ func (w *tokenBuffer) loadQueryCommonTokenList() {
 
 // GetIcoTokenList
 func (w *tokenBuffer) GetIcoTokenList() (icoTokenList []*entity.TokenInfo) {
-	if w.icoTokenList == nil {
-		log.Debugf("GetIcoTokenList from buffer nil, data reload")
-		w.loadQueryIcoTokenList()
-		log.Debugf("GetIcoTokenList from buffer, buffer data updated ")
-	}
 	w.RLock()
 	icoTokenList = w.icoTokenList
 	w.RUnlock()
@@ -144,12 +129,6 @@ func (w *tokenBuffer) loadQueryIcoTokenList() {
 
 // GetTokensDetailList
 func (w *tokenBuffer) GetTokensDetailList() (tokenDetailList []*entity.TokenInfo) {
-	if w.tokenDetailList == nil {
-		log.Debugf("GetTokensDetailList from buffer nil, data reload")
-		w.loadQueryTokensDetailList()
-		log.Debugf("GetTokensDetailList from buffer, buffer data updated ")
-	}
-
 	w.RLock()
 	tokenDetailList = w.tokenDetailList
 	w.RUnlock()
