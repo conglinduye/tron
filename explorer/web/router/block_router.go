@@ -47,5 +47,16 @@ func blockRegister(ginRouter *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, blockResp)
 	})
+	//获取fullnode最新块
+	ginRouter.GET("/api/block/latest", func(c *gin.Context) {
+		log.Debug("Hello /api/block/latest")
+		//blockResp, err := service.QueryBlock(blockReq)
+		blockResp, err := service.QueryBlockLatestBuffer()
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+		}
+		c.JSON(http.StatusOK, blockResp)
+	})
 
 }
