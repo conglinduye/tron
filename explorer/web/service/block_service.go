@@ -111,7 +111,7 @@ func QueryBlockBuffer(req *entity.Blocks) (*entity.BlockInfo, error) {
 	blockBuffer := buffer.GetBlockBuffer()
 	if req.Number != "" {
 		if req.Number == "latest" {
-			maxNumber := blockBuffer.GetMaxBlockID()
+			maxNumber := blockBuffer.GetFullNodeMaxBlockID()
 			if maxNumber > 0 {
 				block = blockBuffer.GetBlock(maxNumber)
 			}
