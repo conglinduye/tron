@@ -107,12 +107,32 @@ func storeTransactionsInner(trans []*core.Transaction) bool {
 	return true
 }
 
+var blockDBChanNum = 8
 var blockLock sync.Mutex
+var blockDBChan = make(chan struct{}, 8)
+
+func initDBLimit() {
+	blockDBChanNum = *gMaxTrxDB
+	blockDBChan = make(chan struct{}, blockDBChanNum)
+	for i := 0; i < blockDBChanNum; i++ {
+		blockDBChan <- struct{}{}
+	}
+}
+
+func getBlockDBLock() {
+	<-blockDBChan
+}
+
+func releaseBlockDBLock() {
+	blockDBChan <- struct{}{}
+}
 
 // 穿行化db操作
 func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
-	blockLock.Lock()
-	defer blockLock.Unlock()
+	// blockLock.Lock()
+	// defer blockLock.Unlock()
+	getBlockDBLock()
+	defer releaseBlockDBLock()
 	return storeBlocksInner(blocks)
 }
 

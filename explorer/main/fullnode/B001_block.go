@@ -22,6 +22,7 @@ var gRedisDSN = flag.String("redisDSN", "127.0.0.1:6379", "redis DSN")
 var gMaxErrCntPerNode = flag.Int("max_err_per_node", 10, "max error before we try to other node")
 var gMaxAccountWorkload = flag.Int("max_account_workload", 200, "max account a node need handle not fork new worker")
 var gIntHandleAccountInterval = flag.Int("account_handle_interval", 30, "account info synchronize handle minmum interval in seconds")
+var gMaxTrxDB = flag.Int("trxdb_oper_cnt", 8, "the block/transaction db operation routine limit at the same time")
 
 var quit = make(chan struct{}) // quit signal channel
 var wg sync.WaitGroup
@@ -58,6 +59,7 @@ func startDaemon() {
 
 func main() {
 	flag.Parse()
+	initDBLimit()
 
 	maxErrCnt = *gMaxErrCntPerNode
 	getAccountWorkerLimit = *gMaxAccountWorkload
