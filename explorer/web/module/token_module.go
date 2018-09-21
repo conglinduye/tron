@@ -12,21 +12,21 @@ import (
 	"github.com/wlcy/tron/explorer/web/entity"
 )
 
-//QueryTokens
-func QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.TokenResp, error) {
+//QueryTokenList
+func QueryTokenList(strSQL, filterSQL, sortSQL, pageSQL string) ([]*entity.TokenInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
 	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
-		log.Errorf("QueryTokens error:[%v]\n", err)
+		log.Errorf("QueryTokensList error:[%v]\n", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 	if dataPtr == nil {
-		log.Errorf("QueryTokens dataPtr is nil ")
+		log.Errorf("QueryTokensList dataPtr is nil ")
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
-	tokenResp := &entity.TokenResp{}
-	tokens := make([]*entity.TokenInfo, 0)
+
+	tokenList := make([]*entity.TokenInfo, 0)
 
 	for dataPtr.NextT() {
 		token := &entity.TokenInfo{}
@@ -48,55 +48,10 @@ func QueryTokensRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Tok
 		}
 		token.Abbr = dataPtr.GetField("asset_abbr")
 
-		tokens = append(tokens, token)
+		tokenList = append(tokenList, token)
 	}
 
-	var total = int64(len(tokens))
-	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
-	if err != nil {
-		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
-	}
-	tokenResp.Total = total
-	tokenResp.Data = tokens
-
-	return tokenResp, nil
-}
-
-//QueryToken
-func QueryTokenRealize(strSQL, filterSQL string) (*entity.TokenInfo, error) {
-	strFullSQL := strSQL + " " + filterSQL
-	log.Sql(strFullSQL)
-	dataPtr, err := mysql.QueryTableData(strFullSQL)
-	if err != nil {
-		log.Errorf("QueryToken error:[%v]\n", err)
-		return nil, util.NewErrorMsg(util.Error_common_internal_error)
-	}
-	if dataPtr == nil {
-		log.Errorf("QueryToken dataPtr is nil ")
-		return nil, util.NewErrorMsg(util.Error_common_internal_error)
-	}
-	token := &entity.TokenInfo{}
-	for dataPtr.NextT() {
-		token.OwnerAddress = dataPtr.GetField("owner_address")
-		token.Name = dataPtr.GetField("asset_name")
-		token.TotalSupply = mysql.ConvertDBValueToInt64(dataPtr.GetField("total_supply"))
-		token.TrxNum = mysql.ConvertDBValueToInt64(dataPtr.GetField("trx_num"))
-		token.Num = mysql.ConvertDBValueToInt64(dataPtr.GetField("num"))
-		token.Participated = mysql.ConvertDBValueToInt64(dataPtr.GetField("participated"))
-		token.EndTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("end_time"))
-		token.StartTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("start_time"))
-		token.VoteScore = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote_score"))
-		token.Description = string(utils.HexDecode(dataPtr.GetField("asset_desc")))
-		token.Url = dataPtr.GetField("utl")
-		frozenJson := dataPtr.GetField("frozen_supply")
-		var tokenFrozenInfo []entity.TokenFrozenInfo
-		if err := json.Unmarshal([]byte(frozenJson), &tokenFrozenInfo); err == nil {
-			token.Frozen = tokenFrozenInfo
-		}
-		token.Abbr = dataPtr.GetField("asset_abbr")
-	}
-
-	return token, nil
+	return tokenList, nil
 }
 
 //QueryTokenBalanceRealize 查询通证余额

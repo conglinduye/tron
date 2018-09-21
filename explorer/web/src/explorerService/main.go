@@ -14,8 +14,8 @@ import (
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/router"
-	"github.com/wlcy/tron/explorer/web/task"
 	"github.com/wlcy/tron/explorer/web/buffer"
+	"github.com/wlcy/tron/explorer/web/task"
 )
 
 // config file
@@ -46,8 +46,6 @@ func main() {
 	buffer.GetAccountTokenBuffer()
 	buffer.GetTokenBuffer()
 
-
-
 	/* 数据库和redis初始化也可以用这种方式， but i don't like it
 	redisCli = redis.NewClient(conf.Redis.Host, conf.Redis.Pass, conf.Redis.Index, conf.Redis.Poolsize)
 	mysql.Initialize(conf.Mysql.Host, conf.Mysql.Port, conf.Mysql.Schema,
@@ -61,8 +59,6 @@ func main() {
 	go task.SyncAssetIssueParticipated()
 
 	go task.SyncVoteWitnessRanking()
-
-
 
 	router.Start(conf.Address, conf.Objectpool)
 

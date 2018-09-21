@@ -15,9 +15,9 @@ var onceTokenBuffer sync.Once
 
 type tokenBuffer struct {
 	sync.RWMutex
-	commonTokenResp 		*entity.TokenResp
-	icoTokenResp    		*entity.TokenResp
-	tokenInfoDetailList		[]*entity.TokenInfo
+	commonTokenList     []*entity.TokenInfo
+	icoTokenList        []*entity.TokenInfo
+	tokenDetailList     []*entity.TokenInfo
 }
 
 func GetTokenBuffer() *tokenBuffer {
@@ -27,89 +27,88 @@ func GetTokenBuffer() *tokenBuffer {
 func getTokenBuffer() *tokenBuffer {
 	onceTokenBuffer.Do(func() {
 		_tokenBuffer = &tokenBuffer{}
-		_tokenBuffer.loadCommonQueryTokens()
-		_tokenBuffer.loadIcoQueryTokens()
-		_tokenBuffer.loadQueryTokensDetail()
+		_tokenBuffer.loadQueryCommonTokenList()
+		_tokenBuffer.loadQueryIcoTokenList()
+		_tokenBuffer.loadQueryTokensDetailList()
 
-		go tokenInfoBufferLoader()
+		go tokenListBufferLoader()
 
-		go tokenInfoDetailBufferLoader()
+		go tokenDetailListBufferLoader()
 	})
 
 	return _tokenBuffer
-
 }
 
-func tokenInfoDetailBufferLoader() {
+func tokenListBufferLoader() {
 	for {
-		_tokenBuffer.loadQueryTokensDetail()
+		_tokenBuffer.loadQueryCommonTokenList()
+		_tokenBuffer.loadQueryIcoTokenList()
+		time.Sleep(61 * time.Second)
+	}
+}
+
+func tokenDetailListBufferLoader() {
+	for {
+		_tokenBuffer.loadQueryTokensDetailList()
 		time.Sleep(301 * time.Second)
 	}
 }
 
-func tokenInfoBufferLoader() {
-	for {
-		_tokenBuffer.loadCommonQueryTokens()
-		_tokenBuffer.loadIcoQueryTokens()
-		time.Sleep(50 * time.Second)
+func (w *tokenBuffer) GetCommonTokenList() (commonTokenList []*entity.TokenInfo) {
+	if w.commonTokenList == nil {
+		log.Debugf("GetCommonTokenList from buffer nil, data reload")
+		w.loadQueryCommonTokenList()
+		log.Debugf("GetCommonTokenList from buffer, buffer data updated ")
 	}
-}
-
-func (w *tokenBuffer) GetCommonTokenResp() (tokenResp *entity.TokenResp) {
 	w.RLock()
-	if w.commonTokenResp == nil {
-		log.Debugf("GetCommonTokenResp from buffer nil, data reload")
-		w.loadCommonQueryTokens()
-		log.Debugf("GetCommonTokenResp from buffer, buffer data updated ")
-	}
-	tokenResp = w.commonTokenResp
+	commonTokenList = w.commonTokenList
 	w.RUnlock()
 	return
 }
 
-// loadCommonQueryTokens
-func (w *tokenBuffer) loadCommonQueryTokens() {
+// loadCommonQueryTokenList
+func (w *tokenBuffer) loadQueryCommonTokenList() {
 	strSQL := fmt.Sprintf(`
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople') 
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople', '') 
 			order by participated desc `)
 
-	commonTokenResp, err := module.QueryTokensRealize(strSQL, "", "", "")
+	commonTokenList, err := module.QueryTokenList(strSQL, "", "", "")
 	if err != nil {
-		log.Errorf("loadCommonQueryTokens list is nil or err:[%v]", err)
+		log.Errorf("loadCommonQueryTokensLists list is nil or err:[%v]", err)
 	}
-	if len(commonTokenResp.Data) == 0 {
+	if len(commonTokenList) == 0 {
 		w.Lock()
-		w.icoTokenResp = commonTokenResp
+		w.commonTokenList = commonTokenList
 		w.Unlock()
 		return
 	}
 
-	subHandle(commonTokenResp)
+	commonTokenList = subHandle(commonTokenList)
 
 	w.Lock()
-	w.commonTokenResp = commonTokenResp
+	w.commonTokenList = commonTokenList
 	w.Unlock()
 
 }
 
-// GetIcoTokenResp
-func (w *tokenBuffer)  GetIcoTokenResp() (tokenResp *entity.TokenResp) {
-	w.RLock()
-	if w.icoTokenResp == nil {
-		log.Debugf("GetIcoTokenResp from buffer nil, data reload")
-		w.loadIcoQueryTokens()
-		log.Debugf("GetIcoTokenResp from buffer, buffer data updated ")
+// GetIcoTokenList
+func (w *tokenBuffer) GetIcoTokenList() (icoTokenList []*entity.TokenInfo) {
+	if w.icoTokenList == nil {
+		log.Debugf("GetIcoTokenList from buffer nil, data reload")
+		w.loadQueryIcoTokenList()
+		log.Debugf("GetIcoTokenList from buffer, buffer data updated ")
 	}
-	tokenResp = w.icoTokenResp
+	w.RLock()
+	icoTokenList = w.icoTokenList
 	w.RUnlock()
 	return
 }
 
 // loadIcoQueryTokens
-func (w *tokenBuffer) loadIcoQueryTokens() {
+func (w *tokenBuffer) loadQueryIcoTokenList() {
 	strSQL := fmt.Sprintf(`
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
@@ -122,48 +121,43 @@ func (w *tokenBuffer) loadIcoQueryTokens() {
 
 	sortSQL := "order by participated desc"
 
-	icoTokenResp, err := module.QueryTokensRealize(strSQL, filterSQL, sortSQL, "")
+	icoTokenList, err := module.QueryTokenList(strSQL, filterSQL, sortSQL, "")
 	if err != nil {
 		log.Errorf("loadIcoQueryTokens list is nil or err:[%v]", err)
 	}
-	if len(icoTokenResp.Data) == 0 {
+	if len(icoTokenList) == 0 {
 		w.Lock()
-		w.icoTokenResp = icoTokenResp
+		w.icoTokenList = icoTokenList
 		w.Unlock()
 		return
 	}
 
-	subHandle(icoTokenResp)
+	icoTokenList = subHandle(icoTokenList)
 
-	icoTokenResp.Data = filterIcoAssetExpire(icoTokenResp)
+	icoTokenList = filterIcoTokenExpire(icoTokenList)
 
 	w.Lock()
-	w.icoTokenResp = icoTokenResp
+	w.icoTokenList = icoTokenList
 	w.Unlock()
 
 }
 
-// GetTokensDetail
-func (w *tokenBuffer) GetTokensDetail() (tokenInfoList []*entity.TokenInfo) {
+// GetTokensDetailList
+func (w *tokenBuffer) GetTokensDetailList() (tokenDetailList []*entity.TokenInfo) {
+	if w.tokenDetailList == nil {
+		log.Debugf("GetTokensDetailList from buffer nil, data reload")
+		w.loadQueryTokensDetailList()
+		log.Debugf("GetTokensDetailList from buffer, buffer data updated ")
+	}
+
 	w.RLock()
-	if w.tokenInfoDetailList == nil {
-		log.Debugf("GetTokensDetail from buffer nil, data reload")
-		w.loadQueryTokensDetail()
-		log.Debugf("GetTokensDetail from buffer, buffer data updated ")
-	}
-	newTokenInfoList := make([]*entity.TokenInfo, 0, len(w.tokenInfoDetailList))
-	for _, tokenInfo := range w.tokenInfoDetailList {
-		newTokenInfo := new(entity.TokenInfo)
-		*newTokenInfo = *tokenInfo
-		newTokenInfoList = append(newTokenInfoList, newTokenInfo)
-	}
-	tokenInfoList = newTokenInfoList
+	tokenDetailList = w.tokenDetailList
 	w.RUnlock()
 	return
 }
 
-// loadQueryTokensDetail
-func (w *tokenBuffer) loadQueryTokensDetail() {
+// loadQueryTokensDetailList
+func (w *tokenBuffer) loadQueryTokensDetailList() {
 	strSQL := fmt.Sprintf(`
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
@@ -171,47 +165,44 @@ func (w *tokenBuffer) loadQueryTokensDetail() {
 			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople') 
 			order by participated desc `)
 
-	tokenResp, err := module.QueryTokensRealize(strSQL, "", "", "")
+	tokenDetailList, err := module.QueryTokenList(strSQL, "", "", "")
 	if err != nil {
-		log.Errorf("loadQueryTokensDetail list is nil or err:[%v]", err)
+		log.Errorf("loadQueryTokensDetailList list is nil or err:[%v]", err)
 	}
-	if len(tokenResp.Data) == 0 {
+	if len(tokenDetailList) == 0 {
 		return
 	}
-	subHandle(tokenResp)
+	subHandle(tokenDetailList)
 
-	tokenInfoList := tokenResp.Data
-	for index := range tokenInfoList {
-		tokenInfo := tokenInfoList[index]
+	/*for index := range tokenDetailList {
+		tokenInfo := tokenDetailList[index]
 		// QueryTotalTokenTransfers
 		totalTokenTransfers, _ := module.QueryTotalTokenTransfers(tokenInfo.Name)
 		tokenInfo.TotalTransactions = totalTokenTransfers
 		// QueryTotalTokenHolders
 		totalTokenHolders, _ := module.QueryTotalTokenHolders(tokenInfo.Name)
 		tokenInfo.NrOfTokenHolders = totalTokenHolders
-	}
+	}*/
 
 	w.Lock()
-	w.tokenInfoDetailList = tokenInfoList
+	w.tokenDetailList = tokenDetailList
 	w.Unlock()
 }
 
-
 // subHandle
-func subHandle(tokenResp *entity.TokenResp) {
+func subHandle(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 	// calculateTokens
-	calculateTokens(tokenResp)
+	calculateTokens(tokenList)
 
 	// queryCreateTime
-	tokens := tokenResp.Data
-	for index := range tokens {
-		token := tokens[index]
+	for index := range tokenList {
+		token := tokenList[index]
 		createTime := queryAssetCreateTime(token.OwnerAddress, token.Name)
-		tokens[index].DateCreated = createTime
+		tokenList[index].DateCreated = createTime
 	}
 
 	tokenAddressList := make([]string, 0)
-	for _, tokenInfo := range tokenResp.Data {
+	for _, tokenInfo := range tokenList {
 		if tokenInfo.OwnerAddress != "" {
 			tokenAddressList = append(tokenAddressList, tokenInfo.OwnerAddress)
 		}
@@ -222,14 +213,10 @@ func subHandle(tokenResp *entity.TokenResp) {
 		log.Errorf("queryTokenExtInfo list is nil or err:[%v]", err)
 	}
 
-	var tokenListResp = &entity.TokenResp{}
-	tokenList := make([]*entity.TokenInfo, 0)
-	//var index = mysql.ConvertStringToInt32(req.Start, 0)
+	newTokenList := make([]*entity.TokenInfo, 0)
 	tokenExtEmptyInfoList := module.InitTokenExtInfos()
 
-	for _, tokenInfo := range tokenResp.Data {
-		//atomic.AddInt32(&index, 1)
-		//tokenInfo.Index = index
+	for _, tokenInfo := range tokenList {
 
 		for _, tokenExtInfo := range tokenExtList {
 
@@ -255,20 +242,17 @@ func subHandle(tokenResp *entity.TokenResp) {
 				tokenInfo.SocialMedia = tokenExtEmptyInfoList[0].SocialMedia
 			}
 		}
-		tokenList = append(tokenList, tokenInfo)
-
-		if len(tokenList) > 0 {
-			tokenListResp.Data = tokenList
-			tokenListResp.Total = tokenResp.Total
-		}
+		newTokenList = append(newTokenList, tokenInfo)
 	}
+
+	return newTokenList
+
 }
 
 // calculateTokens
-func calculateTokens(tokenResp *entity.TokenResp) {
-	tokens := tokenResp.Data
-	for index := range tokens {
-		token := tokens[index]
+func calculateTokens(tokenList []*entity.TokenInfo) {
+	for index := range tokenList {
+		token := tokenList[index]
 		calculateToken(token)
 	}
 }
@@ -338,17 +322,16 @@ func queryAssetCreateTime(ownerAddress, tokenName string) int64 {
 	return createTime
 }
 
-// filterIcoAssetExpire
-func filterIcoAssetExpire(tokenResp *entity.TokenResp) []*entity.TokenInfo {
-	tokens := make([]*entity.TokenInfo, 0)
-	data := tokenResp.Data
-	for index := range data {
-		token := data[index]
+// filterIcoTokenExpire
+func filterIcoTokenExpire(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
+	newTokenList := make([]*entity.TokenInfo, 0)
+	for index := range tokenList {
+		token := tokenList[index]
 		if token.IssuedPercentage == 100 {
 			// do nothing
 		} else {
-			tokens = append(tokens, token)
+			newTokenList = append(newTokenList, token)
 		}
 	}
-	return tokens
+	return newTokenList
 }

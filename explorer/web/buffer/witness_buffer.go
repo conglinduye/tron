@@ -30,7 +30,6 @@ func getWitnessBuffer() *witnessBuffer {
 		_witnessBuffer = &witnessBuffer{}
 		_witnessBuffer.load()
 		_witnessBuffer.loadStatistic()
-
 		go witnessBufferLoader()
 	})
 	return _witnessBuffer
