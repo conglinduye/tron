@@ -44,6 +44,7 @@ func tokenListBufferLoader() {
 
 func tokenDetailListBufferLoader() {
 	for {
+		time.Sleep(301 * time.Second)
 		go _tokenBuffer.loadQueryTokensDetailList()
 		time.Sleep(301 * time.Second)
 	}

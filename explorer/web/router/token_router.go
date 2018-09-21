@@ -37,15 +37,15 @@ func tokenRegister(ginRouter *gin.Engine) {
 			tokenList, _ = service.QueryIcoTokenListBuffer()
 		} else if tokenReq.Owner != "" && tokenReq.Name != "" {
 			log.Info("service.QueryTokenDetailListBuffer")
-			tokenList,  _ = service.QueryTokenDetailListBuffer()
-			tokenList, total := hanldeTokenDetail(tokenReq.Owner, tokenReq.Name, tokenList)
+			tokenList, flag := service.QueryTokenDetailListBuffer()
+			tokenList, total := hanldeTokenDetail(tokenReq.Owner, tokenReq.Name, tokenList, flag)
 			tokenResp.Total = total
 			tokenResp.Data = tokenList
 			c.JSON(http.StatusOK, tokenResp)
 			return
 		} else if tokenReq.Name != "" && strings.HasPrefix(tokenReq.Name, "%") && strings.HasSuffix(tokenReq.Name, "%") {
 			log.Info("service.QueryCommonTokenListBuffer NameFuzzyQuery")
-			tokenList, _ = service.QueryCommonTokenListBuffer()
+			tokenList, _ = service.QueryTokenDetailListBuffer()
 			tokenList, total := hanldeTokenList4FuzzyQuery(tokenReq.Name, tokenList)
 			tokenResp.Total = total
 			tokenResp.Data = tokenList
@@ -173,13 +173,21 @@ func tokenRegister(ginRouter *gin.Engine) {
 
 
 // hanldeTokenDetail
-func hanldeTokenDetail(address string, name string, tokenList []*entity.TokenInfo) ([]*entity.TokenInfo, int64) {
+func hanldeTokenDetail(address string, name string, tokenList []*entity.TokenInfo, flag bool) ([]*entity.TokenInfo, int64) {
 	newTokenInfoList := make([]*entity.TokenInfo, 0)
 	tokenInfo := &entity.TokenInfo{}
 	for _, token := range tokenList {
 		if token.OwnerAddress == address && token.Name == name {
-			tokenInfo = token
+			*tokenInfo = *token
 			tokenInfo.Index = 1
+			if flag == false {
+				log.Infof("hanldeTokenDetail, flag:%v\n", flag)
+				totalTransactions, _ := service.QueryTotalTokenTransfers(token.Name)
+				tokenInfo.TotalTransactions = totalTransactions
+				nrOfTokenHolders, _ := service.QueryTotalTokenHolders(token.Name)
+				tokenInfo.NrOfTokenHolders = nrOfTokenHolders
+			}
+
 			newTokenInfoList = append(newTokenInfoList, tokenInfo)
 			break
 		}

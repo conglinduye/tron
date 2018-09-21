@@ -43,14 +43,20 @@ func QueryIcoTokenListBuffer() ([]*entity.TokenInfo, error) {
 }
 
 // QueryTokenDetailListBuffer
-func QueryTokenDetailListBuffer() ([]*entity.TokenInfo, error) {
+func QueryTokenDetailListBuffer() ([]*entity.TokenInfo, bool) {
 	tokenBuffer := buffer.GetTokenBuffer()
+	// first buffer from GetTokensDetailList
 	tokenDetailList := tokenBuffer.GetTokensDetailList()
 	if tokenDetailList == nil {
-		tokenDetailList = make([]*entity.TokenInfo, 0)
+		// second buffer from GetCommonTokenList
+		tokenDetailList := tokenBuffer.GetCommonTokenList()
+		if tokenDetailList == nil {
+			tokenDetailList = make([]*entity.TokenInfo, 0)
+		}
+		return tokenDetailList, false
+	} else {
+		return tokenDetailList, true
 	}
-	return tokenDetailList, nil
-
 }
 
 //UploadTokenLogo 保存图片
@@ -166,4 +172,15 @@ func QueryAssetBalances(req *entity.Token) (*entity.AssetBalanceResp, error){
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 	return assetBalanceResp, nil
+}
+
+
+// QueryTotalTokenTransfers
+func QueryTotalTokenTransfers(tokenName string) (int64, error) {
+	return module.QueryTotalTokenTransfers(tokenName)
+}
+
+//QueryTotalTokenHolders
+func QueryTotalTokenHolders(tokenName string) (int64, error) {
+	return module.QueryTotalTokenHolders(tokenName)
 }
