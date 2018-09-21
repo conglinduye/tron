@@ -15,9 +15,9 @@ var onceTokenBuffer sync.Once
 
 type tokenBuffer struct {
 	sync.RWMutex
-	commonTokenResp 		*entity.TokenResp
-	icoTokenResp    		*entity.TokenResp
-	tokenInfoDetailList		[]*entity.TokenInfo
+	commonTokenResp     *entity.TokenResp
+	icoTokenResp        *entity.TokenResp
+	tokenInfoDetailList []*entity.TokenInfo
 }
 
 func GetTokenBuffer() *tokenBuffer {
@@ -27,9 +27,9 @@ func GetTokenBuffer() *tokenBuffer {
 func getTokenBuffer() *tokenBuffer {
 	onceTokenBuffer.Do(func() {
 		_tokenBuffer = &tokenBuffer{}
-		_tokenBuffer.loadCommonQueryTokens()
-		_tokenBuffer.loadIcoQueryTokens()
-		_tokenBuffer.loadQueryTokensDetail()
+		//_tokenBuffer.loadCommonQueryTokens()
+		//_tokenBuffer.loadIcoQueryTokens()
+		//_tokenBuffer.loadQueryTokensDetail()
 
 		go tokenInfoBufferLoader()
 
@@ -96,7 +96,7 @@ func (w *tokenBuffer) loadCommonQueryTokens() {
 }
 
 // GetIcoTokenResp
-func (w *tokenBuffer)  GetIcoTokenResp() (tokenResp *entity.TokenResp) {
+func (w *tokenBuffer) GetIcoTokenResp() (tokenResp *entity.TokenResp) {
 	w.RLock()
 	if w.icoTokenResp == nil {
 		log.Debugf("GetIcoTokenResp from buffer nil, data reload")
@@ -195,7 +195,6 @@ func (w *tokenBuffer) loadQueryTokensDetail() {
 	w.tokenInfoDetailList = tokenInfoList
 	w.Unlock()
 }
-
 
 // subHandle
 func subHandle(tokenResp *entity.TokenResp) {

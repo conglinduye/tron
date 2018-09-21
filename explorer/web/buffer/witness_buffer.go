@@ -28,9 +28,6 @@ func GetWitnessBuffer() *witnessBuffer {
 func getWitnessBuffer() *witnessBuffer {
 	onceWitnessBuffer.Do(func() {
 		_witnessBuffer = &witnessBuffer{}
-		_witnessBuffer.load()
-		_witnessBuffer.loadStatistic()
-
 		go witnessBufferLoader()
 	})
 	return _witnessBuffer
