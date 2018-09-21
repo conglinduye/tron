@@ -105,6 +105,7 @@ type VoteWitnessResp struct {
 
 //VoteWitness 节点投票信息
 type VoteWitness struct {
+	RealTimeRanking		int32		`json:"realTimeRanking"`
 	Address     		string 		`json:"address"`
 	Name        		string 		`json:"name"`
 	URL         		string 		`json:"url"`

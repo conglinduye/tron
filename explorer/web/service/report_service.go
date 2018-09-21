@@ -149,6 +149,10 @@ func SyncPersistYesterdayReport() {
 			new_address_seen, total_block_count, total_transaction, total_address, blockchain_size
 			from wlcy_statistics order by date desc limit 1`)
 	reportOverviews, _:= module.QueryStatistics(strSQL)
+	if len(reportOverviews) == 0 {
+		log.Error("SyncPersistYesterdayReport QueryStatistics len(reportOverviews) == 0")
+		return
+	}
 	if reportOverviews[0].Date < dateTime {
 		t1 = t1.Add(-24 * time.Hour)
 		t2 := t1.Add(24 * time.Hour)

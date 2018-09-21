@@ -26,46 +26,46 @@ func tokenRegister(ginRouter *gin.Engine) {
 			tokenReq.Start = "0"
 			tokenReq.Limit = "20"
 		}
-
 		tokenResp := &entity.TokenResp{}
-		var err error = nil
+		tokenList := make([]*entity.TokenInfo, 0)
+
 		if tokenReq.Owner == "" && tokenReq.Name == "" && tokenReq.Status == "" {
-			log.Info("service.QueryCommonTokensBuffer")
-			tokenResp, err = service.QueryCommonTokensBuffer(tokenReq)
+			log.Info("service.QueryCommonTokenListBuffer")
+			tokenList, _ = service.QueryCommonTokenListBuffer()
 		} else if tokenReq.Status != "" && tokenReq.Status == "ico" {
-			log.Info("service.QueryIcoTokensBuffer")
-			tokenResp, err = service.QueryIcoTokensBuffer(tokenReq)
+			log.Info("service.QueryIcoTokenListBuffer")
+			tokenList, _ = service.QueryIcoTokenListBuffer()
 		} else if tokenReq.Owner != "" && tokenReq.Name != "" {
-			log.Info("service.QueryTokensDetail")
-			tokenInfoList, total := service.QueryTokensDetail(tokenReq.Owner, tokenReq.Name)
+			log.Info("service.QueryTokenDetailListBuffer")
+			tokenList,  _ = service.QueryTokenDetailListBuffer()
+			tokenList, total := hanldeTokenDetail(tokenReq.Owner, tokenReq.Name, tokenList)
 			tokenResp.Total = total
-			tokenResp.Data = tokenInfoList
+			tokenResp.Data = tokenList
+			c.JSON(http.StatusOK, tokenResp)
+			return
+		} else if tokenReq.Name != "" && strings.HasPrefix(tokenReq.Name, "%") && strings.HasSuffix(tokenReq.Name, "%") {
+			log.Info("service.QueryCommonTokenListBuffer NameFuzzyQuery")
+			tokenList, _ = service.QueryCommonTokenListBuffer()
+			tokenList, total := hanldeTokenList4FuzzyQuery(tokenReq.Name, tokenList)
+			tokenResp.Total = total
+			tokenResp.Data = tokenList
 			c.JSON(http.StatusOK, tokenResp)
 			return
 		} else {
-			log.Info("service.QueryTokens")
-			tokenResp, err = service.QueryTokens(tokenReq)
-		}
-
-		// handleTokenRespData
-		tokenResp = handleTokenRespData(tokenResp)
-
-		if tokenReq.Owner != "" && tokenReq.Name != "" && !strings.HasPrefix(tokenReq.Name, "%") && !strings.HasSuffix(tokenReq.Name, "%") {
-			// QueryTotalTokenTransfers
-			totalTokenTransfers, _ := service.QueryTotalTokenTransfers(tokenReq.Name)
-			tokenResp.Data[0].TotalTransactions = totalTokenTransfers
-			// QueryTotalTokenHolders
-			totalTokenHolders, _ := service.QueryTotalTokenHolders(tokenReq.Name)
-			tokenResp.Data[0].NrOfTokenHolders = totalTokenHolders
-		}
-
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
+			log.Info("service.QueryCommonTokenListBuffer OtherQuery")
+			tokenList, _ = service.QueryCommonTokenListBuffer()
+			tokenList, total := hanldeTokenList4QueryCondition(tokenReq, tokenList)
+			tokenResp.Total = total
+			tokenResp.Data = tokenList
+			c.JSON(http.StatusOK, tokenResp)
 			return
 		}
-		tokenInfoList := tokenResp.Data
-		length := len(tokenInfoList)
+
+		// copyTokenList
+		tokenList = copyTokenList(tokenList)
+
+		// paging handle
+		length := len(tokenList)
 		tokenResp.Total = int64(length)
 		start := mysql.ConvertStringToInt(tokenReq.Start, 0)
 		limit := mysql.ConvertStringToInt(tokenReq.Limit, 0)
@@ -73,23 +73,29 @@ func tokenRegister(ginRouter *gin.Engine) {
 			tokenResp.Data = make([]*entity.TokenInfo, 0)
 		} else {
 			if start + limit < length {
-				tokenResp.Data = tokenInfoList[start:start+limit]
+				tokenResp.Data = tokenList[start:start+limit]
 			} else {
-				tokenResp.Data = tokenInfoList[start:length]
+				tokenResp.Data = tokenList[start:length]
 			}
 		}
-		handleTokensIndex(tokenReq, tokenResp)
+
+		// handleTokenListIndex
+		handleTokenListIndex(tokenReq, tokenResp.Data)
 
 		c.JSON(http.StatusOK, tokenResp)
 	})
 
 	ginRouter.GET("/api/token/:name", func(c *gin.Context) {
+		tokenReq := &entity.Token{}
 		name := c.Param("name")
+		tokenReq.Name = name
 		log.Debugf("Hello /api/token/:%#v", name)
-		tokenInfo, err := service.QueryToken(name)
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
+		log.Info("service.QueryTokenDetailListBuffer")
+		tokenList,  _ := service.QueryTokenDetailListBuffer()
+		tokenList, _ = hanldeTokenList4QueryCondition(tokenReq, tokenList)
+		tokenInfo := &entity.TokenInfo{}
+		if len(tokenList) > 0 {
+			tokenInfo = tokenList[0]
 		}
 		c.JSON(http.StatusOK, tokenInfo)
 	})
@@ -114,23 +120,6 @@ func tokenRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, assetBalanceResp)
 	})
 
-	ginRouter.GET("/api/mytoken", func(c *gin.Context) {
-		tokenReq := &entity.Token{}
-		tokenReq.Owner = c.Query("owner")
-		log.Debugf("Hello /api/mytoken?%#v", tokenReq)
-		log.Debugf("owner_address=%v", tokenReq.Owner)
-
-		if tokenReq.Start == "" || tokenReq.Limit == "" {
-			tokenReq.Start = "0"
-			tokenReq.Limit = "40"
-		}
-		tokenResp, err := service.QueryTokens(tokenReq)
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
-		}
-		c.JSON(http.StatusOK, tokenResp)
-	})
 
 	ginRouter.POST("/api/uploadLogo", func(c *gin.Context) {
 		res := &entity.UploadLogoRes{}
@@ -182,26 +171,75 @@ func tokenRegister(ginRouter *gin.Engine) {
 	})
 }
 
-// handleTokensIndex
-func handleTokensIndex(req *entity.Token, tokenResp *entity.TokenResp) {
+
+// hanldeTokenDetail
+func hanldeTokenDetail(address string, name string, tokenList []*entity.TokenInfo) ([]*entity.TokenInfo, int64) {
+	newTokenInfoList := make([]*entity.TokenInfo, 0)
+	tokenInfo := &entity.TokenInfo{}
+	for _, token := range tokenList {
+		if token.OwnerAddress == address && token.Name == name {
+			tokenInfo = token
+			tokenInfo.Index = 1
+			newTokenInfoList = append(newTokenInfoList, tokenInfo)
+			break
+		}
+	}
+	total := len(tokenList)
+	return newTokenInfoList, int64(total)
+}
+
+// hanldeTokenList4QueryCondition
+func hanldeTokenList4QueryCondition(tokenReq *entity.Token, tokenList []*entity.TokenInfo) ([]*entity.TokenInfo, int64) {
+	newTokenInfoList := make([]*entity.TokenInfo, 0)
+	for _, tokenInfo := range tokenList {
+		if tokenReq.Owner != "" && tokenInfo.OwnerAddress == tokenReq.Owner {
+			temp := new(entity.TokenInfo)
+			*temp = *tokenInfo
+			newTokenInfoList = append(newTokenInfoList, temp)
+		}
+		if tokenReq.Name != "" && tokenInfo.Name == tokenReq.Name {
+			newTokenInfoList = append(newTokenInfoList, tokenInfo)
+		}
+	}
+	total := len(tokenList)
+	return newTokenInfoList, int64(total)
+}
+
+// hanldeTokenList4FuzzyQuery
+func hanldeTokenList4FuzzyQuery(name string, tokenList []*entity.TokenInfo) ([]*entity.TokenInfo, int64) {
+	rs := []rune(name)
+	name = string(rs[1:len(name)-1])
+	newTokenInfoList := make([]*entity.TokenInfo, 0)
+	for _, tokenInfo := range tokenList {
+		if strings.Contains(tokenInfo.Name, name) {
+			temp := new(entity.TokenInfo)
+			*temp = *tokenInfo
+			newTokenInfoList = append(newTokenInfoList, temp)
+		}
+
+	}
+	total := len(tokenList)
+	return newTokenInfoList, int64(total)
+}
+
+
+// handleTokenListIndex
+func handleTokenListIndex(req *entity.Token, tokenList []*entity.TokenInfo) {
 	var index = mysql.ConvertStringToInt32(req.Start, 0)
 
-	for _, tokenInfo := range tokenResp.Data {
+	for _, token := range tokenList {
 		atomic.AddInt32(&index, 1)
-		tokenInfo.Index = index
+		token.Index = index
 	}
 }
 
-// handleTokenRespData
-func handleTokenRespData(resp *entity.TokenResp) *entity.TokenResp {
-	newResp := &entity.TokenResp{}
-	tokenInfoList := make([]*entity.TokenInfo, 0, len(resp.Data))
-	for _, tokenInfo := range resp.Data {
+// copyTokenList
+func copyTokenList(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
+	newTokenList := make([]*entity.TokenInfo, 0, len(tokenList))
+	for _, tokenInfo := range tokenList {
 		newTokenInfo := new(entity.TokenInfo)
 		*newTokenInfo = *tokenInfo
-		tokenInfoList = append(tokenInfoList, newTokenInfo)
+		newTokenList = append(newTokenList, newTokenInfo)
 	}
-	newResp.Total = int64(len(tokenInfoList))
-	newResp.Data = tokenInfoList
-	return newResp
+	return newTokenList
 }
