@@ -32,28 +32,6 @@ func voteRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, resp)
 	})
 
-	ginRouter.GET("/api/vote/live", func(c *gin.Context) {
-		log.Debugf("Hello /api/vote/live")
-		//resp, err := service.QueryVoteLive()
-		resp, err := service.QueryVoteLiveBuffer()
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
-		}
-		c.JSON(http.StatusOK, resp)
-	})
-
-	ginRouter.GET("/api/vote/current-cycle", func(c *gin.Context) {
-		log.Debugf("Hello /api/vote/current-cycle")
-		//	resp, err := service.QueryVoteCurrentCycle()
-		resp, err := service.QueryVoteCurrentCycleBuffer()
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
-		}
-		c.JSON(http.StatusOK, resp)
-	})
-
 	ginRouter.GET("/api/vote/next-cycle", func(c *gin.Context) {
 		log.Debugf("Hello /api/vote/next-cycle")
 		//resp, err := service.QueryVoteNextCycle()

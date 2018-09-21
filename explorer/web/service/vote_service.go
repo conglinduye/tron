@@ -17,24 +17,9 @@ import (
 )
 
 
-const lately_cycle_vote_witness_ranking_key ="lately.cycle.vote.witness.ranking.key"
-const lately_day_vote_witness_ranking_key ="lately.day.vote.witness.ranking.key"
+const latelyCycleVoteWitnessRankingKey ="lately.cycle.vote.witness.ranking.key"
+const latelyDayVoteWitnessRankingKey ="lately.day.vote.witness.ranking.key"
 
-//QueryVoteLiveBuffer 从buffer中获取实时投票数据
-func QueryVoteLiveBuffer() (*entity.VoteLiveInfo, error) {
-	var voteLive = &entity.VoteLiveInfo{}
-	voteBuffer := buffer.GetVoteBuffer()
-	votes, _ := voteBuffer.GetVoteLive()
-	voteLive.Data = votes
-	return voteLive, nil
-
-}
-
-//QueryVoteCurrentCycleBuffer 从buffer中获取上轮投票数据
-func QueryVoteCurrentCycleBuffer() (*entity.VoteCurrentCycleResp, error) {
-	voteBuffer := buffer.GetVoteBuffer()
-	return voteBuffer.GetVoteCurrentCycle(), nil
-}
 
 //QueryVoteNextCycleBuffer 本轮投票剩余时长
 func QueryVoteNextCycleBuffer() (*entity.VoteNextCycleResp, error) {
@@ -262,16 +247,16 @@ func queryRealTimeVoteWitnessTotal(toAddress string) int64 {
 func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
 	var latelyDayVoteWitnessRankingValue, latelyCycleVoteWitnessRankingValue string
 	var err error
-	latelyDayVoteWitnessRankingValue, err = config.RedisCli.Get(lately_day_vote_witness_ranking_key).Result()
+	latelyDayVoteWitnessRankingValue, err = config.RedisCli.Get(latelyDayVoteWitnessRankingKey).Result()
 	if err == redis.Nil {
 		SyncVoteWitnessRanking()
-		latelyDayVoteWitnessRankingValue, _ = config.RedisCli.Get(lately_day_vote_witness_ranking_key).Result()
+		latelyDayVoteWitnessRankingValue, _ = config.RedisCli.Get(latelyDayVoteWitnessRankingKey).Result()
 	} else if err != nil {
 		log.Errorf("getVoteWitnessRankingChange redis get latelyDayVoteWitnessRankingValue error :[%v]\n", err)
 		return
 	}
 
-	latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+	latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(latelyCycleVoteWitnessRankingKey).Result()
 
 	latelyDayVoteWitnessRankingList := make([]*entity.VoteWitnessRanking, 0)
 	err = json.Unmarshal([]byte(latelyDayVoteWitnessRankingValue), &latelyDayVoteWitnessRankingList)
@@ -297,7 +282,7 @@ func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
 
 }
 
-//
+// getChangeRanking
 func  getChangeRanking(address string, currentRanking int32, voteWitnessRankingList []*entity.VoteWitnessRanking) int32 {
 	for index := range voteWitnessRankingList {
 		voteWitnessRanking := voteWitnessRankingList[index]
@@ -330,7 +315,7 @@ func syncLatelyCycleVoteWitnessRanking() {
 		return
 	}
 
-	err = config.RedisCli.Set(lately_cycle_vote_witness_ranking_key, string(value), 0).Err()
+	err = config.RedisCli.Set(latelyCycleVoteWitnessRankingKey, string(value), 0).Err()
 	if err != nil {
 		log.Errorf("syncLatelyCycleVoteWitnessRanking set lately_cycle_vote_witness_ranking_key err:[%v]", err)
 	}
@@ -340,12 +325,12 @@ func syncLatelyCycleVoteWitnessRanking() {
 func SyncVoteWitnessRanking() {
 	var latelyDayVoteWitnessRankingValue, latelyCycleVoteWitnessRankingValue string
 	var err error
-	latelyDayVoteWitnessRankingValue, err = config.RedisCli.Get(lately_day_vote_witness_ranking_key).Result()
+	latelyDayVoteWitnessRankingValue, err = config.RedisCli.Get(latelyDayVoteWitnessRankingKey).Result()
 	if err == redis.Nil {
-		latelyCycleVoteWitnessRankingValue, err = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+		latelyCycleVoteWitnessRankingValue, err = config.RedisCli.Get(latelyCycleVoteWitnessRankingKey).Result()
 		if err == redis.Nil {
 			syncLatelyCycleVoteWitnessRanking()
-			latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+			latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(latelyCycleVoteWitnessRankingKey).Result()
 		} else if err != nil  {
 			log.Errorf("syncVoteWitnessRanking redis get latelyCycleVoteWitnessRankingValue error :[%v]\n", err)
 			return
@@ -358,10 +343,10 @@ func SyncVoteWitnessRanking() {
 		return
 	}
 
-	latelyCycleVoteWitnessRankingValue, err = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+	latelyCycleVoteWitnessRankingValue, err = config.RedisCli.Get(latelyCycleVoteWitnessRankingKey).Result()
 	if err == redis.Nil {
 		syncLatelyCycleVoteWitnessRanking()
-		latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(lately_cycle_vote_witness_ranking_key).Result()
+		latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(latelyCycleVoteWitnessRankingKey).Result()
 	} else if err != nil {
 		log.Errorf("syncVoteWitnessRanking redis get latelyCycleVoteWitnessRankingValue error :[%v]\n", err)
 		return
@@ -369,7 +354,7 @@ func SyncVoteWitnessRanking() {
 
 	latelyDayVoteWitnessRankingValue = latelyCycleVoteWitnessRankingValue
 
-	err = config.RedisCli.Set(lately_day_vote_witness_ranking_key, string(latelyDayVoteWitnessRankingValue), 0).Err()
+	err = config.RedisCli.Set(latelyDayVoteWitnessRankingKey, string(latelyDayVoteWitnessRankingValue), 0).Err()
 	if err != nil {
 		log.Errorf("syncVoteWitnessRanking set lately_day_vote_witness_ranking_key err:[%v]", err)
 	}
