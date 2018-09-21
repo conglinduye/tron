@@ -208,6 +208,13 @@ func storeBlocksInner(blocks []*core.Block) (bool, int64, int64, []int64) {
 		// prepare transaction
 		for _, tran := range block.Transactions {
 			// tran.RawData.RefBlockNum = block.BlockHeader.RawData.Number
+			if len(tran.Signature) == 0 {
+				tran.Signature = append(tran.Signature, []byte{})
+				fmt.Printf("ERROR: block [%v] transaction [%v] signature is empty!\n", block.BlockHeader.RawData.Number, utils.ToJSONStr(tran))
+			} else if len(tran.Signature) > 1 {
+				fmt.Printf("ERROR: block [%v] transaction [%v] signature more than 1!\n", block.BlockHeader.RawData.Number, utils.ToJSONStr(tran))
+				tran.Signature = tran.Signature[0:1]
+			}
 			tran.Signature = append(tran.Signature, utils.BinaryBigEndianEncodeInt64(block.BlockHeader.RawData.Number))
 			tran.Signature = append(tran.Signature, utils.BinaryBigEndianEncodeInt64(block.BlockHeader.RawData.Timestamp))
 			tranList = append(tranList, tran)
