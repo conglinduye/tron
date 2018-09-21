@@ -275,7 +275,7 @@ func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
 
 }
 
-//
+// getChangeRanking
 func getChangeRanking(address string, currentRanking int32, voteWitnessRankingList []*entity.VoteWitnessRanking) int32 {
 	for _, voteWitnessRanking := range voteWitnessRankingList {
 		if voteWitnessRanking.Address == address {
