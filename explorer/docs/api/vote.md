@@ -14,6 +14,7 @@ output:json
     "total":143,
     "totalVotes":7852792991,
      "fastestRise":{ //排名上升变化最快的节点
+            "realTimeRanking":46,
             "address":"TJgmwx9TYaqujmdthJkjaLyWXrwTCmmTan",
             "name":"ZADEA-MadeInItaly",
             "url":"www",
@@ -26,7 +27,8 @@ output:json
             "change_day":56
         }
     "data":[
-        {
+        { 
+            "realTimeRanking":1,//实时投票排名
             "address":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",//地址
             "name":"Sesameseed",//名称
             "url":"https://www.sesameseed.org",//url
@@ -69,6 +71,7 @@ output:json
 {
     "success":true,
     "data":{
+        "realTimeRanking":1,
         "address":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",
         "name":"Sesameseed",
         "url":"https://www.sesameseed.org",
