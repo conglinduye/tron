@@ -229,12 +229,17 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 
 	sort.SliceStable(voteWitnessList, func(i, j int) bool { return voteWitnessList[i].RealTimeVotes > voteWitnessList[j].RealTimeVotes })
 
+	for index := range voteWitnessList {
+		voteWitnessList[index].RealTimeRanking = int32(index + 1)
+	}
+
 	// getVoteWitnessRankingChange
 	getVoteWitnessRankingChange(voteWitnessList)
 
 	sortList := make([]*entity.VoteWitness, 0, len(voteWitnessList))
 	for index := range voteWitnessList {
-		voteWitness := voteWitnessList[index]
+		voteWitness := new(entity.VoteWitness)
+		*voteWitness = *voteWitnessList[index]
 		sortList = append(sortList, voteWitness)
 	}
 
@@ -284,9 +289,9 @@ func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
 
 	for index := range voteWitnessList {
 		voteWitness := voteWitnessList[index]
-		changeCycle :=  getChangeRanking(voteWitness.Address, int32(index + 1), latelyCycleVoteWitnessRankingList)
+		changeCycle :=  getChangeRanking(voteWitness.Address, voteWitness.RealTimeRanking, latelyCycleVoteWitnessRankingList)
 		voteWitness.ChangeCycle = changeCycle
-		changeDay := getChangeRanking(voteWitness.Address, int32(index + 1), latelyDayVoteWitnessRankingList)
+		changeDay := getChangeRanking(voteWitness.Address, voteWitness.RealTimeRanking, latelyDayVoteWitnessRankingList)
 		voteWitness.ChangeDay = changeDay
 	}
 
@@ -377,7 +382,6 @@ func QueryVoteWitnessDetail(address string) (*entity.VoteWitnessDetail, error) {
 	voteWitnessDetail := &entity.VoteWitnessDetail{}
 	voteWitness := &entity.VoteWitness{}
 	req := &entity.VoteWitnessReq{}
-	req.Address = address
 	voteWitnessResp, err := QueryVoteWitness(req)
 	if err != nil {
 		log.Errorf("QueryVoteWitnessDetail error :[%v]\n", err)
@@ -388,7 +392,13 @@ func QueryVoteWitnessDetail(address string) (*entity.VoteWitnessDetail, error) {
 
 	voteWitnessDetail.Success = true
 	if len(voteWitnessResp.Data) != 0 {
-		voteWitness = voteWitnessResp.Data[0]
+		voteWitnessList := voteWitnessResp.Data
+		for _, temp := range voteWitnessList {
+			if address == temp.Address {
+				voteWitness = temp
+				break
+			}
+		}
 		voteWitnessDetail.Data = voteWitness
 	} else {
 		voteWitnessDetail.Success = false
