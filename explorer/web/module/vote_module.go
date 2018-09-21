@@ -3,6 +3,7 @@ package module
 import (
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
@@ -51,7 +52,6 @@ func QueryRealTimeTotalVotes(strSQL string) int64 {
 
 	return votes
 }
-
 
 //QueryVoteLiveRealize 操作数据库
 func QueryVoteLiveRealize(strSQL string) (*entity.VoteLiveInfo, error) {
@@ -217,9 +217,10 @@ func QueryVoterAvailableVotes(strSQL string) (float64, error) {
 	return result, nil
 }
 
-// QueryVoteWitness
-func QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.VoteWitnessResp, error) {
+// QueryVoteWitness ...
+func QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL string, totalVotes int64) (*entity.VoteWitnessResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
+	realTimeRange := int32(0)
 	log.Info(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
@@ -235,29 +236,39 @@ func QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.VoteW
 	voteWitnessList := make([]*entity.VoteWitness, 0)
 
 	for dataPtr.NextT() {
+		atomic.AddInt32(&realTimeRange, 1)
 		var voteWitness = &entity.VoteWitness{}
+		voteWitness.RealTimeRanking = realTimeRange
 		voteWitness.Address = dataPtr.GetField("address")
 		voteWitness.LastCycleVotes = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote_count"))
 		voteWitness.Name = dataPtr.GetField("account_name")
+		voteWitness.RealTimeVotes = mysql.ConvertDBValueToInt64(dataPtr.GetField("realTimeVotes"))
 		voteWitness.URL = dataPtr.GetField("github_link")
+		voteWitness.ChangeVotes = voteWitness.RealTimeVotes - voteWitness.LastCycleVotes
+		if voteWitness.URL != "" {
+			voteWitness.HasPage = true
+		}
+		if totalVotes != 0 {
+			voteWitness.VotesPercentage = float64(voteWitness.LastCycleVotes) / float64(totalVotes) * 100
+		}
 
 		voteWitnessList = append(voteWitnessList, voteWitness)
 	}
 
-	var total = int64(len(voteWitnessList))
+	/*var total = int64(len(voteWitnessList))
 	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
 	if err != nil {
 		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
-	}
+	}*/
 
-	voteWitnessResp.Total = total
+	voteWitnessResp.Total = totalVotes
 	voteWitnessResp.Data = voteWitnessList
 
 	return voteWitnessResp, nil
 }
 
 // QueryRealTimeVoteWitnessTotal
-func QueryRealTimeVoteWitnessTotal(strSQL string) (int64) {
+func QueryRealTimeVoteWitnessTotal(strSQL string) int64 {
 	var realTimeVotes = int64(0)
 	log.Info(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
@@ -298,4 +309,3 @@ func QueryVoteWitnessRanking(strSQL string) ([]*entity.VoteWitnessRanking, error
 
 	return voteWitnessRankingList, nil
 }
-
