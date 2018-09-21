@@ -113,6 +113,18 @@ func getBlock(id int, b, e int64) {
 		return
 	}
 
+	if id == 0 {
+		for {
+			runTaskCnt := wc1.currentWorker()
+			fmt.Printf("Current working task:[%v]--max task:[%v], latest block id handled:%v\n", runTaskCnt, *gIntMaxWorker, newE)
+			if e > 0 && 1 == runTaskCnt {
+				fmt.Printf("Sync all data cost:%v\n", time.Since(ts))
+				break
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}
+
 	// fmt.Printf("%v Finish work, total cost:%v, total block:%v(%v), begin:%v, end:%v\n", taskID, time.Since(ts), cnt, b-bb, bb, b)
 
 	wc1.stopOne()
