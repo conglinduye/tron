@@ -109,7 +109,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 
 		if tokenReq.Start == "" || tokenReq.Limit == "" {
 			tokenReq.Start = "0"
-			tokenReq.Limit = "50"
+			tokenReq.Limit = "20"
 		}
 
 		assetBalanceResp, err := service.QueryAssetBalances(tokenReq)

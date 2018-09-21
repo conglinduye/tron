@@ -15,7 +15,7 @@ import (
 //QueryTokenList
 func QueryTokenList(strSQL, filterSQL, sortSQL, pageSQL string) ([]*entity.TokenInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
-	log.Sql(strFullSQL)
+	log.Info(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryTokensList error:[%v]\n", err)
@@ -47,6 +47,14 @@ func QueryTokenList(strSQL, filterSQL, sortSQL, pageSQL string) ([]*entity.Token
 			token.Frozen = tokenFrozenInfo
 		}
 		token.Abbr = dataPtr.GetField("asset_abbr")
+
+		if dataPtr.IsFieldExist("totalTokenTransfers") {
+			token.TotalTransactions = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalTokenTransfers"))
+		}
+
+		if dataPtr.IsFieldExist("totalTokenHolders") {
+			token.NrOfTokenHolders = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalTokenHolders"))
+		}
 
 		tokenList = append(tokenList, token)
 	}

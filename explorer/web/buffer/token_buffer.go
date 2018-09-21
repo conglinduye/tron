@@ -72,7 +72,7 @@ func (w *tokenBuffer) loadQueryCommonTokenList() {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople', '') 
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople', 'binance') 
 			order by participated desc `)
 
 	commonTokenList, err := module.QueryTokenList(strSQL, "", "", "")
@@ -113,7 +113,7 @@ func (w *tokenBuffer) loadQueryIcoTokenList() {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople') `)
+			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople', 'binance') `)
 
 	t := time.Now()
 	dateTime := t.UnixNano() / 1e6
@@ -159,11 +159,22 @@ func (w *tokenBuffer) GetTokensDetailList() (tokenDetailList []*entity.TokenInfo
 // loadQueryTokensDetailList
 func (w *tokenBuffer) loadQueryTokensDetailList() {
 	strSQL := fmt.Sprintf(`
-			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
-			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
-			from asset_issue
-			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople') 
-			order by participated desc `)
+		select a.owner_address, a.asset_name, a.asset_abbr, a.total_supply, a.frozen_supply,
+			a.trx_num, a.num, a.participated, a.start_time, a.end_time, a.order_num, a.vote_score, a.asset_desc, a.url,
+			b.totalTokenTransfers, c.totalTokenHolders
+		from asset_issue a
+			left join(
+				select asset_name, count(1) as totalTokenTransfers
+				from contract_asset_transfer
+				group by asset_name
+			) b on b.asset_name = a.asset_name
+			left join(
+				select asset_name, count(1) as totalTokenHolders
+				from account_asset_balance 
+				group by asset_name
+			) c on c.asset_name = a.asset_name
+		where 1=1 and a.asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople', 'binance') 
+		order by a.participated desc  `)
 
 	tokenDetailList, err := module.QueryTokenList(strSQL, "", "", "")
 	if err != nil {
@@ -173,16 +184,6 @@ func (w *tokenBuffer) loadQueryTokensDetailList() {
 		return
 	}
 	subHandle(tokenDetailList)
-
-	/*for index := range tokenDetailList {
-		tokenInfo := tokenDetailList[index]
-		// QueryTotalTokenTransfers
-		totalTokenTransfers, _ := module.QueryTotalTokenTransfers(tokenInfo.Name)
-		tokenInfo.TotalTransactions = totalTokenTransfers
-		// QueryTotalTokenHolders
-		totalTokenHolders, _ := module.QueryTotalTokenHolders(tokenInfo.Name)
-		tokenInfo.NrOfTokenHolders = totalTokenHolders
-	}*/
 
 	w.Lock()
 	w.tokenDetailList = tokenDetailList
