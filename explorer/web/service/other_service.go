@@ -28,7 +28,7 @@ func QuerySystemStatus() (*entity.SystemStatusResp, error) {
 	//查询数据库获取最大块包含非确认--从buffer获取（由于数据库中没存未确认的块，所以从fullnode获取）
 	latestdBlockIDDb := blockBuffer.GetMaxBlockID()
 	//从buffer中获取fullnode块高
-	fullnodeNowBlockID := blockBuffer.GetFullNodeMaxBlockID()
+	fullnodeNowBlockID := blockBuffer.GetFullNodeMaxBlockID() //realMaxBlockID
 	//从buffer中获取db的确认过的块高
 	solidityNowBlockID := blockBuffer.GetSolidityNodeMaxBlockID()
 	if solidityNowBlockID > 0 {
