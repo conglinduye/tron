@@ -45,12 +45,11 @@ func main() {
 	*/
 
 	//init buffer
-	buffer.GetBlockBuffer()
-	buffer.GetWitnessBuffer()
-	buffer.GetMarketBuffer()
-	buffer.GetVoteBuffer()
-	buffer.GetAccountTokenBuffer()
-	buffer.GetTokenBuffer()
+	go buffer.GetBlockBuffer()
+	go buffer.GetWitnessBuffer()
+	go buffer.GetMarketBuffer()
+	go buffer.GetAccountTokenBuffer()
+	go buffer.GetTokenBuffer()
 
 	go task.SyncCacheTodayReport()
 
