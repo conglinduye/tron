@@ -143,8 +143,7 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 // QueryVotesSubHandle
 func queryVotesSubHandle(votesResp *entity.VotesResp) {
 	votesInfos := votesResp.Data
-	for index := range votesInfos {
-		votesInfo := votesInfos[index]
+	for _, votesInfo := range votesInfos {
 
 		strSQLOne := fmt.Sprintf(`
 			select acc.address as candidateAddress, acc.account_name as candidateName, wlwit.url as candidateUrl
@@ -191,16 +190,19 @@ func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
 func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, error) {
 	var filterSQL, sortSQL, pageSQL string
 	strSQL := fmt.Sprintf(`
-		select witt.address,witt.vote_count, srac.github_link,acc.account_name
+		select witt.address, witt.vote_count, srac.github_link, acc.account_name,votes.realTimeVotes
 		from witness witt
 		left join tron_account acc on acc.address=witt.address
-		left join wlcy_sr_account srac on acc.address=srac.address
+		left join wlcy_sr_account srac on witt.address=srac.address
+		left join (
+			select to_address,sum(vote) as realTimeVotes from account_vote_result  group by to_address 
+		) votes on votes.to_address=witt.address
 		where 1=1 `)
 
 	if req.Address != "" {
 		filterSQL = fmt.Sprintf(" and witt.address='%v'", req.Address)
 	}
-	sortSQL = "order by witt.vote_count desc"
+	sortSQL = "order by votes.realTimeVotes desc"
 
 	//pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
@@ -214,10 +216,7 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 	voteWitnessResp.TotalVotes = totalVotes
 
 	voteWitnessList:= voteWitnessResp.Data
-	for index := range voteWitnessList {
-		voteWitness := voteWitnessList[index]
-		realTimeVotes := queryRealTimeVoteWitnessTotal(voteWitness.Address)
-		voteWitness.RealTimeVotes = realTimeVotes
+	for index, voteWitness := range voteWitnessList {
 		voteWitness.ChangeVotes = voteWitness.RealTimeVotes - voteWitness.LastCycleVotes
 		if voteWitness.URL != "" {
 			voteWitness.HasPage = true
@@ -225,13 +224,14 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 		if totalVotes != 0 {
 			voteWitness.VotesPercentage = float64(voteWitness.LastCycleVotes) / float64(totalVotes) * 100
 		}
+		voteWitness.RealTimeRanking = int32(index + 1)
 	}
 
-	sort.SliceStable(voteWitnessList, func(i, j int) bool { return voteWitnessList[i].RealTimeVotes > voteWitnessList[j].RealTimeVotes })
+	//sort.SliceStable(voteWitnessList, func(i, j int) bool { return voteWitnessList[i].RealTimeVotes > voteWitnessList[j].RealTimeVotes })
 
-	for index := range voteWitnessList {
+	/*for index := range voteWitnessList {
 		voteWitnessList[index].RealTimeRanking = int32(index + 1)
-	}
+	}*/
 
 	// getVoteWitnessRankingChange
 	getVoteWitnessRankingChange(voteWitnessList)
@@ -245,7 +245,7 @@ func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, erro
 
 	if len(sortList) > 0 {
 		sort.SliceStable(sortList, func(i, j int) bool { return sortList[i].ChangeCycle > sortList[j].ChangeCycle })
-		voteWitnessResp.FastestRise = *sortList[0]
+		voteWitnessResp.FastestRise = sortList[0]
 	}
 
 	return voteWitnessResp, nil

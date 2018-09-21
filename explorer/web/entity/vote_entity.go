@@ -100,7 +100,7 @@ type VoteWitnessResp struct {
 	Total				int64					`json:"total"`
 	TotalVotes			int64					`json:"totalVotes"`
 	Data    			[]*VoteWitness			`json:"data"`
-	FastestRise			VoteWitness				`json:"fastestRise"`
+	FastestRise			*VoteWitness			`json:"fastestRise"`
 }
 
 //VoteWitness 节点投票信息

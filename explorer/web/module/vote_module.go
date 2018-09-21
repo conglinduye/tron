@@ -240,6 +240,7 @@ func QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.VoteW
 		voteWitness.LastCycleVotes = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote_count"))
 		voteWitness.Name = dataPtr.GetField("account_name")
 		voteWitness.URL = dataPtr.GetField("github_link")
+		voteWitness.RealTimeVotes = mysql.ConvertDBValueToInt64(dataPtr.GetField("realTimeVotes"))
 
 		voteWitnessList = append(voteWitnessList, voteWitness)
 	}
