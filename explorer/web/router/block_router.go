@@ -34,6 +34,17 @@ func blockRegister(ginRouter *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, blockResp)
 	})
+	//获取fullnode最新块
+	ginRouter.GET("/api/block/latest", func(c *gin.Context) {
+		log.Debug("Hello /api/block/latest")
+		//blockResp, err := service.QueryBlock(blockReq)
+		blockResp, err := service.QueryBlockLatestBuffer()
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+		}
+		c.JSON(http.StatusOK, blockResp)
+	})
 	//:number=2135998
 	ginRouter.GET("/api/block/:number", func(c *gin.Context) {
 		blockReq := &entity.Blocks{}
@@ -41,17 +52,6 @@ func blockRegister(ginRouter *gin.Engine) {
 		log.Debugf("Hello /api/block/:%#v", blockReq.Number)
 		//blockResp, err := service.QueryBlock(blockReq)
 		blockResp, err := service.QueryBlockBuffer(blockReq)
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
-		}
-		c.JSON(http.StatusOK, blockResp)
-	})
-	//获取fullnode最新块
-	ginRouter.GET("/api/block/latest", func(c *gin.Context) {
-		log.Debug("Hello /api/block/latest")
-		//blockResp, err := service.QueryBlock(blockReq)
-		blockResp, err := service.QueryBlockLatestBuffer()
 		if err != nil {
 			errCode, _ := util.GetErrorCode(err)
 			c.JSON(errCode, err)
