@@ -4,22 +4,21 @@ import (
 	"fmt"
 	"strings"
 
+	"encoding/json"
+	"sort"
+
 	"github.com/wlcy/tron/explorer/core/grpcclient"
+	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
-	"github.com/wlcy/tron/explorer/lib/util"
-	"sort"
-	"encoding/json"
-	"github.com/wlcy/tron/explorer/lib/config"
 	"gopkg.in/redis.v4"
 )
 
-
-const latelyCycleVoteWitnessRankingKey ="lately.cycle.vote.witness.ranking.key"
-const latelyDayVoteWitnessRankingKey ="lately.day.vote.witness.ranking.key"
-
+const latelyCycleVoteWitnessRankingKey = "lately.cycle.vote.witness.ranking.key"
+const latelyDayVoteWitnessRankingKey = "lately.day.vote.witness.ranking.key"
 
 //QueryVoteNextCycleBuffer 本轮投票剩余时长
 func QueryVoteNextCycleBuffer() (*entity.VoteNextCycleResp, error) {
@@ -101,7 +100,7 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	}
 
 	if len(accountVoteResultRes.Data) == 0 {
-		votesResp.Data = make([]*entity.VotesInfo , 0)
+		votesResp.Data = make([]*entity.VotesInfo, 0)
 		return votesResp, nil
 	}
 
@@ -139,7 +138,7 @@ func queryVotesSubHandle(votesResp *entity.VotesResp) {
 
 		candidateInfo, err := module.QueryCandidateInfo(strSQLOne)
 		if err != nil {
-			log.Errorf("QueryVotesSubHandle queryCandidateInfo strSQL:%v, err:[%v]",strSQLOne,  err)
+			log.Errorf("QueryVotesSubHandle queryCandidateInfo strSQL:%v, err:[%v]", strSQLOne, err)
 		} else {
 			votesInfo.CandidateName = candidateInfo.CandidateName
 			votesInfo.CandidateURL = candidateInfo.CandidateUrl
@@ -149,13 +148,12 @@ func queryVotesSubHandle(votesResp *entity.VotesResp) {
 
 		voterAvailableVotes, err := module.QueryVoterAvailableVotes(strSQLTwo)
 		if err != nil {
-			log.Errorf("QueryVotesSubHandle queryVoterAvailableVotes strSQL:%v, err:[%v]",strSQLTwo, err)
+			log.Errorf("QueryVotesSubHandle queryVoterAvailableVotes strSQL:%v, err:[%v]", strSQLTwo, err)
 		} else {
 			votesInfo.VoterAvailableVotes = voterAvailableVotes
 		}
 	}
 }
-
 
 func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
 	filterSQL := ""
@@ -169,68 +167,64 @@ func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
 	}
 
 	totalVotes := module.QueryRealTimeTotalVotes(strSQL + filterSQL)
-	 return totalVotes
+	return totalVotes
 }
 
-// QueryVoteWitness
+// QueryVoteWitness ...
 func QueryVoteWitness(req *entity.VoteWitnessReq) (*entity.VoteWitnessResp, error) {
 	var filterSQL, sortSQL, pageSQL string
+	var voteCycleTotalNum = int64(0)
 	strSQL := fmt.Sprintf(`
-		select witt.address,witt.vote_count, srac.github_link,acc.account_name
-		from witness witt
-		left join tron_account acc on acc.address=witt.address
-		left join wlcy_sr_account srac on acc.address=srac.address
-		where 1=1 `)
+	select witt.address,witt.vote_count, srac.github_link,acc.account_name,votes.realTimeVotes
+	from witness witt
+	left join tron_account acc on acc.address=witt.address
+	left join wlcy_sr_account srac on witt.address=srac.address
+	left join (
+		select to_address,sum(vote) as realTimeVotes from account_vote_result  group by to_address 
+	) votes on votes.to_address=witt.address
+	where 1=1 `)
 
 	if req.Address != "" {
 		filterSQL = fmt.Sprintf(" and witt.address='%v'", req.Address)
 	}
-	sortSQL = "order by witt.vote_count desc"
-
+	//sortSQL = "order by witt.vote_count desc"
+	sortSQL = "order by votes.realTimeVotes"
 	//pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
-	voteWitnessResp, err := module.QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL)
+	curCycle := buffer.GetVoteBuffer().GetVoteCurrentCycle()
+	if curCycle == nil {
+		log.Error("GetVoteCurrentCycle nil,query database instead")
+		voteCycleTotalNum = module.QueryTotalVotes()
+	} else {
+		voteCycleTotalNum = curCycle.TotalVotes
+	}
+	voteWitnessResp, err := module.QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL, voteCycleTotalNum)
 	if err != nil {
-		log.Errorf("QueryVoteWitness strSQL:%v, err:[%v]",strSQL, err)
+		log.Errorf("QueryVoteWitness strSQL:%v, err:[%v]", strSQL, err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 
-	totalVotes := module.QueryTotalVotes()
-	voteWitnessResp.TotalVotes = totalVotes
+	//voteWitnessList := voteWitnessResp.Data
+	/*
+		sort.SliceStable(voteWitnessList, func(i, j int) bool { return voteWitnessList[i].RealTimeVotes > voteWitnessList[j].RealTimeVotes })
 
-	voteWitnessList:= voteWitnessResp.Data
-	for index := range voteWitnessList {
-		voteWitness := voteWitnessList[index]
-		realTimeVotes := queryRealTimeVoteWitnessTotal(voteWitness.Address)
-		voteWitness.RealTimeVotes = realTimeVotes
-		voteWitness.ChangeVotes = voteWitness.RealTimeVotes - voteWitness.LastCycleVotes
-		if voteWitness.URL != "" {
-			voteWitness.HasPage = true
+		for index := range voteWitnessList {
+			voteWitnessList[index].RealTimeRanking = int32(index + 1)
 		}
-		if totalVotes != 0 {
-			voteWitness.VotesPercentage = float64(voteWitness.LastCycleVotes) / float64(totalVotes) * 100
-		}
-	}
-
-	sort.SliceStable(voteWitnessList, func(i, j int) bool { return voteWitnessList[i].RealTimeVotes > voteWitnessList[j].RealTimeVotes })
-
-	for index := range voteWitnessList {
-		voteWitnessList[index].RealTimeRanking = int32(index + 1)
-	}
+	*/
 
 	// getVoteWitnessRankingChange
-	getVoteWitnessRankingChange(voteWitnessList)
+	getVoteWitnessRankingChange(voteWitnessResp.Data)
 
-	sortList := make([]*entity.VoteWitness, 0, len(voteWitnessList))
-	for index := range voteWitnessList {
-		voteWitness := new(entity.VoteWitness)
-		*voteWitness = *voteWitnessList[index]
+	/*sortList := make([]*entity.VoteWitness, 0, len(voteWitnessList))
+	for _,voteWitness := range voteWitnessList {
 		sortList = append(sortList, voteWitness)
-	}
+	}*/
 
+	sortList := voteWitnessResp.Data
 	if len(sortList) > 0 {
 		sort.SliceStable(sortList, func(i, j int) bool { return sortList[i].ChangeCycle > sortList[j].ChangeCycle })
-		voteWitnessResp.FastestRise = *sortList[0]
+		voteWitnessResp.FastestRise = sortList[0]
 	}
 
 	return voteWitnessResp, nil
@@ -272,9 +266,8 @@ func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
 		return
 	}
 
-	for index := range voteWitnessList {
-		voteWitness := voteWitnessList[index]
-		changeCycle :=  getChangeRanking(voteWitness.Address, voteWitness.RealTimeRanking, latelyCycleVoteWitnessRankingList)
+	for _, voteWitness := range voteWitnessList {
+		changeCycle := getChangeRanking(voteWitness.Address, voteWitness.RealTimeRanking, latelyCycleVoteWitnessRankingList)
 		voteWitness.ChangeCycle = changeCycle
 		changeDay := getChangeRanking(voteWitness.Address, voteWitness.RealTimeRanking, latelyDayVoteWitnessRankingList)
 		voteWitness.ChangeDay = changeDay
@@ -282,17 +275,15 @@ func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
 
 }
 
-// getChangeRanking
-func  getChangeRanking(address string, currentRanking int32, voteWitnessRankingList []*entity.VoteWitnessRanking) int32 {
-	for index := range voteWitnessRankingList {
-		voteWitnessRanking := voteWitnessRankingList[index]
+//
+func getChangeRanking(address string, currentRanking int32, voteWitnessRankingList []*entity.VoteWitnessRanking) int32 {
+	for _, voteWitnessRanking := range voteWitnessRankingList {
 		if voteWitnessRanking.Address == address {
 			return voteWitnessRanking.Ranking - currentRanking
 		}
 	}
 	return 0
 }
-
 
 //syncLatelyCycleVoteWitnessRanking
 func syncLatelyCycleVoteWitnessRanking() {
@@ -301,12 +292,12 @@ func syncLatelyCycleVoteWitnessRanking() {
 	voteWitnessRankingList, err := module.QueryVoteWitnessRanking(strSQL)
 
 	if err != nil {
-		log.Errorf("syncLatelyCycleVoteWitnessRanking strSQL:%v, err:[%v]",strSQL,  err)
+		log.Errorf("syncLatelyCycleVoteWitnessRanking strSQL:%v, err:[%v]", strSQL, err)
 		return
 	}
 
-	for index := range voteWitnessRankingList {
-		voteWitnessRankingList[index].Ranking = int32(index+1)
+	for index, voteWitnessRanking := range voteWitnessRankingList {
+		voteWitnessRanking.Ranking = int32(index + 1)
 	}
 
 	value, err := json.Marshal(voteWitnessRankingList)
@@ -331,7 +322,7 @@ func SyncVoteWitnessRanking() {
 		if err == redis.Nil {
 			syncLatelyCycleVoteWitnessRanking()
 			latelyCycleVoteWitnessRankingValue, _ = config.RedisCli.Get(latelyCycleVoteWitnessRankingKey).Result()
-		} else if err != nil  {
+		} else if err != nil {
 			log.Errorf("syncVoteWitnessRanking redis get latelyCycleVoteWitnessRankingValue error :[%v]\n", err)
 			return
 		}
