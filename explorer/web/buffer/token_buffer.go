@@ -27,9 +27,9 @@ func GetTokenBuffer() *tokenBuffer {
 func getTokenBuffer() *tokenBuffer {
 	onceTokenBuffer.Do(func() {
 		_tokenBuffer = &tokenBuffer{}
-		//_tokenBuffer.loadCommonQueryTokens()
-		//_tokenBuffer.loadIcoQueryTokens()
-		//_tokenBuffer.loadQueryTokensDetail()
+		_tokenBuffer.loadCommonQueryTokens()
+		_tokenBuffer.loadIcoQueryTokens()
+		_tokenBuffer.loadQueryTokensDetail()
 
 		go tokenInfoBufferLoader()
 

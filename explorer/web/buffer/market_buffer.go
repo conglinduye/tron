@@ -30,7 +30,7 @@ func GetMarketBuffer() *marketBuffer {
 func getMarketBuffer() *marketBuffer {
 	onceMarketOnce.Do(func() {
 		_marketBuffer = &marketBuffer{}
-		//_marketBuffer.load()
+		_marketBuffer.load()
 
 		go marketBufferLoader()
 	})

@@ -28,9 +28,9 @@ func GetVoteBuffer() *voteBuffer {
 func getVoteBuffer() *voteBuffer {
 	onceVoteBuffer.Do(func() {
 		_voteBuffer = &voteBuffer{}
-		//_voteBuffer.loadQueryVoteLive()
-		//_voteBuffer.getMaintenanceTimeStamp()
-		//_voteBuffer.loadQueryVoteCurrentCycle()
+		_voteBuffer.loadQueryVoteLive()
+		_voteBuffer.getMaintenanceTimeStamp()
+		_voteBuffer.loadQueryVoteCurrentCycle()
 
 		go voteLiveBufferLoader()
 		go voteCycleBufferLoader()

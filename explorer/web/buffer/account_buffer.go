@@ -26,7 +26,7 @@ func GetAccountTokenBuffer() *accountTokenBuffer {
 func getAccountTokenBuffer() *accountTokenBuffer {
 	onceAccountTokentOnce.Do(func() {
 		_accountTokenBuffer = &accountTokenBuffer{}
-		//_accountTokenBuffer.getAccountTokenBuffer()
+		_accountTokenBuffer.getAccountTokenBuffer()
 
 		go accountBufferLoader()
 	})
