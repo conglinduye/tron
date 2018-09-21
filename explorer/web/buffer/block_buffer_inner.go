@@ -260,6 +260,7 @@ func (b *blockBuffer) readBuffer(numStart int64, numEnd int64) []*entity.BlockIn
 
 func (b *blockBuffer) backgroundWorker() {
 	go b.backgroundLoader()
+	go b.backgroundGrpcBlockInfo()
 	go b.backgroundIndexLoader()
 
 }
@@ -274,6 +275,16 @@ func (b *blockBuffer) backgroundIndexLoader() {
 	}
 }
 
+func (b *blockBuffer) backgroundGrpcBlockInfo() {
+	minInterval := time.Duration(10) * time.Second
+	for {
+		b.getSolidityNodeMaxBlockID()
+		b.getNowBlock()
+		log.Debugf("222-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
+		time.Sleep(minInterval)
+	}
+}
+
 func (b *blockBuffer) backgroundLoader() {
 	minInterval := time.Duration(10) * time.Second
 	for {
@@ -281,7 +292,7 @@ func (b *blockBuffer) backgroundLoader() {
 		//log.Debugf("000")
 		b.getNowConfirmedBlock()
 		//log.Debugf("111-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
-		for {
+		/*for {
 			if b.getSolidityNodeMaxBlockID() {
 				log.Debugf("222-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
 				break
@@ -294,7 +305,7 @@ func (b *blockBuffer) backgroundLoader() {
 				break
 			}
 			//log.Debugf("555-%v, %v, %v, %v\n", b.GetMaxBlockID(), b.GetMaxConfirmedBlockID(), b.GetSolidityNodeMaxBlockID(), b.GetFullNodeMaxBlockID())
-		}
+		}*/
 
 		tsc := time.Since(ts)
 		if tsc < minInterval {
