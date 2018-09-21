@@ -144,12 +144,13 @@ func (w *tokenBuffer) loadQueryIcoTokenList() {
 
 // GetTokensDetailList
 func (w *tokenBuffer) GetTokensDetailList() (tokenDetailList []*entity.TokenInfo) {
-	w.RLock()
 	if w.tokenDetailList == nil {
 		log.Debugf("GetTokensDetailList from buffer nil, data reload")
 		w.loadQueryTokensDetailList()
 		log.Debugf("GetTokensDetailList from buffer, buffer data updated ")
 	}
+
+	w.RLock()
 	tokenDetailList = w.tokenDetailList
 	w.RUnlock()
 	return
@@ -173,7 +174,7 @@ func (w *tokenBuffer) loadQueryTokensDetailList() {
 	}
 	subHandle(tokenDetailList)
 
-	for index := range tokenDetailList {
+	/*for index := range tokenDetailList {
 		tokenInfo := tokenDetailList[index]
 		// QueryTotalTokenTransfers
 		totalTokenTransfers, _ := module.QueryTotalTokenTransfers(tokenInfo.Name)
@@ -181,7 +182,7 @@ func (w *tokenBuffer) loadQueryTokensDetailList() {
 		// QueryTotalTokenHolders
 		totalTokenHolders, _ := module.QueryTotalTokenHolders(tokenInfo.Name)
 		tokenInfo.NrOfTokenHolders = totalTokenHolders
-	}
+	}*/
 
 	w.Lock()
 	w.tokenDetailList = tokenDetailList
