@@ -601,6 +601,7 @@ CREATE TABLE `transactions` (
   `expire_time` bigint(20) DEFAULT '0',
   `modified_time` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '记录更新时间',
   `real_timestamp` bigint(20) NOT NULL DEFAULT '0' COMMENT 'transaction timestamp',
+  `raw_data` varchar(500) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'transaction raw data.data',
   PRIMARY KEY (`trx_hash`,`block_id`),
   KEY `idx_transactions_hash_create_time` (`block_id`,`trx_hash`,`create_time`),
   KEY `idx_transactions_create_time` (`create_time`),
