@@ -32,6 +32,8 @@ func TestRedis(*testing.T) {
 	fmt.Println(AddRefreshAddress([]byte("123"), []byte("345"), []byte("456")))
 
 	fmt.Println(_redisCli.Set("123", "4123", time.Duration(0)))
+
+	fmt.Printf("----%s\n", utils.HexDecode("7b22757365725f66726f6d223a22547275656265696e67222c22757365725f746f223a2254726f6e4c6f6f7454656c656772616d426f74222c22706c6174666f726d223a2274656c656772616d227d"))
 }
 
 func TestGetAccount(*testing.T) {

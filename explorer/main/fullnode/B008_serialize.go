@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -12,6 +13,10 @@ import (
 )
 
 func storeTransactions(trans []*core.Transaction) bool {
+	return storeTransactionsInner(trans)
+}
+
+func storeTransactionsInner(trans []*core.Transaction) bool {
 	dbb := getMysqlDB()
 
 	txn, err := dbb.Begin()
@@ -102,7 +107,16 @@ func storeTransactions(trans []*core.Transaction) bool {
 	return true
 }
 
+var blockLock sync.Mutex
+
+// 穿行化db操作
 func storeBlocks(blocks []*core.Block) (bool, int64, int64, []int64) {
+	blockLock.Lock()
+	defer blockLock.Unlock()
+	return storeBlocksInner(blocks)
+}
+
+func storeBlocksInner(blocks []*core.Block) (bool, int64, int64, []int64) {
 	dbb := getMysqlDB()
 	ts := time.Now()
 	txn, err := dbb.Begin()
