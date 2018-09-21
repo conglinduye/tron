@@ -38,19 +38,18 @@ func main() {
 		return
 	}
 
-	//初始化buffer
-	buffer.GetBlockBuffer()
-	buffer.GetWitnessBuffer()
-	buffer.GetMarketBuffer()
-	buffer.GetVoteBuffer()
-	buffer.GetAccountTokenBuffer()
-	buffer.GetTokenBuffer()
-
 	/* 数据库和redis初始化也可以用这种方式， but i don't like it
 	redisCli = redis.NewClient(conf.Redis.Host, conf.Redis.Pass, conf.Redis.Index, conf.Redis.Poolsize)
 	mysql.Initialize(conf.Mysql.Host, conf.Mysql.Port, conf.Mysql.Schema,
 		conf.Mysql.User, conf.Mysql.Pass)
 	*/
+
+	//init buffer
+	go buffer.GetBlockBuffer()
+	go buffer.GetWitnessBuffer()
+	go buffer.GetMarketBuffer()
+	go buffer.GetAccountTokenBuffer()
+	go buffer.GetTokenBuffer()
 
 	go task.SyncCacheTodayReport()
 

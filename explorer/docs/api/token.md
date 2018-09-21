@@ -11,8 +11,11 @@ start=0                                     //起始序号
 &status=ico                                 //ico是否结束标识
 
 eg: 
-http://18.216.57.65:20110/api/token?start=0&limit=10
+http://18.216.57.65:20110/api/token?start=0&limit=20
 
+http://18.216.57.65:20110/api/token?start=0&limit=20&status=ico
+
+http://18.216.57.65:20110/api/token?owner=TXiBuTWoXvWYKz47NcvKe1gfQDdNHnbBmh&name=VIP
 ```
 output:json
 ```json
@@ -118,7 +121,6 @@ input:param
 
 eg:
 http://18.216.57.65:20110/api/token/VIP
-
 ```
 output:json
 ```json

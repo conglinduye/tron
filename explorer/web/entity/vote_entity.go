@@ -44,23 +44,6 @@ type LiveInfo struct {
 	Votes   int64  `json:"votes"`   //:100006481
 }
 
-//VoteCurrentCycleResp 上轮投票信息
-type VoteCurrentCycleResp struct {
-	TotalVotes int64               `json:"total_votes"` //:"TFuC2Qge4GxA2U9abKxk1pw3YZvGM5XRir",
-	Candidates []*VoteCurrentCycle `json:"candidates"`  //:"trongalaxy",
-}
-
-//VoteCurrentCycle 上轮投票信息
-type VoteCurrentCycle struct {
-	Address     string `json:"address"`      //:"TFuC2Qge4GxA2U9abKxk1pw3YZvGM5XRir",
-	Name        string `json:"name"`         //:"trongalaxy",
-	URL         string `json:"url"`          //:"http://www.trongalaxy.io",
-	HasPage     bool   `json:"hasPage"`      //:100006481
-	Votes       int64  `json:"votes"`        //:100006481
-	ChangeCycle int32  `json:"change_cycle"` //:1,
-	ChangeDay   int32  `json:"change_day"`   //:1,
-}
-
 //VoteNextCycleResp 返回倒计时时间
 type VoteNextCycleResp struct {
 	NextCycle int64 `json:"nextCycle"` //:,毫秒
