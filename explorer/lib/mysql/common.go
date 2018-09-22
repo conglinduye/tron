@@ -123,7 +123,7 @@ func retrieveDatabase() (*TronDB, error) {
 
 	//测试一下是否是连接成功的
 	if err := dbInstance.Ping(); err != nil {
-		//dbInstance.Close()
+		log.Errorf("the  mysql connect err [%v]", err)
 		dbInstance = nil
 		return nil, err
 	}
