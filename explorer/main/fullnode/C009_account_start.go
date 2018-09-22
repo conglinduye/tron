@@ -37,6 +37,9 @@ func startAccountDaemon() {
 }
 
 func syncAccount() {
+	if nil == wc2 {
+		return
+	}
 	for wc2.currentWorker() > 0 { // wait
 		time.Sleep(3 * time.Second)
 	}
