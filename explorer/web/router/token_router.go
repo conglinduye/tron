@@ -181,7 +181,7 @@ func hanldeTokenDetail(address string, name string, tokenList []*entity.TokenInf
 			*tokenInfo = *token
 			tokenInfo.Index = 1
 			if flag == false {
-				log.Infof("hanldeTokenDetail, flag:%v\n", flag)
+				log.Infof("hanldeTokenDetail, flag:%v", flag)
 				totalTransactions, _ := service.QueryTotalTokenTransfers(token.Name)
 				tokenInfo.TotalTransactions = totalTransactions
 				nrOfTokenHolders, _ := service.QueryTotalTokenHolders(token.Name)
