@@ -116,17 +116,17 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 		return votesResp, nil
 	}
 
-	voteInfos := make([]*entity.VotesInfo, 0)
+	voteInfoList := make([]*entity.VotesInfo, 0)
 	for _, v := range accountVoteResultRes.Data {
 		votesInfo := &entity.VotesInfo{}
 		votesInfo.VoterAddress = v.Address
 		votesInfo.CandidateAddress = v.ToAddress
 		votesInfo.Votes = v.Vote
-		voteInfos = append(voteInfos, votesInfo)
+		voteInfoList = append(voteInfoList, votesInfo)
 	}
 
 	votesResp.Total = accountVoteResultRes.Total
-	votesResp.Data = voteInfos
+	votesResp.Data = voteInfoList
 
 	queryVotesSubHandle(votesResp)
 
