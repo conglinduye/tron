@@ -2,14 +2,44 @@
 address = ":20110"
 objectpool = 10
 
-[mysql]
+#********************************************************************************
+# config the main database of tron-explorer system. 
+#********************************************************************************
+[MysqlMain]
+# config the mysql conns, first item is the primary item.
+readConnections = "primary,secondary"
+writeConnections = "writary"
+
+[primary]
+# primary read database connection
+
 #host = "18.216.57.65"
-host = "127.0.0.1"
+host = "tronscan-mysql02.c36e8tfqp8gx.us-east-2.rds.amazonaws.com"
 port = "3306"
-user = "budev"
-pass = "tron**1"
-#user = "root"
-#pass = "root"
+user = "tron"
+pass = "tron"
+protocol = "tcp"
+schema = "tron"
+charset = "utf8"
+
+[secondary]
+# secondary read database connection, if primary database crashed, use secondary instead
+#host = "18.216.57.65"
+host = "tronscan-mysql03.c36e8tfqp8gx.us-east-2.rds.amazonaws.com"
+port = "3306"
+user = "tron"
+pass = "tron"
+protocol = "tcp"
+schema = "tron"
+charset = "utf8"
+
+[writary]
+# write database connection, the one can only exec write operation
+#host = "18.216.57.65"
+host = "tronscan-mysql01.c36e8tfqp8gx.us-east-2.rds.amazonaws.com"
+port = "3306"
+user = "tron"
+pass = "tron"
 protocol = "tcp"
 schema = "tron"
 charset = "utf8"
