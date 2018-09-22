@@ -120,11 +120,11 @@ func initMutilDB(config *toml.Tree) error {
 	//init read database
 	for _, db := range strings.Split(readConnections, ",") {
 		params := make(map[string]string, 0)
-		params["host"] = config.GetDefault(fmt.Sprintf("%v.host", db), "127.0.0.1").(string)
-		params["port"] = config.GetDefault(fmt.Sprintf("%v.port", db), "3306").(string)
-		params["schema"] = config.GetDefault(fmt.Sprintf("%v.schema", db), "tron").(string)
-		params["user"] = config.GetDefault(fmt.Sprintf("%v.user", db), "tron").(string)
-		params["passwd"] = config.GetDefault(fmt.Sprintf("%v.pass", db), "tron").(string)
+		params[mysql.DBHost] = config.GetDefault(fmt.Sprintf("%v.host", db), "127.0.0.1").(string)
+		params[mysql.DBPort] = config.GetDefault(fmt.Sprintf("%v.port", db), "3306").(string)
+		params[mysql.DBSchema] = config.GetDefault(fmt.Sprintf("%v.schema", db), "tron").(string)
+		params[mysql.DBName] = config.GetDefault(fmt.Sprintf("%v.user", db), "tron").(string)
+		params[mysql.DBPass] = config.GetDefault(fmt.Sprintf("%v.pass", db), "tron").(string)
 		dbParams[db] = params
 		log.Debugf("read database init:db:[%v],param:[%v]", db, params)
 	}

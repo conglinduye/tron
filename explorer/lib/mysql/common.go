@@ -21,11 +21,11 @@ const DATEFORMATDATE = "20060102"
 const DATEFORMATHOUR = "2006010215"
 const DATEFORMATMINUTE = "200601021504"
 
-var dbHost = ""       //主机
-var dbPort = "3306"   //端口
-var dbSchema = "tron" //db schema
-var dbName = "tron"   //用户名
-var dbPass = "tron"   //密码
+var DBHost = "host"     //主机
+var DBPort = "port"     //端口
+var DBSchema = "schema" //db schema
+var DBName = "user"     //用户名
+var DBPass = "password" //密码
 //数据库配置集合  map[primary]map[host]"localhost"
 var mysqlMain map[string]map[string]string
 
@@ -43,7 +43,7 @@ var dbInstance *TronDB
 //Initialize 初始化
 // appInfo spaceInfo user report appType
 // centerControl
-func Initialize(host, port, schema, user, passwd string) bool {
+/*func Initialize(host, port, schema, user, passwd string) bool {
 	if len(strings.TrimSpace(host)) == 0 ||
 		len(strings.TrimSpace(port)) == 0 ||
 		len(strings.TrimSpace(schema)) == 0 ||
@@ -58,7 +58,7 @@ func Initialize(host, port, schema, user, passwd string) bool {
 	dbName = strings.TrimSpace(user)
 	dbPass = strings.TrimSpace(passwd)
 	return true
-}
+}*/
 
 //InitializeReader 初始化
 // appInfo spaceInfo user report appType
@@ -77,7 +77,7 @@ func GetDatabase() (*TronDB, error) {
 }
 
 //GetMysqlConnectionInfo 获取连接mysql的相关信息
-func GetMysqlConnectionInfo() DBParam {
+/*func GetMysqlConnectionInfo() DBParam {
 	dbConfig := DBParam{
 		Mode:         string("mysql"),
 		ConnSQL:      fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", dbName, dbPass, dbHost, dbPort, dbSchema),
@@ -85,13 +85,13 @@ func GetMysqlConnectionInfo() DBParam {
 		MaxIdleConns: 10,
 	}
 	return dbConfig
-}
+}*/
 
 //GetMysqlMutiConnectionInfo 获取连接mysql的相关信息
 func GetMysqlMutiConnectionInfo(db map[string]string) DBParam {
 	dbConfig := DBParam{
 		Mode:         string("mysql"),
-		ConnSQL:      fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", db["user"], db["passwd"], db["host"], db["port"], db["schema"]),
+		ConnSQL:      fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", db[DBName], db[DBPass], db[DBHost], db[DBPort], db[DBSchema]),
 		MaxOpenconns: 10,
 		MaxIdleConns: 10,
 	}
