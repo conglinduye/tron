@@ -91,7 +91,7 @@ func GetMysqlConnectionInfo() DBParam {
 func GetMysqlMutiConnectionInfo(db map[string]string) DBParam {
 	dbConfig := DBParam{
 		Mode:         string("mysql"),
-		ConnSQL:      fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", db[dbName], db[dbPass], db[dbHost], db[dbPort], db[dbSchema]),
+		ConnSQL:      fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", db["dbName"], db["dbPass"], db["dbHost"], db["dbPort"], db["dbSchema"]),
 		MaxOpenconns: 10,
 		MaxIdleConns: 10,
 	}
