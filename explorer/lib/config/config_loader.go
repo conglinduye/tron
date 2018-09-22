@@ -85,7 +85,7 @@ func initRedis(config *toml.Tree) error {
 }
 
 //initDB 初始化DB baseAdapter.loadAdxTemplateData use
-func initDB(config *toml.Tree) error {
+/*func initDB(config *toml.Tree) error {
 	const NodeName = "mysql"
 	host := config.GetDefault(fmt.Sprintf("%v.host", NodeName), "127.0.0.1").(string)
 	port := config.GetDefault(fmt.Sprintf("%v.port", NodeName), "3306").(string)
@@ -98,7 +98,7 @@ func initDB(config *toml.Tree) error {
 	mysql.Initialize(host, port, schema, user, passwd)
 
 	return nil
-}
+}*/
 
 //initMutilDB 初始化DB
 func initMutilDB(config *toml.Tree) error {
