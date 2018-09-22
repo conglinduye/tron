@@ -34,8 +34,15 @@ func getBlock(id int, b, e int64) {
 		getBlock(id, b, e)
 		return
 	}
+
+	if le < b && e > 0 { // begin position > latest end position, and e > 0 mean get old block
+		wc1.stopOne()
+		fmt.Printf("%v quit as no block need to sync:[%v ~ %v] latest block of main net is:%v\n", taskID, b, e, le)
+		return
+	}
+
 	fmt.Printf("%v latestNum is [%v]\n", taskID, le)
-	b = checkForkTask(id, "", le, b, e)
+	b = checkForkTask(id, "", le, b, e) // check if we need fork sub task
 
 	bb := b
 	cnt := int64(0)

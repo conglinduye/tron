@@ -1,0 +1,298 @@
+redis ping ret:PONG, err:<nil>
+witness work result:(0,143,0,<nil>)
+[0000|450000~500000|35.182.37.246:50051] latestNum is [2537303]
+[0001|450000~499500|54.236.37.243:50051] latestNum is [2537303]
+[0002|450000~499000|52.47.197.188:50051] latestNum is [2537303]
+[0003|450000~498500|52.15.93.92:50051] latestNum is [2537303]
+[0004|450000~498000|54.252.224.209:50051] latestNum is [2537303]
+[0005|450000~497500|54.252.224.209:50051] latestNum is [2537304]
+[0006|450000~497000|52.53.189.99:50051] latestNum is [2537305]
+[0007|450000~496500|52.62.210.100:50051] latestNum is [2537305]
+[0008|450000~496000|35.182.37.246:50051] latestNum is [2537305]
+store 124 transactions cost:2.054309588s
+[0009|450000~495500|13.231.4.243:50051] latestNum is [2537305]
+store 122 transactions cost:2.05491686s
+Current working task:[10]--max task:[64], latest block id handled:500000
+asset daemon work result:(0, 939, 1, <nil>)
+store 127 transactions cost:3.244102612s
+[0010|450000~495000|34.253.187.192:50051] latestNum is [2537307]
+store 101 transactions cost:2.541535288s
+store 286 transactions cost:6.64606759s
+store 69 transactions cost:1.847674649s
+store 134 transactions cost:2.944476965s
+store 113 transactions cost:2.486052516s
+node daemon work result:(0, 427, 2, <nil>)
+Current working task:[5]--max task:[64], latest block id handled:500000
+store 695 transactions cost:11.833232792s
+[0011|450000~494500|52.15.93.92:50051] latestNum is [2537309]
+store 169 transactions cost:1.183760735s
+[0012|450000~494000|18.228.15.36:50051] latestNum is [2537310]
+[0013|450000~493500|52.56.56.149:50051] latestNum is [2537310]
+store 945 transactions cost:10.873086484s
+[0014|450000~493000|13.124.62.58:50051] latestNum is [2537310]
+[0015|450000~492500|52.15.93.92:50051] latestNum is [2537310]
+[0016|450000~492000|52.15.93.92:50051] latestNum is [2537310]
+store 126 transactions cost:932.262015ms
+store 106 transactions cost:1.23087844s
+[0017|450000~491500|35.182.37.246:50051] latestNum is [2537311]
+### total account need to synchronze:0         , err:<nil>, start synchronize account info ......
+*** account, working task:1    , finished:0         , total:0         , badAddr:0         , waitCnt:3
+[0018|450000~491000|52.62.210.100:50051] latestNum is [2537312]
+[0019|450000~490500|18.228.15.36:50051] latestNum is [2537312]
+Current working task:[9]--max task:[64], latest block id handled:500000
+[0020|450000~490000|34.220.77.106:50051] latestNum is [2537312]
+store 96 transactions cost:1.911063359s
+store 139 transactions cost:2.753596809s
+store 70 transactions cost:1.788211079s
+*** account, working task:1    , finished:0         , total:0         , badAddr:0         , waitCnt:2
+witness work result:(0,143,0,<nil>)
+store 166 transactions cost:5.021998894s
+*** account, working task:1    , finished:0         , total:0         , badAddr:0         , waitCnt:1
+### total account syncrhonzed:0         , bad address:0         , cost:6.001615242s, synchronize to db .....
+### store account size:0          to DB cost:264ns
+[0021|450000~489500|34.253.187.192:50051] latestNum is [2537314]
+store 74 transactions cost:1.135412288s
+store 91 transactions cost:1.570695685s
+[0022|450000~489000|35.176.192.130:50051] latestNum is [2537314]
+[0023|450000~488500|34.250.140.143:50051] latestNum is [2537314]
+store 128 transactions cost:3.9080088s
+Current working task:[6]--max task:[64], latest block id handled:500000
+[0024|450000~488000|34.220.77.106:50051] latestNum is [2537316]
+[0025|450000~487500|34.250.140.143:50051] latestNum is [2537316]
+[0026|450000~487000|54.236.37.243:50051] latestNum is [2537316]
+store 76 transactions cost:550.446998ms
+store 73 transactions cost:1.644823014s
+[0027|450000~486500|34.220.77.106:50051] latestNum is [2537317]
+store 131 transactions cost:3.547720073s
+Current working task:[7]--max task:[64], latest block id handled:500000
+store 111 transactions cost:2.81358247s
+store 145 transactions cost:3.213248988s
+[0028|450000~486000|13.125.210.234:50051] latestNum is [2537319]
+[0029|450000~485500|13.125.210.234:50051] latestNum is [2537319]
+[0030|450000~485000|13.229.128.108:50051] latestNum is [2537319]
+asset daemon work result:(0, 940, 0, <nil>)
+store 253 transactions cost:5.685453427s
+[0031|450000~484500|13.124.62.58:50051] latestNum is [2537320]
+[0032|450000~484000|52.15.93.92:50051] latestNum is [2537320]
+node daemon work result:(0, 411, 0, <nil>)
+[0033|450000~483500|52.56.56.149:50051] latestNum is [2537321]
+store 110 transactions cost:1.782713023s
+store 96 transactions cost:1.65764302s
+### total account need to synchronze:1464      , err:<nil>, start synchronize account info ......
+store 81 transactions cost:1.143244105s
+Current working task:[7]--max task:[64], latest block id handled:500000
+[0034|450000~483000|35.176.192.130:50051] latestNum is [2537322]
+[0035|450000~482500|34.220.77.106:50051] latestNum is [2537322]
+[0036|450000~482000|35.176.192.130:50051] latestNum is [2537322]
+store 95 transactions cost:1.601670623s
+store 350 transactions cost:10.10459148s
+store 64 transactions cost:868.678388ms
+witness work result:(0,143,0,<nil>)
+[0037|450000~481500|13.231.4.243:50051] latestNum is [2537323]
+store 83 transactions cost:540.801453ms
+store 91 transactions cost:964.515604ms
+store 91 transactions cost:808.172431ms
+store 629 transactions cost:10.056689606s
+store 105 transactions cost:485.241394ms
+[0038|450000~481000|34.250.140.143:50051] latestNum is [2537324]
+[0039|450000~480500|34.253.187.192:50051] latestNum is [2537325]
+[0040|450000~480000|18.228.15.36:50051] latestNum is [2537325]
+[0041|450000~479500|34.250.140.143:50051] latestNum is [2537325]
+Current working task:[7]--max task:[64], latest block id handled:500000
+[0042|450000~479000|52.47.197.188:50051] latestNum is [2537325]
+[0043|450000~478500|52.62.210.100:50051] latestNum is [2537325]
+[0044|450000~478000|35.182.37.246:50051] latestNum is [2537325]
+[0045|450000~477500|18.228.15.36:50051] latestNum is [2537326]
+store 93 transactions cost:956.901873ms
+[0046|450000~477000|18.228.15.36:50051] latestNum is [2537326]
+[0047|450000~476500|13.231.4.243:50051] latestNum is [2537326]
+[0048|450000~476000|13.125.210.234:50051] latestNum is [2537326]
+[0049|450000~475500|34.250.140.143:50051] latestNum is [2537326]
+[0050|450000~475000|35.182.37.246:50051] latestNum is [2537326]
+[0051|450000~474500|13.124.62.58:50051] latestNum is [2537327]
+[0052|450000~474000|35.182.37.246:50051] latestNum is [2537327]
+[0053|450000~473500|13.231.4.243:50051] latestNum is [2537327]
+[0054|450000~473000|34.220.77.106:50051] latestNum is [2537327]
+store 129 transactions cost:2.965554266s
+store 2350 transactions cost:36.586456241s
+store 124 transactions cost:3.244552619s
+[0055|450000~472500|18.196.99.16:50051] latestNum is [2537328]
+[0056|450000~472000|34.220.77.106:50051] latestNum is [2537328]
+[0057|450000~471500|13.124.62.58:50051] latestNum is [2537328]
+store 102 transactions cost:3.339615334s
+Current working task:[18]--max task:[64], latest block id handled:500000
+[0058|450000~471000|35.154.90.144:50051] latestNum is [2537328]
+[0059|450000~470500|13.125.210.234:50051] latestNum is [2537329]
+store 118 transactions cost:4.600040857s
+store 177 transactions cost:5.877132386s
+store 112 transactions cost:5.07747648s
+[0060|450000~470000|35.180.51.163:50051] latestNum is [2537330]
+[0061|450000~469500|54.236.37.243:50051] latestNum is [2537330]
+[0062|450000~469000|13.124.62.58:50051] latestNum is [2537331]
+store 364 transactions cost:13.095507043s
+store 125 transactions cost:6.961256657s
+Current working task:[18]--max task:[64], latest block id handled:500000
+store 152 transactions cost:8.290978201s
+[0063|450000~468500|34.253.187.192:50051] latestNum is [2537332]
+[0064|450000~468000|13.125.210.234:50051] latestNum is [2537332]
+[0065|450000~467500|54.252.224.209:50051] latestNum is [2537332]
+[0066|450000~467000|34.220.77.106:50051] latestNum is [2537333]
+store 161 transactions cost:9.400757876s
+store 123 transactions cost:8.285863878s
+witness work result:(0,143,0,<nil>)
+store 127 transactions cost:7.848784181s
+[0067|450000~466500|34.253.187.192:50051] latestNum is [2537334]
+[0068|450000~466000|52.53.189.99:50051] latestNum is [2537334]
+[0069|450000~465500|52.47.197.188:50051] latestNum is [2537334]
+[0070|450000~465000|34.220.77.106:50051] latestNum is [2537334]
+[0071|450000~464500|13.231.4.243:50051] latestNum is [2537334]
+[0072|450000~464000|34.220.77.106:50051] latestNum is [2537334]
+asset daemon work result:(0, 940, 0, <nil>)
+store 154 transactions cost:9.828613502s
+Current working task:[23]--max task:[64], latest block id handled:500000
+store 228 transactions cost:11.086272321s
+[0073|450000~463500|34.250.140.143:50051] latestNum is [2537335]
+[0074|450000~463000|35.180.51.163:50051] latestNum is [2537336]
+[0075|450000~462500|13.125.210.234:50051] latestNum is [2537336]
+[0076|450000~462000|13.229.128.108:50051] latestNum is [2537336]
+store 116 transactions cost:6.948333809s
+[0077|450000~461500|13.229.128.108:50051] latestNum is [2537337]
+[0078|450000~461000|54.236.37.243:50051] latestNum is [2537337]
+store 119 transactions cost:6.480090165s
+[0079|450000~460500|54.236.37.243:50051] latestNum is [2537337]
+*** account, working task:3    , finished:1064      , total:1464      , badAddr:0         , waitCnt:3
+[0080|450000~460000|35.176.192.130:50051] latestNum is [2537337]
+store 184 transactions cost:10.323865177s
+store 123 transactions cost:7.631525562s
+[0081|450000~459500|35.154.90.144:50051] latestNum is [2537338]
+[0082|450000~459000|13.231.4.243:50051] latestNum is [2537338]
+*** account, working task:3    , finished:1064      , total:1464      , badAddr:0         , waitCnt:3
+Current working task:[28]--max task:[64], latest block id handled:500000
+[0083|450000~458500|18.228.15.36:50051] latestNum is [2537339]
+store 224 transactions cost:15.681001202s
+[0084|450000~458000|13.124.62.58:50051] latestNum is [2537339]
+store 162 transactions cost:8.809934854s
+[0085|450000~457500|35.154.90.144:50051] latestNum is [2537339]
+node daemon work result:(55, 306, 0, <nil>)
+*** account, working task:1    , finished:1464      , total:1464      , badAddr:0         , waitCnt:3
+[0086|450000~457000|34.250.140.143:50051] latestNum is [2537339]
+*** account, working task:1    , finished:1464      , total:1464      , badAddr:0         , waitCnt:2
+store 134 transactions cost:9.432489555s
+[0087|450000~456500|34.250.140.143:50051] latestNum is [2537341]
+*** account, working task:1    , finished:1464      , total:1464      , badAddr:0         , waitCnt:1
+*** accountNet start to syncrhonize accountNet info, total account:1464......
+[0088|450000~456000|13.231.4.243:50051] latestNum is [2537342]
+Current working task:[31]--max task:[64], latest block id handled:500000
+store 164 transactions cost:11.472709648s
+[0089|450000~455500|18.228.15.36:50051] latestNum is [2537342]
+store 180 transactions cost:13.289705658s
+store 154 transactions cost:8.914094859s
+store 157 transactions cost:10.226848487s
+[0090|450000~455000|52.53.189.99:50051] latestNum is [2537343]
+[0091|450000~454500|13.124.62.58:50051] latestNum is [2537343]
+store 137 transactions cost:9.316250971s
+[0092|450000~454000|35.182.37.246:50051] latestNum is [2537343]
+[0093|450000~453500|52.56.56.149:50051] latestNum is [2537343]
+[0094|450000~453000|13.125.210.234:50051] latestNum is [2537344]
+[0095|450000~452500|54.236.37.243:50051] latestNum is [2537344]
+[0096|450000~452000|52.15.93.92:50051] latestNum is [2537344]
+store 127 transactions cost:8.988165218s
+witness work result:(0,143,0,<nil>)
+[0097|450000~451500|18.196.99.16:50051] latestNum is [2537345]
+[0098|450000~451000|13.229.128.108:50051] latestNum is [2537345]
+Current working task:[35]--max task:[64], latest block id handled:500000
+store 148 transactions cost:9.181217192s
+insert contract(*core.AssetIssueContract) trx_hash:[c5077edc0b50e67be8589a3bc49aa729190106ad3ce3b96521f69212b840e974], blockID:[463866] failed:Error 1366: Incorrect string value: '\xA0the t...' for column 'asset_desc' at row 1
+[0099|450000~450500|34.253.187.192:50051] latestNum is [2537347]
+store 147 transactions cost:7.01266741s
+store 155 transactions cost:8.248965567s
+store 119 transactions cost:7.768895889s
+Current working task:[31]--max task:[64], latest block id handled:500000
+store 283 transactions cost:12.594960616s
+store 136 transactions cost:8.465516489s
+store 264 transactions cost:16.233972618s
+asset daemon work result:(0, 940, 0, <nil>)
+store 192 transactions cost:11.597182541s
+Current working task:[27]--max task:[64], latest block id handled:500000
+store 148 transactions cost:9.87634669s
+store 148 transactions cost:12.000472341s
+witness work result:(0,143,0,<nil>)
+node daemon work result:(35, 248, 0, <nil>)
+Current working task:[25]--max task:[64], latest block id handled:500000
+*** accountNet, working task:6    , finished:464   , total:1464  , waitCnt:3
+store 174 transactions cost:14.320431556s
+store 211 transactions cost:17.115134255s
+*** accountNet, working task:6    , finished:464   , total:1464  , waitCnt:3
+store 224 transactions cost:16.826131849s
+store 192 transactions cost:13.107114361s
+*** accountNet, working task:6    , finished:464   , total:1464  , waitCnt:3
+Current working task:[21]--max task:[64], latest block id handled:500000
+store 203 transactions cost:10.435724066s
+*** accountNet, working task:6    , finished:464   , total:1464  , waitCnt:3
+store 169 transactions cost:8.391623463s
+store 158 transactions cost:5.223301943s
+*** accountNet, working task:6    , finished:464   , total:1464  , waitCnt:3
+store 178 transactions cost:5.785524102s
+store 155 transactions cost:4.422854489s
+store 1299 transactions cost:59.194230378s
+store 152 transactions cost:3.597347257s
+*** accountNet, working task:6    , finished:464   , total:1464  , waitCnt:3
+Current working task:[14]--max task:[64], latest block id handled:500000
+store 173 transactions cost:5.04813569s
+store 163 transactions cost:3.29658383s
+*** accountNet, working task:6    , finished:464   , total:1464  , waitCnt:3
+store 146 transactions cost:3.439902545s
+*** accountNet, working task:6    , finished:464   , total:1464  , waitCnt:3
+store 157 transactions cost:4.468231027s
+store 159 transactions cost:4.524126593s
+store 219 transactions cost:6.534706481s
+store 183 transactions cost:5.883471377s
+store 148 transactions cost:2.981913014s
+*** accountNet, working task:6    , finished:464   , total:1464  , waitCnt:3
+witness work result:(0,143,0,<nil>)
+Current working task:[6]--max task:[64], latest block id handled:500000
+asset daemon work result:(0, 940, 0, <nil>)
+*** accountNet, working task:4    , finished:864   , total:1464  , waitCnt:3
+store 213 transactions cost:4.239406653s
+node daemon work result:(0, 358, 0, <nil>)
+store 360 transactions cost:7.161250616s
+store 207 transactions cost:5.003281654s
+*** accountNet, working task:4    , finished:864   , total:1464  , waitCnt:3
+store 374 transactions cost:6.809209413s
+store 845 transactions cost:42.986356685s
+*** accountNet, working task:4    , finished:864   , total:1464  , waitCnt:3
+*** accountNet, working task:4    , finished:864   , total:1464  , waitCnt:3
+Current working task:[1]--max task:[64], latest block id handled:500000
+Sync all data cost:3m18.005191085s
+get all blocks cost:3m21.005544227s
+*** accountNet, working task:4    , finished:864   , total:1464  , waitCnt:3
+*** accountNet, working task:3    , finished:1064  , total:1464  , waitCnt:3
+*** accountNet, working task:3    , finished:1064  , total:1464  , waitCnt:3
+Redis Account Refresh Push Daemon QUIT
+*** accountNet, working task:2    , finished:1264  , total:1464  , waitCnt:3
+*** accountNet, working task:2    , finished:1264  , total:1464  , waitCnt:3
+*** accountNet, working task:2    , finished:1264  , total:1464  , waitCnt:3
+Witness Daemon QUIT
+Asset Daemon QUIT
+*** accountNet, working task:1    , finished:1464  , total:1464  , waitCnt:3
+Node Daemon QUIT
+*** accountNet, working task:1    , finished:1464  , total:1464  , waitCnt:2
+*** accountNet, working task:1    , finished:1464  , total:1464  , waitCnt:1
+### total account syncrhonzed:1464      , bad address:0         , cost:2m47.382754849s, synchronize to db .....
+### total account need to synchronze:0         , err:<nil>, start synchronize account info ......
+*** account, working task:1    , finished:0         , total:0         , badAddr:0         , waitCnt:3
+*** account, working task:1    , finished:0         , total:0         , badAddr:0         , waitCnt:2
+*** account, working task:1    , finished:0         , total:0         , badAddr:0         , waitCnt:1
+### total account syncrhonzed:0         , bad address:0         , cost:6.000270682s, synchronize to db .....
+### store account size:0          to DB cost:201ns
+Wait other daemon quit .......
+store account OK, cost:16.308005196s, insertCnt:534, updateCnt:466, errCnt:0, total source:1000
+store account OK, cost:10.550377548s, insertCnt:247, updateCnt:217, errCnt:0, total source:464
+### store account size:1464       to DB cost:26.859068953s
+### total account need to synchronze:0         , err:<nil>, start synchronize account info ......
+*** account, working task:1    , finished:0         , total:0         , badAddr:0         , waitCnt:3
+*** account, working task:1    , finished:0         , total:0         , badAddr:0         , waitCnt:2
+*** account, working task:1    , finished:0         , total:0         , badAddr:0         , waitCnt:1
+### total account syncrhonzed:0         , bad address:0         , cost:6.000260385s, synchronize to db .....
+### store account size:0          to DB cost:195ns
+Account Daemon QUITfullnode QUIT
