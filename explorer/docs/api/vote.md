@@ -23,8 +23,7 @@ output:json
             "realTimeVotes":2240028,
             "changeVotes":2155678,
             "votesPercentage":0.001074783688738554,
-            "change_cycle":56,//前端页面拿该值显示变化位数
-            "change_day":56
+            "change_cycle":56//前端页面拿该值显示变化位数
         }
     "data":[
         { 
@@ -38,7 +37,6 @@ output:json
             "changeVotes":-1810867,//变化票数
             "votesPercentage":6.500254923121276,//投票占比
             "change_cycle":1,//6小时票数排位变化
-            "change_day":1 //12小时票数排位变化
         },
         {
             "address":"TV6qcwSp38uESiDczxxb7zbJX1h2LfDs78",
@@ -49,8 +47,7 @@ output:json
             "realTimeVotes":463860453,
             "changeVotes":-2484681,
             "votesPercentage":5.9385894233360416,
-            "change_cycle":0,
-            "change_day":0
+            "change_cycle":0
         },...
     ]
 }
@@ -80,8 +77,7 @@ output:json
         "realTimeVotes":506759341,
         "changeVotes":1047173,
         "votesPercentage":0.06443760395530662,
-        "change_cycle":0,
-        "change_day":0
+        "change_cycle":0
     }
 }
 ```

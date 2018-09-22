@@ -15,5 +15,5 @@ func Async() {
 	go task.SyncCacheTodayReport()
 	go task.SyncPersistYesterdayReport()
 	go task.SyncAssetIssueParticipated()
-	go task.SyncVoteWitnessRanking()
+
 }
