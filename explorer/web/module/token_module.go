@@ -418,3 +418,51 @@ func QueryAssetCreateTime(ownerAddress, tokenName string) (int64, error) {
 	}
 	return assetCreateTime, nil
 }
+
+// QueryAssetTransfer
+func QueryAssetTransfer(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.AssetTransferResp, error) {
+	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
+	log.Sql(strFullSQL)
+	dataPtr, err := mysql.QueryTableData(strFullSQL)
+	if err != nil {
+		log.Errorf("QueryAssetTransfer error:[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryAssetTransfer dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	assetTransferResp := &entity.AssetTransferResp{}
+	assetTransferList := make([]*entity.AssetTransfer, 0)
+
+	for dataPtr.NextT() {
+		assetTransfer := &entity.AssetTransfer{}
+		assetTransfer.BlockId = mysql.ConvertDBValueToInt64(dataPtr.GetField("block_id"))
+		assetTransfer.TransactionHash = dataPtr.GetField("trx_hash")
+		assetTransfer.Timestamp = mysql.ConvertDBValueToInt64(dataPtr.GetField("create_time"))
+		assetTransfer.TransferFromAddress = dataPtr.GetField("owner_address")
+		assetTransfer.TransferToAddress = dataPtr.GetField("to_address")
+		assetTransfer.Amount = mysql.ConvertDBValueToInt64(dataPtr.GetField("amount"))
+		assetTransfer.TokenName = dataPtr.GetField("asset_name")
+
+		confirmed := dataPtr.GetField("confirmed")
+		if confirmed == "1" {
+			assetTransfer.Confirmed = true
+		} else {
+			assetTransfer.Confirmed = false
+		}
+
+		assetTransferList = append(assetTransferList, assetTransfer)
+	}
+
+	total, err := mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
+	if err != nil {
+		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
+	}
+
+	assetTransferResp.Total = total
+	assetTransferResp.Data = assetTransferList
+
+	return assetTransferResp, nil
+}

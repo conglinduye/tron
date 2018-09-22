@@ -14,6 +14,7 @@ import (
 )
 
 func tokenRegister(ginRouter *gin.Engine) {
+	// 查询通证列表信息
 	ginRouter.GET("/api/token", func(c *gin.Context) {
 		tokenReq := &entity.Token{}
 		tokenReq.Start = c.Query("start")
@@ -85,11 +86,12 @@ func tokenRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, tokenResp)
 	})
 
+	// 根据通证名称查询通证信息
 	ginRouter.GET("/api/token/:name", func(c *gin.Context) {
 		tokenReq := &entity.Token{}
 		name := c.Param("name")
 		tokenReq.Name = name
-		log.Debugf("Hello /api/token/:%#v", name)
+		log.Debugf("Hello /api/token/:name %#v", name)
 		log.Info("service.QueryTokenDetailListBuffer")
 		tokenList,  _ := service.QueryTokenDetailListBuffer()
 		tokenList, _ = hanldeTokenList4QueryCondition(tokenReq, tokenList)
@@ -100,7 +102,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, tokenInfo)
 	})
 
-
+	// 根据通证名称查询通证持有人信息
 	ginRouter.GET("/api/token/:name/address", func(c *gin.Context) {
 		tokenReq := &entity.Token{}
 		tokenReq.Name = c.Param("name")
@@ -120,7 +122,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, assetBalanceResp)
 	})
 
-
+	// 上传Token图片
 	ginRouter.POST("/api/uploadLogo", func(c *gin.Context) {
 		res := &entity.UploadLogoRes{}
 		var uploadLogoReq entity.UploadLogoReq
@@ -154,6 +156,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, res)
 	})
 
+	// 获取下载TokenTemplateFile地址
 	ginRouter.GET("/api/download/tokenInfo", func(c *gin.Context) {
 		res := &entity.TokenDownloadInfoRes{}
 		tokenFile := config.TokenTemplateFile
@@ -165,10 +168,33 @@ func tokenRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, res)
 	})
 
+	// 同步通证筹集资金
 	ginRouter.GET("/api/sync/participated", func(c *gin.Context) {
 		service.SyncAssetIssueParticipated()
 		c.JSON(http.StatusOK, "handle done")
 	})
+
+	// 查询通证转账
+	ginRouter.GET("/api/asset/transfer", func(c *gin.Context) {
+		req := &entity.AssetTransferReq{}
+		req.Start = c.Query("start")
+		req.Limit = c.Query("limit")
+		req.Token = c.Query("token")
+		log.Debugf("Hello /api/token/transfer?%#v", req)
+		if req.Start == "" || req.Limit == "" {
+			req.Start = "0"
+			req.Limit = "20"
+		}
+
+		assetTransferResp, err := service.QueryAssetTransfer(req)
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, assetTransferResp)
+			return
+		}
+		c.JSON(http.StatusOK, assetTransferResp)
+	})
+
 }
 
 
