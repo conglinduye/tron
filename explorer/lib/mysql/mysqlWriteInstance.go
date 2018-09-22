@@ -93,12 +93,11 @@ func retrieveWriteDatabase() (*TronDB, error) {
 
 	//测试一下是否是连接成功的
 	if err := dbWriteInstance.Ping(); err != nil {
-		//dbInstance.Close()
 		dbWriteInstance = nil
 		return nil, err
 	}
 
-	return dbInstance, nil
+	return dbWriteInstance, nil
 }
 
 // OpenDataBaseWriteTransaction 开启一个数据库事物
