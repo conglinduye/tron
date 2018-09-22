@@ -110,22 +110,14 @@ output:json
     "totalVotes":15000010,//总票数
     "data":[
         {
-            "id":"0ed12410-41a7-4caf-a49f-33dae029053e",// 投票ID
-            "block":1836424,//交易块
-            "transaction":"a7fe8203ed520bbc12a406f8ec5ed8ec9fb2d262967b2212581971ab8cc95cfd",//交易hash
-            "timestamp":"2018-08-27T23:25:12.000Z",//时间戳
             "voterAddress":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",//投票人地址
-            "candidateAddress":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",//被投票人地址
+            "candidateAddress":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",//被投票人(候选人)地址
             "votes":10,//票数
             "candidateUrl":"https://www.sesameseed.org",//候选人url
             "candidateName":"Sesameseed",//候选人名称
-            "voterAvailableVotes":10// 可用票数
+            "voterAvailableVotes":10// 投票人可用票数
         },
         {
-            "id":"1acaaac8-497c-490a-a536-acbb8d18562f",
-            "block":1712572,
-            "transaction":"b3d2887f14f03f2b6ed3cc41dae382063b55a615ee05e316670ebb24d626bdd2",
-            "timestamp":"2018-08-23T16:03:21.000Z",
             "voterAddress":"TR6vbWGkT9ztWkKoG972Uzz529niHAEpGp",
             "candidateAddress":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp",
             "votes":15000000,
