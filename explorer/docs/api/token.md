@@ -212,6 +212,50 @@ output:json
     ]
 }
 ```
+
+## 根据通证名称查询通证转账
+- url:/api/asset/transfer
+- method:get
+
+input:param
+```param
+
+eg:
+/api/asset/transfer
+http://18.216.57.65:20110/api/asset/transfer?start=0&limit=20&name=VIP
+```
+ouput:json
+```json
+
+{
+    "total":2,
+    "Data":[
+        {
+            "blockId":2385200, //区块ID
+            "transactionHash":"00041899b98d38de173431434d23478f0a59c1b52b6cb024e64c08205a3350ec",//交易hash
+            "timestamp":1537063485000, //创建时间戳
+            "transferFromAddress":"TKjdnbJxP4yHeLTHZ86DGnFFY6QhTjuBv2", //转账from地址
+            "transferToAddress":"TFGw3DMJS9NPZnV14wkw6K6aiDP6HgvXA3", //转账to地址
+            "amount":1, //转账数量
+            "tokenName":"HuobiToken", //通证名称
+            "confirmed":true //是否确认
+        },
+        {
+            "blockId":2346000,
+            "transactionHash":"000e9ac7cc63ad472aa6bb753878ce6cd863f23a67aafb897bac426c3fbd3987",
+            "timestamp":1536945795000,
+            "transferFromAddress":"TFMAHNTS35ZNL5Pr9XToVVekyAbE9ts65Y",
+            "transferToAddress":"TQoXdQAhvgiXCX6HrfKNFKSUBTmuVTDpoi",
+            "amount":1,
+            "tokenName":"BitTorrent",
+            "confirmed":true
+        }
+    ]
+}
+
+```
+
+
 ## 根据通证名称查询通证持有人信息
 - url:/api/token/:name/address
 - method:get
