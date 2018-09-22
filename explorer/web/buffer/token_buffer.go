@@ -68,11 +68,9 @@ func (w *tokenBuffer) loadQueryCommonTokenList() {
 	commonTokenList, err := module.QueryTokenList(strSQL, "", "", "")
 	if err != nil {
 		log.Errorf("loadCommonQueryTokensLists list is nil or err:[%v]", err)
+		return
 	}
 	if len(commonTokenList) == 0 {
-		w.Lock()
-		w.commonTokenList = commonTokenList
-		w.Unlock()
 		return
 	}
 
@@ -109,11 +107,9 @@ func (w *tokenBuffer) loadQueryIcoTokenList() {
 	icoTokenList, err := module.QueryTokenList(strSQL, filterSQL, sortSQL, "")
 	if err != nil {
 		log.Errorf("loadIcoQueryTokens list is nil or err:[%v]", err)
+		return
 	}
 	if len(icoTokenList) == 0 {
-		w.Lock()
-		w.icoTokenList = icoTokenList
-		w.Unlock()
 		return
 	}
 
@@ -158,6 +154,7 @@ func (w *tokenBuffer) loadQueryTokensDetailList() {
 	tokenDetailList, err := module.QueryTokenList(strSQL, "", "", "")
 	if err != nil {
 		log.Errorf("loadQueryTokensDetailList list is nil or err:[%v]", err)
+		return
 	}
 	if len(tokenDetailList) == 0 {
 		return

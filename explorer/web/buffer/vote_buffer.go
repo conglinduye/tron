@@ -9,12 +9,8 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
+	"sort"
 )
-
-/*
-store all vote data in memory
-load from db every 30 seconds
-*/
 
 var _voteBuffer *voteBuffer
 var onceVoteBuffer sync.Once
@@ -28,12 +24,8 @@ func GetVoteBuffer() *voteBuffer {
 func getVoteBuffer() *voteBuffer {
 	onceVoteBuffer.Do(func() {
 		_voteBuffer = &voteBuffer{}
-		_voteBuffer.loadQueryVoteLive()
-		_voteBuffer.getMaintenanceTimeStamp()
-		_voteBuffer.loadQueryVoteCurrentCycle()
-
-		go voteLiveBufferLoader()
-		go voteCycleBufferLoader()
+		go voteWitnessBufferLoader()
+		go maintenanceTimeStampLoader()
 	})
 	return _voteBuffer
 }
@@ -41,51 +33,27 @@ func getVoteBuffer() *voteBuffer {
 type voteBuffer struct {
 	sync.RWMutex
 
-	voteLive map[string]*entity.LiveInfo
-
-	voteCurrentCycle *entity.VoteCurrentCycleResp
+	voteWitness *entity.VoteWitnessResp
 
 	nextMaintenanceTime int64
 }
 
-func voteLiveBufferLoader() {
+func voteWitnessBufferLoader() {
 	for {
-		_voteBuffer.loadQueryVoteLive()
+		_voteBuffer.loadVoteWitness()
 		time.Sleep(30 * time.Second)
 	}
 }
-func voteCycleBufferLoader() {
+
+func maintenanceTimeStampLoader() {
 	for {
 		_voteBuffer.getMaintenanceTimeStamp()
-		_voteBuffer.loadQueryVoteCurrentCycle()
 		time.Sleep(60 * time.Second)
 	}
 }
 
-func (w *voteBuffer) GetVoteLive() (voteLive map[string]*entity.LiveInfo, ok bool) {
-	w.RLock()
-	if len(w.voteLive) == 0 {
-		log.Infof("get vote live info from buffer nil, data reload")
-		w.loadQueryVoteLive()
-	}
-	log.Infof("get vote live info from buffer, buffer data updated ")
-	voteLive = w.voteLive
-	w.RUnlock()
-	return
-}
-
-func (w *voteBuffer) GetVoteCurrentCycle() (voteCycle *entity.VoteCurrentCycleResp) {
-
-	if w.voteCurrentCycle == nil {
-		log.Infof("get VoteCurrentCycle info from buffer nil, data reload")
-		w.loadQueryVoteCurrentCycle()
-	}
-	log.Infof("get VoteCurrentCycle info from buffer, buffer data updated ")
-	return w.voteCurrentCycle
-}
 
 func (w *voteBuffer) GetNextMaintenanceTime() int64 {
-
 	if w.nextMaintenanceTime == 0 {
 		log.Infof("get NextMaintenanceTime info from buffer nil, data reload")
 		w.getMaintenanceTimeStamp()
@@ -94,51 +62,69 @@ func (w *voteBuffer) GetNextMaintenanceTime() int64 {
 	return w.nextMaintenanceTime
 }
 
-func (w *voteBuffer) loadQueryVoteLive() { //QueryVoteLive()  实时投票数据
-	strSQL := fmt.Sprintf(`
-	SELECT acc.address as voteraddress,outvoter.votes,
-	       acc.frozen,acc.account_name,wlwit.url
-	FROM tron.tron_account acc 
-	left join tron.wlcy_witness_create_info wlwit on wlwit.address=acc.address
-	left join (
-		select to_address,sum(vote) as votes from tron.account_vote_result 
-		 group by to_address
-	) outvoter on outvoter.to_address=acc.address
-     where 1=1 and outvoter.votes>=0 
-	 order by outvoter.votes desc `)
-
-	liveInfo, err := module.QueryVoteLiveRealize(strSQL)
-	if err != nil {
-		log.Errorf("get vote live info from db err:[%v]", err)
-		return
-	}
-	w.Lock()
-	w.voteLive = liveInfo.Data
-	w.Unlock()
+func (w *voteBuffer) GetVoteWitness() (voteWitness *entity.VoteWitnessResp) {
+	w.RLock()
+	voteWitness = w.voteWitness
+	w.RUnlock()
+	return
 }
 
-func (w *voteBuffer) loadQueryVoteCurrentCycle() { //QueryVoteCurrentCycle()  上轮投票数据
+func (w *voteBuffer) loadVoteWitness() {
+	var filterSQL, sortSQL, pageSQL string
 	strSQL := fmt.Sprintf(`
-	SELECT acc.address as voteraddress,outvoter.votes,
-	acc.frozen,acc.account_name,wlwit.url,srcc.github_link
-FROM tron.tron_account acc 
-left join tron.wlcy_witness_create_info wlwit on wlwit.address=acc.address
-left join tron.wlcy_sr_account srcc on srcc.address=acc.address
-left join (
- select address,sum(vote_count) as votes from tron.witness 
-  group by address
-) outvoter on outvoter.address=acc.address
-where 1=1 and outvoter.votes>=0  order by votes desc `)
+		select witt.address, witt.vote_count, srac.github_link, acc.account_name,votes.realTimeVotes
+		from witness witt
+		left join tron_account acc on acc.address=witt.address
+		left join wlcy_sr_account srac on witt.address=srac.address
+		left join (
+			select to_address,sum(vote) as realTimeVotes from account_vote_result  group by to_address 
+		) votes on votes.to_address=witt.address
+		where 1=1 `)
 
-	voteCurrent, err := module.QueryVoteCurrentCycleRealize(strSQL, "", "", "")
+	sortSQL = "order by votes.realTimeVotes desc"
+
+	voteWitnessResp, err := module.QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL)
 	if err != nil {
-		log.Errorf("get last vote info from db err:[%v]", err)
+		log.Errorf("QueryVoteWitness strSQL:%v, err:[%v]",strSQL, err)
 		return
 	}
+
+	totalVotes := module.QueryTotalVotes()
+	voteWitnessResp.TotalVotes = totalVotes
+
+	voteWitnessList:= voteWitnessResp.Data
+	for index, voteWitness := range voteWitnessList {
+		voteWitness.ChangeVotes = voteWitness.RealTimeVotes - voteWitness.LastCycleVotes
+		if voteWitness.URL != "" {
+			voteWitness.HasPage = true
+		}
+		if totalVotes != 0 {
+			voteWitness.VotesPercentage = float64(voteWitness.LastCycleVotes) / float64(totalVotes) * 100
+		}
+		voteWitness.RealTimeRanking = int32(index + 1)
+	}
+
+	// getVoteWitnessRankingChange
+	getVoteWitnessRankingChange(voteWitnessList)
+
+	sortList := make([]*entity.VoteWitness, 0, len(voteWitnessList))
+	for _, temp := range voteWitnessList {
+		voteWitness := new(entity.VoteWitness)
+		*voteWitness = *temp
+		sortList = append(sortList, voteWitness)
+	}
+
+	if len(sortList) > 0 {
+		sort.SliceStable(sortList, func(i, j int) bool { return sortList[i].ChangeCycle > sortList[j].ChangeCycle })
+		voteWitnessResp.FastestRise = sortList[0]
+	}
+
 	w.Lock()
-	w.voteCurrentCycle = voteCurrent
+	w.voteWitness = voteWitnessResp
 	w.Unlock()
+
 }
+
 
 //获取下轮开始时间戳
 func (w *voteBuffer) getMaintenanceTimeStamp() {
@@ -154,3 +140,27 @@ func (w *voteBuffer) getMaintenanceTimeStamp() {
 	w.nextMaintenanceTime = nextMaintenanceTime
 	w.Unlock()
 }
+
+// getVoteWitnessRankingChange
+func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
+	lastCycleSortList := make([]*entity.VoteWitness, 0, len(voteWitnessList))
+	for _, temp := range voteWitnessList {
+		voteWitness := new(entity.VoteWitness)
+		*voteWitness = *temp
+		lastCycleSortList = append(lastCycleSortList, voteWitness)
+	}
+
+	if len(lastCycleSortList) > 0 {
+		sort.SliceStable(lastCycleSortList, func(i, j int) bool { return lastCycleSortList[i].LastCycleVotes > lastCycleSortList[j].LastCycleVotes })
+	}
+
+	for _, temp1 := range voteWitnessList {
+		for index := range lastCycleSortList {
+			temp2 := lastCycleSortList[index]
+			if temp1.Address == temp2.Address {
+				temp1.ChangeCycle = int32(index+1)-temp1.RealTimeRanking
+			}
+		}
+	}
+}
+

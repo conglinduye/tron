@@ -14,7 +14,6 @@ import (
 
 func voteRegister(ginRouter *gin.Engine) {
 
-	//?sort=-number&limit=1&count=true&number=2135998
 	ginRouter.GET("/api/vote", func(c *gin.Context) {
 		req := &entity.Votes{}
 		req.Sort = c.Query("sort")
@@ -44,16 +43,7 @@ func voteRegister(ginRouter *gin.Engine) {
 	})
 
 	ginRouter.GET("/api/vote/witness", func(c *gin.Context) {
-		req := &entity.VoteWitnessReq{}
-		req.Start = c.Query("start")
-		req.Limit = c.Query("limit")
-		req.Address = c.Query("address")
-
-		resp, err := service.QueryVoteWitness(req)
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
-		}
+		resp, _ := service.QueryVoteWitnessBuffer()
 		c.JSON(http.StatusOK, resp)
 	})
 

@@ -50,6 +50,9 @@ func needQuit() bool {
 }
 
 func startDaemon() {
+	if *gEndBlokcID != 0 { // do not start daemon if end_block is not zero
+		return
+	}
 	startAssetDaemon()
 	startWintnessDaemon()
 	startRedisAccountRefreshPush()

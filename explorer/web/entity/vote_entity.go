@@ -31,36 +31,6 @@ type VotesInfo struct {
 	VoterAvailableVotes float64 `json:"voterAvailableVotes"` //:10
 }
 
-//VoteLiveInfo 实时投票数据
-type VoteLiveInfo struct {
-	Data map[string]*LiveInfo `json:"data"` // 记录详情
-}
-
-//LiveInfo 实时信息
-type LiveInfo struct {
-	Address string `json:"address"` //:"TFuC2Qge4GxA2U9abKxk1pw3YZvGM5XRir",
-	Name    string `json:"name"`    //:"trongalaxy",
-	URL     string `json:"url"`     //:"http://www.trongalaxy.io",
-	Votes   int64  `json:"votes"`   //:100006481
-}
-
-//VoteCurrentCycleResp 上轮投票信息
-type VoteCurrentCycleResp struct {
-	TotalVotes int64               `json:"total_votes"` //:"TFuC2Qge4GxA2U9abKxk1pw3YZvGM5XRir",
-	Candidates []*VoteCurrentCycle `json:"candidates"`  //:"trongalaxy",
-}
-
-//VoteCurrentCycle 上轮投票信息
-type VoteCurrentCycle struct {
-	Address     string `json:"address"`      //:"TFuC2Qge4GxA2U9abKxk1pw3YZvGM5XRir",
-	Name        string `json:"name"`         //:"trongalaxy",
-	URL         string `json:"url"`          //:"http://www.trongalaxy.io",
-	HasPage     bool   `json:"hasPage"`      //:100006481
-	Votes       int64  `json:"votes"`        //:100006481
-	ChangeCycle int32  `json:"change_cycle"` //:1,
-	ChangeDay   int32  `json:"change_day"`   //:1,
-}
-
 //VoteNextCycleResp 返回倒计时时间
 type VoteNextCycleResp struct {
 	NextCycle int64 `json:"nextCycle"` //:,毫秒
@@ -86,15 +56,6 @@ type CandidateInfo struct {
 	CandidateUrl		string 	`json:"candidateUrl"`			// candidateUrl
 }
 
-//VoteWitnessReq
-type VoteWitnessReq struct {
-	Limit     string  `json:"limit,omitempty"`     	// 每页记录数
-	Start     string  `json:"start,omitempty"`     	// 记录的起始序号
-	Address   string  `json:"address,omitempty"` 	// 地址
-
-}
-
-
 //VoteWitnessResp
 type VoteWitnessResp struct {
 	Total				int64					`json:"total"`
@@ -115,7 +76,6 @@ type VoteWitness struct {
 	ChangeVotes			int64		`json:"changeVotes"`
 	VotesPercentage		float64		`json:"votesPercentage"`
 	ChangeCycle 		int32  		`json:"change_cycle"`
-	ChangeDay   		int32  		`json:"change_day"`
 }
 
 // VoteWitnessRanking
