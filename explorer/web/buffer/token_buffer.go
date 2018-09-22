@@ -38,15 +38,14 @@ func tokenListBufferLoader() {
 	for {
 		go _tokenBuffer.loadQueryCommonTokenList()
 		go _tokenBuffer.loadQueryIcoTokenList()
-		time.Sleep(61 * time.Second)
+		time.Sleep(120 * time.Second)
 	}
 }
 
 func tokenDetailListBufferLoader() {
 	for {
-		time.Sleep(301 * time.Second)
 		go _tokenBuffer.loadQueryTokensDetailList()
-		time.Sleep(301 * time.Second)
+		time.Sleep(180 * time.Second)
 	}
 }
 
@@ -176,10 +175,9 @@ func subHandle(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 	calculateTokens(tokenList)
 
 	// queryCreateTime
-	for index := range tokenList {
-		token := tokenList[index]
+	for _, token := range tokenList {
 		createTime := queryAssetCreateTime(token.OwnerAddress, token.Name)
-		tokenList[index].DateCreated = createTime
+		token.DateCreated = createTime
 	}
 
 	tokenAddressList := make([]string, 0)
@@ -232,20 +230,24 @@ func subHandle(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 
 // calculateTokens
 func calculateTokens(tokenList []*entity.TokenInfo) {
-	for index := range tokenList {
-		token := tokenList[index]
+	for _, token := range tokenList {
 		calculateToken(token)
 	}
 }
 
 // calculateToken
 func calculateToken(token *entity.TokenInfo) {
-	frozen := token.Frozen
+	frozenList := token.Frozen
 
 	var frozenSupply int64 = 0
-	for index := range frozen {
-		frozenSupply = frozenSupply + frozen[index].Amount
+	if frozenList != nil {
+		for _, frozen := range frozenList {
+			frozenSupply = frozenSupply + frozen.Amount
+		}
+	} else {
+		token.Frozen = make([]entity.TokenFrozenInfo, 0)
 	}
+
 	totalSupply := token.TotalSupply
 	availableSupply := totalSupply - frozenSupply
 
@@ -306,8 +308,7 @@ func queryAssetCreateTime(ownerAddress, tokenName string) int64 {
 // filterIcoTokenExpire
 func filterIcoTokenExpire(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 	newTokenList := make([]*entity.TokenInfo, 0)
-	for index := range tokenList {
-		token := tokenList[index]
+	for _, token := range tokenList {
 		if token.IssuedPercentage == 100 {
 			// do nothing
 		} else {
