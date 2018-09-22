@@ -113,7 +113,7 @@ func retrieveDatabase() (*TronDB, error) {
 				continue
 				//return nil, util.NewError(util.Error_common_db_not_connected, util.GetErrorMsgSleek(util.Error_common_db_not_connected))
 			}
-			log.Debugf("the [%v] mysql connect successfully,param:[%v]", mysqlType, param)
+			log.Debugf("the [%v] mysql connect successfully,para.ConnSQL:[%v]", mysqlType, para.ConnSQL)
 			//设置连接池信息
 			dbPtr.SetConnsParam(para.MaxOpenconns, para.MaxIdleConns)
 			dbInstance = dbPtr
