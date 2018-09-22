@@ -399,7 +399,7 @@ func storeAssetIssueContract(txn *sql.Tx, confirmed int, trxHash string, trx *co
 		ctx.EndTime,
 		ctx.Order,
 		ctx.VoteScore,
-		string(ctx.Description),
+		utils.HexEncode(ctx.Description),
 		string(ctx.Url),
 		ctx.FreeAssetNetLimit,
 		ctx.PublicFreeAssetNetLimit,
@@ -875,7 +875,7 @@ func storeUpdateAssetContract(txn *sql.Tx, confirmed int, trxHash string, trx *c
 		trx.RawData.Expiration,
 		confirmed,
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
-		string(ctx.Description),
+		utils.HexEncode(ctx.Description),
 		string(ctx.Url),
 		ctx.NewLimit,
 		ctx.NewPublicLimit)
