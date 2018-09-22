@@ -115,7 +115,6 @@ type VoteWitness struct {
 	ChangeVotes			int64		`json:"changeVotes"`
 	VotesPercentage		float64		`json:"votesPercentage"`
 	ChangeCycle 		int32  		`json:"change_cycle"`
-	ChangeDay   		int32  		`json:"change_day"`
 }
 
 // VoteWitnessRanking
