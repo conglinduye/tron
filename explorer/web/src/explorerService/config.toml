@@ -55,7 +55,8 @@ httpWebKey="WoiYeI5brZy4S8wQfVz7M5BczMkIhnugYW5QIibNgnWsAsktgHn5"
 netType="mainnet"
 
 [Redis]
-host = "127.0.0.1:6379"
+#host = "127.0.0.1:6379"
+host = "oline-tronscan-redis.jw6c3k.ng.0001.use2.cache.amazonaws.co:6379"
 pass = ""
 index = 0
 poolsize = 10
