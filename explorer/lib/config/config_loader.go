@@ -75,10 +75,10 @@ func initRedis(config *toml.Tree) error {
 		PoolSize int
 	}{}
 	redisInfo.Addr = config.GetDefault("Redis.host", "127.0.0.1:6379").(string)
-	redisInfo.Password = config.GetDefault("Redis.pass", "127.0.0.1:6379").(string)
+	redisInfo.Password = config.GetDefault("Redis.pass", "").(string)
 	redisInfo.Db = int(util.ToInt64(config.GetDefault("Redis.index", 0)))
 	redisInfo.PoolSize = int(util.ToInt64(config.GetDefault("Redis.poolSize", 10)))
-
+	log.Debugf("redis init:Addr:%v, Password:%v, Db:%v, PoolSize:%v", redisInfo.Addr, redisInfo.Password, redisInfo.Db, redisInfo.PoolSize)
 	RedisCli = redis.NewClient(redisInfo.Addr, redisInfo.Password, redisInfo.Db, redisInfo.PoolSize)
 
 	return nil

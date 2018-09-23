@@ -141,7 +141,7 @@ func (b *blockBuffer) GetBlock(blockID int64) (block *entity.BlockInfo) {
 // GetBlockBuffer ...
 func GetBlockBuffer() Buffer {
 	_onceBlockBuffer.Do(func() {
-		initRedis([]string{"127.0.0.1:6379"})
+		initRedis([]string{"oline-tronscan-redis.jw6c3k.ng.0001.use2.cache.amazonaws.com:6379"})
 
 		_blockBuffer = &blockBuffer{}
 
