@@ -333,7 +333,8 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 
 		trx.Block = blockID
 		trx.Hash = utils.HexEncode(utils.CalcTransactionHash(rawTrx))
-		trx.CreateTime = rawTrx.RawData.Timestamp
+		// trx.CreateTime = rawTrx.RawData.Timestamp
+		trx.CreateTime = block.BlockHeader.RawData.Timestamp // use block timestamp
 		if ownerCtxIF, ok := realCtx.(utils.OwnerAddressIF); ok {
 			trx.OwnerAddress = utils.Base58EncodeAddr(ownerCtxIF.GetOwnerAddress())
 		}
