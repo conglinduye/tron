@@ -245,7 +245,7 @@ func (b *blockBuffer) getTransferIndexOffset(offset, count int64) (filter string
 		return "", "", ""
 	}
 
-	fmt.Printf("offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
+	fmt.Printf("transfer index: totalTrn:%v, step:%v, offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", totalTrn, step, offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
 
 	idx := index[ascOffsetIdx]
 	filter = fmt.Sprintf(" and block_id >= '%v'", idx.BlockID)
