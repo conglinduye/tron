@@ -209,7 +209,7 @@ func (b *blockBuffer) cleanConfirmedTranBufferFromUncTranList() {
 func (b *blockBuffer) bufferConfiremdTransaction(filter string, limit string) {
 	data := b.loadTransactionFromDB(filter, "", limit)
 
-	sort.SliceStable(data, func(i, j int) bool { return data[i].Block > data[i].Block })
+	sort.SliceStable(data, func(i, j int) bool { return data[i].Block > data[j].Block })
 	b.trxList = append(data, b.trxList...)
 	if len(b.trxList) > b.maxConfirmedTrx {
 		b.trxList = b.trxList[0:b.maxConfirmedTrx]
@@ -309,7 +309,7 @@ func (b *blockBuffer) loadTransactionFromDB(filter string, order string, limit s
 		return nil
 	}
 
-	sort.SliceStable(ret.Data, func(i, j int) bool { return ret.Data[i].Block > ret.Data[i].Block })
+	sort.SliceStable(ret.Data, func(i, j int) bool { return ret.Data[i].Block > ret.Data[j].Block })
 	return ret.Data
 }
 
@@ -333,7 +333,8 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 
 		trx.Block = blockID
 		trx.Hash = utils.HexEncode(utils.CalcTransactionHash(rawTrx))
-		trx.CreateTime = rawTrx.RawData.Timestamp
+		// trx.CreateTime = rawTrx.RawData.Timestamp
+		trx.CreateTime = block.BlockHeader.RawData.Timestamp // use block timestamp
 		if ownerCtxIF, ok := realCtx.(utils.OwnerAddressIF); ok {
 			trx.OwnerAddress = utils.Base58EncodeAddr(ownerCtxIF.GetOwnerAddress())
 		}
@@ -415,6 +416,10 @@ func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count int64) []*entit
 }
 
 func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*entity.TransactionInfo {
+
+	// redisList := make([]*entity.TransactionInfo, 0, count)
+	// retLen := int64(0)
+
 	redisList := b.getTrxDescListFromRedis(offset, count)
 
 	retLen := int64(len(redisList))
@@ -442,6 +447,7 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 	limit = fmt.Sprintf("limit %v, %v", offset, count) // load from db +100  record
 
 	filter, order, limit := b.getTransactionIndexOffset(offset+int64(len(redisList))+int64(len(b.trxList)), count)
+	fmt.Printf("filter:%v\norder:%\nlimit:%v\n", filter, order, limit)
 
 	retList := b.loadTransactionFromDB(filter, order, limit)
 	// b.storeTrxDescListToRedis(retList, true)

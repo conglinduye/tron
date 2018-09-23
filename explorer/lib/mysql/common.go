@@ -239,7 +239,7 @@ func QueryTableDataCount(tableName string) (int64, error) {
 	}
 
 	strSQL := "select count(*) as rowcounts from " + tableName
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	var data *TronDBRows
 	if data, err = dbPtr.Select(strSQL); err != nil {
 		return 0, util.NewError(util.Error_common_internal_error, util.GetErrorMsgSleek(util.Error_common_internal_error))
@@ -277,7 +277,7 @@ func QuerySQLViewCount(strSQLView string) (int64, error) {
 select count(*) as rowcounts from (
 				%s
 ) newtableName`, strSQLView)
-	log.Debug(strSQL)
+	log.Sql(strSQL)
 	var data *TronDBRows
 	if data, err = dbPtr.Select(strSQL); err != nil {
 		return 0, util.NewError(util.Error_common_internal_error, util.GetErrorMsgSleek(util.Error_common_internal_error))

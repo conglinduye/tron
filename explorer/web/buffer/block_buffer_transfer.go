@@ -108,6 +108,9 @@ func (b *blockBuffer) getRestTran(minBlockID int64, offset, count int64) []*enti
 }
 
 func (b *blockBuffer) getRestTranRedis(blockID int64, offset, count int64) []*entity.TransferInfo {
+	// redisList := make([]*entity.TransferInfo, 0, count)
+	// retLen := int64(0)
+
 	redisList := b.getTranDescListFromRedis(offset, count)
 
 	retLen := int64(len(redisList))
@@ -215,7 +218,7 @@ func (b *blockBuffer) loadTransferFromDB(filter string, order string, limit stri
 		return nil
 	}
 
-	sort.SliceStable(ret.Data, func(i, j int) bool { return ret.Data[i].Block > ret.Data[i].Block })
+	sort.SliceStable(ret.Data, func(i, j int) bool { return ret.Data[i].Block > ret.Data[j].Block })
 	return ret.Data
 }
 

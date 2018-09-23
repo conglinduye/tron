@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/wlcy/tron/explorer/core/utils"
@@ -14,12 +15,19 @@ import (
 func main() {
 	flag.Parse()
 	// mysql.Initialize("127.0.0.1", "3306", "tron", "budev", "tron**1")
-	mysql.Initialize("mine", "3306", "tron", "tron", "tron")
-	log.ChangeLogLevel(log.Str2Level("DEBUG"))
+	reader := make(map[string]string)
+	reader[mysql.DBHost] = "mine"
+	reader[mysql.DBPort] = "3306"
+	reader[mysql.DBSchema] = "tron"
+	reader[mysql.DBName] = "tron"
+	reader[mysql.DBPass] = "tron"
+	mysql.InitializeReader(map[string]map[string]string{"1": reader})
+	mysql.InitializeWriter("mine", "3306", "tron", "tron", "tron")
+	log.ChangeLogLevel(log.Str2Level("INFO"))
 
 	// initRedis([]string{"127.0.0.1:6379"})
 	bb := buffer.GetBlockBuffer()
-	cc := buffer.GetWitnessBuffer()
+	// cc := buffer.GetWitnessBuffer()
 	_ = bb
 	cnt := 0
 	for cnt < 10 {
@@ -34,7 +42,17 @@ func main() {
 		// getTrxHash()
 		//getTrxs()
 
-		cc.GetWitness()
+		// cc.GetWitness()
+
+		var offset, count int64
+		// fmt.Scanf("%v, %v", &offset, &count)
+		offset = 4234567
+		count = 20
+		ret := bb.GetTransactions(offset, count)
+		sort.SliceStable(ret, func(i, j int) bool { return ret[i].Block > ret[j].Block })
+		for idx, trx := range ret {
+			fmt.Printf("idx:%2v, block_id:%v, trx_hash:%v\n", idx, trx.Block, trx.Hash)
+		}
 
 		// fmt.Printf("\n### %v, %v, %v, %v\n\n", bb.GetMaxBlockID(), bb.GetMaxConfirmedBlockID(), bb.GetSolidityNodeMaxBlockID(), bb.GetFullNodeMaxBlockID())
 

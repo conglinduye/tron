@@ -29,7 +29,7 @@ func (dbi *dbIndex) GetTotal() int64 {
 func (dbi *dbIndex) GetStep() int64 {
 	dbi.RLock()
 	defer dbi.RUnlock()
-	return dbi.total
+	return dbi.step
 }
 
 // GetIndex ...
