@@ -532,7 +532,8 @@ func (b *blockBuffer) getTransactionIndexOffset(offset, count int64) (filter str
 	limit = fmt.Sprintf("limit %v, %v", 0, count)
 
 	index := b.trxIndex.GetIndex()
-	totalTrn := b.trxIndex.GetTotal()
+	// totalTrn := b.trxIndex.GetTotal()
+	totalTrn := b.GetTotalTransactions()
 	step := b.trxIndex.GetStep()
 
 	if offset >= totalTrn {

@@ -227,7 +227,8 @@ func (b *blockBuffer) getTransferIndexOffset(offset, count int64) (filter string
 	limit = fmt.Sprintf("limit %v, %v", 0, count)
 
 	index := b.tranIndex.GetIndex()
-	totalTrn := b.tranIndex.GetTotal()
+	// totalTrn := b.tranIndex.GetTotal()
+	totalTrn := b.GetTotalTransfers()
 	step := b.tranIndex.GetStep()
 
 	if offset >= totalTrn {
