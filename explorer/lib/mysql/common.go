@@ -21,11 +21,13 @@ const DATEFORMATDATE = "20060102"
 const DATEFORMATHOUR = "2006010215"
 const DATEFORMATMINUTE = "200601021504"
 
-var dbHost = ""       //主机
-var dbPort = "3306"   //端口
-var dbSchema = "tron" //db schema
-var dbName = "tron"   //用户名
-var dbPass = "tron"   //密码
+var DBHost = "host"     //主机
+var DBPort = "port"     //端口
+var DBSchema = "schema" //db schema
+var DBName = "user"     //用户名
+var DBPass = "password" //密码
+//数据库配置集合  map[primary]map[host]"localhost"
+var mysqlMain map[string]map[string]string
 
 //数据库的连接配置
 type DBParam struct {
@@ -41,7 +43,7 @@ var dbInstance *TronDB
 //Initialize 初始化
 // appInfo spaceInfo user report appType
 // centerControl
-func Initialize(host, port, schema, user, passwd string) bool {
+/*func Initialize(host, port, schema, user, passwd string) bool {
 	if len(strings.TrimSpace(host)) == 0 ||
 		len(strings.TrimSpace(port)) == 0 ||
 		len(strings.TrimSpace(schema)) == 0 ||
@@ -56,6 +58,17 @@ func Initialize(host, port, schema, user, passwd string) bool {
 	dbName = strings.TrimSpace(user)
 	dbPass = strings.TrimSpace(passwd)
 	return true
+}*/
+
+//InitializeReader 初始化
+// appInfo spaceInfo user report appType
+// centerControl
+func InitializeReader(dbSet map[string]map[string]string) bool {
+	if len(dbSet) == 0 {
+		return false
+	}
+	mysqlMain = dbSet
+	return true
 }
 
 //GetDatabase Get一个连接的数据库对象
@@ -64,11 +77,21 @@ func GetDatabase() (*TronDB, error) {
 }
 
 //GetMysqlConnectionInfo 获取连接mysql的相关信息
-func GetMysqlConnectionInfo() DBParam {
+/*func GetMysqlConnectionInfo() DBParam {
 	dbConfig := DBParam{
-		Mode: string("mysql"),
-		//ConnSQL:      string("hub:blahblah@tcp(" + dbHost + ":" + dbPort + ")/hubDB?charset=utf8"),
+		Mode:         string("mysql"),
 		ConnSQL:      fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", dbName, dbPass, dbHost, dbPort, dbSchema),
+		MaxOpenconns: 10,
+		MaxIdleConns: 10,
+	}
+	return dbConfig
+}*/
+
+//GetMysqlMutiConnectionInfo 获取连接mysql的相关信息
+func GetMysqlMutiConnectionInfo(db map[string]string) DBParam {
+	dbConfig := DBParam{
+		Mode:         string("mysql"),
+		ConnSQL:      fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", db[DBName], db[DBPass], db[DBHost], db[DBPort], db[DBSchema]),
 		MaxOpenconns: 10,
 		MaxIdleConns: 10,
 	}
@@ -80,26 +103,27 @@ func retrieveDatabase() (*TronDB, error) {
 	defer CatchError()
 
 	if nil == dbInstance {
-		//连接数据库的参数
-		para := GetMysqlConnectionInfo()
-
-		//打开这个DB对象
-		dbPtr, err := OpenDB(para.Mode, para.ConnSQL)
-		if err != nil {
-			return nil, err
+		for mysqlType, param := range mysqlMain {
+			//连接数据库的参数
+			para := GetMysqlMutiConnectionInfo(param)
+			//打开这个DB对象
+			dbPtr, err := OpenDB(para.Mode, para.ConnSQL)
+			if err != nil || dbPtr == nil {
+				log.Errorf("can't connect the [%v] mysql,param:[%v]", mysqlType, param)
+				continue
+				//return nil, util.NewError(util.Error_common_db_not_connected, util.GetErrorMsgSleek(util.Error_common_db_not_connected))
+			}
+			log.Debugf("the [%v] mysql connect successfully,para.ConnSQL:[%v]", mysqlType, para.ConnSQL)
+			//设置连接池信息
+			dbPtr.SetConnsParam(para.MaxOpenconns, para.MaxIdleConns)
+			dbInstance = dbPtr
+			break
 		}
-		if dbPtr == nil {
-			return nil, util.NewError(util.Error_common_db_not_connected, util.GetErrorMsgSleek(util.Error_common_db_not_connected))
-		}
-
-		//设置连接池信息
-		dbPtr.SetConnsParam(para.MaxOpenconns, para.MaxIdleConns)
-		dbInstance = dbPtr
 	}
 
 	//测试一下是否是连接成功的
 	if err := dbInstance.Ping(); err != nil {
-		//dbInstance.Close()
+		log.Errorf("the  mysql connect err [%v]", err)
 		dbInstance = nil
 		return nil, err
 	}
@@ -271,6 +295,7 @@ select count(*) as rowcounts from (
 	return rowCount, nil
 }
 
+/*
 //ExecuteSQLCommand 执行insert update操作,依次返回 插入消息的主键，影响的条数，错误对象
 func ExecuteSQLCommand(strSQL string, isInsertSQL bool) (int64, int64, error) {
 	var key int64
@@ -311,7 +336,7 @@ func ExecuteSQLCommands(sqls []string) error {
 
 	return dbPtr.TransactionDB(sqls)
 }
-
+*/
 //GenSqlPartIn 获得SQL中 in 部分的SQL  like : "10,12,13,14" or "(10,12,13,14)"
 func GenSqlPartIn(keys []uint64, withBrackets bool) string {
 	var strRet string

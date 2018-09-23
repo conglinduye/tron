@@ -139,3 +139,25 @@ type AssetBalance struct {
 	Balance					int64 				`json:"balance"`				// balance
 }
 
+type AssetTransferReq struct {
+	Start  					string 				`json:"start,omitempty"`  		// start
+	Limit  					string 				`json:"limit,omitempty"`		// limit
+	Token					string 				`json:"token,omitempty"`		// token
+}
+
+type AssetTransferResp struct {
+	Total 					int64				`json:"total"`					// total
+	Data					[]*AssetTransfer	`json:"data	"`					// data
+}
+
+type AssetTransfer struct {
+	BlockId					int64 				`json:"blockId"`				// blockId
+	TransactionHash			string 				`json:"transactionHash"`		// transactionHash
+	Timestamp				int64				`json:"timestamp"`				// timestamp
+	TransferFromAddress		string 				`json:"transferFromAddress"`	// transferFromAddress
+	TransferToAddress		string				`json:"transferToAddress"`		// transferToAddress
+	Amount					int64				`json:"amount"`					// amount
+	TokenName				string 				`json:"tokenName"`				// tokenName
+	Confirmed				bool				`json:"confirmed"`				// confirmed
+}
+

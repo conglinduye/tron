@@ -10,6 +10,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
@@ -44,12 +45,14 @@ func LoadConfig(confFile string) error {
 		log.Errorf("get Redis config failed[%v]!", err)
 		return err
 	}
-
-	if err = initDB(config); nil != err {
+	/*if err = initDB(config); nil != err {
+		log.Errorf("get db config failed:[%v]!", err)
+		return err
+	}*/
+	if err = initMutilDB(config); nil != err {
 		log.Errorf("get db config failed:[%v]!", err)
 		return err
 	}
-
 	if err = initToken(config); nil != err {
 		log.Errorf("get token config failed:[%v]!", err)
 		return err
@@ -82,7 +85,7 @@ func initRedis(config *toml.Tree) error {
 }
 
 //initDB 初始化DB baseAdapter.loadAdxTemplateData use
-func initDB(config *toml.Tree) error {
+/*func initDB(config *toml.Tree) error {
 	const NodeName = "mysql"
 	host := config.GetDefault(fmt.Sprintf("%v.host", NodeName), "127.0.0.1").(string)
 	port := config.GetDefault(fmt.Sprintf("%v.port", NodeName), "3306").(string)
@@ -93,6 +96,44 @@ func initDB(config *toml.Tree) error {
 	log.Debugf("host:%v, port:%v, schema:%v, user:%v, passwd:%v", host, port, schema, user, passwd)
 
 	mysql.Initialize(host, port, schema, user, passwd)
+
+	return nil
+}*/
+
+//initMutilDB 初始化DB
+func initMutilDB(config *toml.Tree) error {
+	const NodeName = "MysqlMain"
+	readConnections := config.GetDefault(fmt.Sprintf("%v.readConnections", NodeName), "primary,secondary").(string)
+	writeConnections := config.GetDefault(fmt.Sprintf("%v.writeConnections", NodeName), "writary").(string)
+	//init write database
+	host := config.GetDefault(fmt.Sprintf("%v.host", writeConnections), "127.0.0.1").(string)
+	port := config.GetDefault(fmt.Sprintf("%v.port", writeConnections), "3306").(string)
+	schema := config.GetDefault(fmt.Sprintf("%v.schema", writeConnections), "tron").(string)
+	user := config.GetDefault(fmt.Sprintf("%v.user", writeConnections), "tron").(string)
+	passwd := config.GetDefault(fmt.Sprintf("%v.pass", writeConnections), "tron").(string)
+
+	log.Debugf("write database init:host:%v, port:%v, schema:%v, user:%v, passwd:%v", host, port, schema, user, passwd)
+
+	mysql.InitializeWriter(host, port, schema, user, passwd)
+	var dbParams = make(map[string]map[string]string, 0)
+
+	//init read database
+	for _, db := range strings.Split(readConnections, ",") {
+		params := make(map[string]string, 0)
+		params[mysql.DBHost] = config.GetDefault(fmt.Sprintf("%v.host", db), "127.0.0.1").(string)
+		params[mysql.DBPort] = config.GetDefault(fmt.Sprintf("%v.port", db), "3306").(string)
+		params[mysql.DBSchema] = config.GetDefault(fmt.Sprintf("%v.schema", db), "tron").(string)
+		params[mysql.DBName] = config.GetDefault(fmt.Sprintf("%v.user", db), "tron").(string)
+		params[mysql.DBPass] = config.GetDefault(fmt.Sprintf("%v.pass", db), "tron").(string)
+		dbParams[db] = params
+		log.Debugf("read database init:db:[%v],param:[%v]", db, params)
+	}
+	if len(dbParams) == 0 {
+		log.Error("init read database err")
+		return util.NewErrorMsg(util.Error_common_db_not_connected)
+	}
+	mysql.InitializeReader(dbParams)
+	log.Debug("init read database success")
 
 	return nil
 }

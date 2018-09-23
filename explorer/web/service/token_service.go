@@ -184,3 +184,22 @@ func QueryTotalTokenTransfers(tokenName string) (int64, error) {
 func QueryTotalTokenHolders(tokenName string) (int64, error) {
 	return module.QueryTotalTokenHolders(tokenName)
 }
+
+// QueryAssetTransfer
+func QueryAssetTransfer(req *entity.AssetTransferReq) (*entity.AssetTransferResp, error) {
+	var filterSQL, sortSQL, pageSQL string
+
+	strSQL := fmt.Sprintf(`
+		select trx_hash, block_id, create_time, confirmed, owner_address, to_address, amount, asset_name
+		from contract_asset_transfer
+		where 1=1 `)
+	if req.Token != "" {
+		filterSQL = fmt.Sprintf(" and asset_name='%v' ", req.Token)
+	}
+
+	sortSQL = fmt.Sprintf("order by create_time desc ")
+
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
+	return module.QueryAssetTransfer(strSQL, filterSQL, sortSQL, pageSQL)
+}

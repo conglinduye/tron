@@ -11,6 +11,7 @@ func Async() {
 	go buffer.GetMarketBuffer()
 	go buffer.GetAccountTokenBuffer()
 	go buffer.GetTokenBuffer()
+	go buffer.GetVoteBuffer()
 
 	go task.SyncCacheTodayReport()
 	go task.SyncPersistYesterdayReport()
