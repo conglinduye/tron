@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/wlcy/tron/explorer/core/utils"
@@ -47,7 +48,11 @@ func main() {
 		// fmt.Scanf("%v, %v", &offset, &count)
 		offset = 4234567
 		count = 20
-		bb.GetTransactions(offset, count)
+		ret := bb.GetTransactions(offset, count)
+		sort.SliceStable(ret, func(i, j int) bool { return ret[i].Block > ret[j].Block })
+		for idx, trx := range ret {
+			fmt.Printf("idx:%2v, block_id:%v, trx_hash:%v\n", idx, trx.Block, trx.Hash)
+		}
 
 		// fmt.Printf("\n### %v, %v, %v, %v\n\n", bb.GetMaxBlockID(), bb.GetMaxConfirmedBlockID(), bb.GetSolidityNodeMaxBlockID(), bb.GetFullNodeMaxBlockID())
 
