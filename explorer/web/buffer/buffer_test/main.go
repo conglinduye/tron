@@ -14,12 +14,19 @@ import (
 func main() {
 	flag.Parse()
 	// mysql.Initialize("127.0.0.1", "3306", "tron", "budev", "tron**1")
-	mysql.Initialize("mine", "3306", "tron", "tron", "tron")
-	log.ChangeLogLevel(log.Str2Level("DEBUG"))
+	reader := make(map[string]string)
+	reader[mysql.DBHost] = "mine"
+	reader[mysql.DBPort] = "3306"
+	reader[mysql.DBSchema] = "tron"
+	reader[mysql.DBName] = "tron"
+	reader[mysql.DBPass] = "tron"
+	mysql.InitializeReader(map[string]map[string]string{"1": reader})
+	mysql.InitializeWriter("mine", "3306", "tron", "tron", "tron")
+	log.ChangeLogLevel(log.Str2Level("INFO"))
 
 	// initRedis([]string{"127.0.0.1:6379"})
 	bb := buffer.GetBlockBuffer()
-	cc := buffer.GetWitnessBuffer()
+	// cc := buffer.GetWitnessBuffer()
 	_ = bb
 	cnt := 0
 	for cnt < 10 {
@@ -34,7 +41,13 @@ func main() {
 		// getTrxHash()
 		//getTrxs()
 
-		cc.GetWitness()
+		// cc.GetWitness()
+
+		var offset, count int64
+		// fmt.Scanf("%v, %v", &offset, &count)
+		offset = 4234567
+		count = 20
+		bb.GetTransactions(offset, count)
 
 		// fmt.Printf("\n### %v, %v, %v, %v\n\n", bb.GetMaxBlockID(), bb.GetMaxConfirmedBlockID(), bb.GetSolidityNodeMaxBlockID(), bb.GetFullNodeMaxBlockID())
 
