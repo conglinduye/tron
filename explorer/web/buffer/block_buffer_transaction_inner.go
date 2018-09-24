@@ -397,7 +397,7 @@ func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count int64) []*entit
 		minCTrxBlockID = minBlockID
 	}
 	if offset > cTrxLen {
-		// offset = offset - cTrxLen
+		offset = offset - cTrxLen
 		return b.getRestTrxRedis(minCTrxBlockID, offset, count)
 	}
 	//else { // part in confirmed list ...
@@ -417,17 +417,17 @@ func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count int64) []*entit
 
 func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*entity.TransactionInfo {
 
-	// redisList := make([]*entity.TransactionInfo, 0, count)
-	// retLen := int64(0)
+	redisList := make([]*entity.TransactionInfo, 0, count)
+	retLen := int64(0)
 
-	redisList := b.getTrxDescListFromRedis(offset, count)
+	// redisList := b.getTrxDescListFromRedis(offset, count)
 
-	retLen := int64(len(redisList))
-	if retLen >= count {
-		log.Debugf("get trx redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
+	// retLen := int64(len(redisList))
+	// if retLen >= count {
+	// 	log.Debugf("get trx redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
 
-		return redisList
-	}
+	// 	return redisList
+	// }
 
 	//else { load from db
 	var filter, limit string
@@ -541,7 +541,7 @@ func (b *blockBuffer) getTransactionIndexOffset(offset, count int64) (filter str
 		return
 	}
 
-	unconfirmedTrx := int64(len(b.trxListUnconfirmed))
+	unconfirmedTrx := int64(0) //int64(len(b.trxListUnconfirmed))
 	ascOffset := totalTrn - offset - 1 - unconfirmedTrx
 	ascOffsetIdx := ascOffset / step
 	ascInnerOffsetIdx := ascOffset % step

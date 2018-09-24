@@ -89,7 +89,7 @@ func (b *blockBuffer) getRestTran(minBlockID int64, offset, count int64) []*enti
 		minCTranBlockID = minBlockID
 	}
 	if offset > cTranLen {
-		// offset = offset - cTranLen
+		offset = offset - cTranLen
 		return b.getRestTranRedis(minCTranBlockID, offset, count)
 	}
 	//else { // part in confirmed list ...
@@ -108,17 +108,17 @@ func (b *blockBuffer) getRestTran(minBlockID int64, offset, count int64) []*enti
 }
 
 func (b *blockBuffer) getRestTranRedis(blockID int64, offset, count int64) []*entity.TransferInfo {
-	// redisList := make([]*entity.TransferInfo, 0, count)
-	// retLen := int64(0)
+	redisList := make([]*entity.TransferInfo, 0, count)
+	retLen := int64(0)
 
-	redisList := b.getTranDescListFromRedis(offset, count)
+	// redisList := b.getTranDescListFromRedis(offset, count)
 
-	retLen := int64(len(redisList))
-	if retLen >= count {
-		log.Debugf("get tran redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
+	// retLen := int64(len(redisList))
+	// if retLen >= count {
+	// 	log.Debugf("get tran redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
 
-		return redisList
-	}
+	// 	return redisList
+	// }
 
 	//else { load from db
 	var filter, limit string
@@ -236,7 +236,7 @@ func (b *blockBuffer) getTransferIndexOffset(offset, count int64) (filter string
 		return
 	}
 
-	unconfirmedTrans := int64(len(b.tranListUnconfirmed))
+	unconfirmedTrans := int64(0) //int64(len(b.tranListUnconfirmed))
 	ascOffset := totalTrn - offset - 1 - unconfirmedTrans
 	ascOffsetIdx := ascOffset / step
 	ascInnerOffsetIdx := ascOffset % step
