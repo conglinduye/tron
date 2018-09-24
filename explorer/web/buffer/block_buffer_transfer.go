@@ -236,7 +236,7 @@ func (b *blockBuffer) getTransferIndexOffset(offset, count int64) (filter string
 		return
 	}
 
-	ascOffset := totalTrn - offset - 1
+	ascOffset := totalTrn - offset - 1 - int64(len(b.tranListUnconfirmed))
 	ascOffsetIdx := ascOffset / step
 	ascInnerOffsetIdx := ascOffset % step
 
