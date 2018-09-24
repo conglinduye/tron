@@ -125,7 +125,11 @@ func getBlock(id int, b, e int64) {
 			runTaskCnt := wc1.currentWorker()
 			fmt.Printf("Current working task:[%v]--max task:[%v], latest block id handled:%v\n", runTaskCnt, *gIntMaxWorker, newE)
 			if e > 0 && 1 == runTaskCnt {
-				fmt.Printf("Sync all data cost:%v\n", time.Since(ts))
+				fmt.Printf("Sync all data cost:%v, last block need to sync is [%v] done!\n", time.Since(ts), e)
+				break
+			}
+			if needQuit() && 1 == runTaskCnt {
+				fmt.Printf("Sync all data cost:%v, receive signal quit\n", time.Since(ts))
 				break
 			}
 			time.Sleep(10 * time.Second)
