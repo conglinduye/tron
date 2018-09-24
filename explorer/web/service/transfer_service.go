@@ -13,10 +13,10 @@ import (
 //QueryTransfersBuffer ...从缓存中获取数据
 func QueryTransfersBuffer(req *entity.Transfers) (*entity.TransfersResp, error) {
 	transfers := &entity.TransfersResp{}
-	if req.Number != "" { //按blockID查询
+	if req.Number != "" { //按blockID查询, 分页 总量等于 block transcation
 		transfers.Data = buffer.GetBlockBuffer().GetTransferByBlockID(mysql.ConvertStringToInt64(req.Number, 0))
 		transfers.Total = int64(len(transfers.Data))
-	} else if req.Hash != "" { //按照交易hash查询
+	} else if req.Hash != "" { //按照交易hash查询，不分页
 		transact := buffer.GetBlockBuffer().GetTransferByHash(req.Hash)
 		if transact == nil {
 			transact, _ = QueryTransfer(req)
@@ -25,9 +25,9 @@ func QueryTransfersBuffer(req *entity.Transfers) (*entity.TransfersResp, error) 
 		transacts = append(transacts, transact)
 		transfers.Data = transacts
 		transfers.Total = int64(len(transfers.Data))
-	} else if req.Address != "" { //按照交易所属人查询，包含转出的交易，和转入的交易
+	} else if req.Address != "" { //按照交易所属人查询，包含转出的交易，和转入的交易， 分页 总量等于用户的transactions
 		return QueryTransfers(req)
-	} else { //分页查询
+	} else { //分页查询, 分页 总量== totalTransaction
 		transfers.Data = buffer.GetBlockBuffer().GetTransfers(req.Start, req.Limit)
 		transfers.Total = buffer.GetBlockBuffer().GetTotalTransfers()
 	}
@@ -99,7 +99,7 @@ func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 		filterTempSQL = fmt.Sprintf("and create_time>%v", time.Now().Add(hourBefore).UnixNano())
 	}*/
 
-	return module.QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL)
+	return module.QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL, true)
 }
 
 //QueryTransfer 精确查询  	//number=2135998   TODO: cache

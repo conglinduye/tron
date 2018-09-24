@@ -103,7 +103,7 @@ func (b *blockBuffer) loadTransactionFromDBFilter(filter string) []*entity.Trans
 	where 1=1 `)
 
 	order := " order by block_id desc "
-	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, "")
+	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, "", false)
 	if nil != err {
 		return nil
 	}
@@ -303,7 +303,7 @@ func (b *blockBuffer) loadTransactionFromDB(filter string, order string, limit s
 	if len(order) == 0 {
 		order = "order by block_id desc"
 	}
-	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, limit)
+	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, limit, false)
 	if nil != err || nil == ret && 0 == len(ret.Data) {
 		log.Debugf("query trx failed:%v\n", err)
 		return nil

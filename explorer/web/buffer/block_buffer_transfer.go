@@ -212,7 +212,7 @@ func (b *blockBuffer) loadTransferFromDB(filter string, order string, limit stri
 	if len(order) == 0 {
 		order = "order by block_id desc"
 	}
-	ret, err := module.QueryTransfersRealize(strSQL, filter, order, limit, "")
+	ret, err := module.QueryTransfersRealize(strSQL, filter, order, limit, "", false)
 	if nil != err || nil == ret && 0 == len(ret.Data) {
 		log.Debugf("query trx failed:%v\n", err)
 		return nil
