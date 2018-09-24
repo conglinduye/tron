@@ -236,7 +236,8 @@ func (b *blockBuffer) getTransferIndexOffset(offset, count int64) (filter string
 		return
 	}
 
-	ascOffset := totalTrn - offset - 1 - int64(len(b.tranListUnconfirmed))
+	unconfirmedTrans := int64(len(b.tranListUnconfirmed))
+	ascOffset := totalTrn - offset - 1 - unconfirmedTrans
 	ascOffsetIdx := ascOffset / step
 	ascInnerOffsetIdx := ascOffset % step
 
@@ -245,7 +246,7 @@ func (b *blockBuffer) getTransferIndexOffset(offset, count int64) (filter string
 		return "", "", ""
 	}
 
-	fmt.Printf("transfer index: totalTrn:%v, step:%v, offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", totalTrn, step, offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
+	fmt.Printf("transfer index: totalTrn:%v, unconfirmed:%v, step:%v, offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", totalTrn, unconfirmedTrans, step, offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
 
 	idx := index[ascOffsetIdx]
 	filter = fmt.Sprintf(" and block_id >= '%v'", idx.BlockID)

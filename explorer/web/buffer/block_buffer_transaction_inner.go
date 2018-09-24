@@ -541,7 +541,8 @@ func (b *blockBuffer) getTransactionIndexOffset(offset, count int64) (filter str
 		return
 	}
 
-	ascOffset := totalTrn - offset - 1 - int64(len(b.trxListUnconfirmed))
+	unconfirmedTrx := int64(len(b.trxListUnconfirmed))
+	ascOffset := totalTrn - offset - 1 - unconfirmedTrx
 	ascOffsetIdx := ascOffset / step
 	ascInnerOffsetIdx := ascOffset % step
 
@@ -550,7 +551,7 @@ func (b *blockBuffer) getTransactionIndexOffset(offset, count int64) (filter str
 		return "", "", ""
 	}
 
-	fmt.Printf("transactions index: totalTrx:%v, step:%v, offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", totalTrn, step, offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
+	fmt.Printf("transactions index: totalTrx:%v, unconfirmed:%v, step:%v, offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", totalTrn, unconfirmedTrx, step, offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
 
 	idx := index[ascOffsetIdx]
 	filter = fmt.Sprintf(" and block_id >= '%v'", idx.BlockID)
