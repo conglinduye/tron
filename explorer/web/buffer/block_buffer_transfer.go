@@ -236,7 +236,7 @@ func (b *blockBuffer) getTransferIndexOffset(offset, count, total int64) (filter
 		return
 	}
 
-	if offset >= total {
+	if offset > total {
 		fmt.Printf("invalid offset:%v, total count:%v, index range:[0, %v]\n", offset, total, total-1)
 		return
 	}

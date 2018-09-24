@@ -539,7 +539,7 @@ func (b *blockBuffer) getTransactionIndexOffset(offset, count, total int64) (fil
 		return
 	}
 
-	if offset >= total {
+	if offset > total {
 		fmt.Printf("invalid offset:%v, total count:%v, index range:[0, %v]\n", offset, total, total-1)
 		return
 	}
