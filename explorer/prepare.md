@@ -44,7 +44,7 @@
         cd $GOPATH/src/Shopify
         git clone https://github.com/Shopify/sarama.git
         ```
-    5. redis:::
+    5. redis:::`go get github.com/go-redis/redis`
         ```shell
         
         ```
@@ -69,8 +69,8 @@
         ```
     2. googleapis（作用: 使用了google grpc-gateway将grpc转化为http接口）
         ```shell
-        mkdir $GOPATH/src/github.com/googleapis/
-        cd $GOPATH/src/github.com/googleapis/
+        mkdir $GOPATH/src/github.com/googleapis
+        cd $GOPATH/src/github.com/googleapis
         git clone https://github.com/googleapis/googleapis.git
         ```
 5. 编译
