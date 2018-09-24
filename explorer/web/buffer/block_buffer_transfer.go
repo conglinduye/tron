@@ -137,7 +137,7 @@ func (b *blockBuffer) getRestTranRedis(blockID int64, offset, count int64) []*en
 	}
 	limit = fmt.Sprintf("limit %v, %v", offset, count)
 
-	filter, order, limit := b.getTransactionIndexOffset(offset+int64(len(redisList))+int64(len(b.trxList)), count)
+	filter, order, limit := b.getTransferIndexOffset(offset+int64(len(redisList))+int64(len(b.trxList)), count)
 
 	retList := b.loadTransferFromDB(filter, order, limit)
 	// b.storeTranDescListToRedis(retList, true)
