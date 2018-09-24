@@ -15,22 +15,22 @@ var (
 	TranRedisDescListKey = "transfer:list:desc" // 交易缓存 倒叙
 )
 
-func (b *blockBuffer) GetTransactions(offset, count int64) []*entity.TransactionInfo {
+func (b *blockBuffer) GetTransactions(offset, count, total int64) []*entity.TransactionInfo {
 	// uncTrxLen := int64(len(b.trxListUnconfirmed))
 	uncTrxLen, uncTrxMinBlockID := b.getUnconfirmdTrxListInfo()
 
-	log.Debugf("get trx(offset:%v, count:%v), uncLen:%v, uncMinBlockID:%v\n", offset, count, uncTrxLen, uncTrxMinBlockID)
+	log.Debugf("get trx(offset:%v, count:%v, total:%v), uncLen:%v, uncMinBlockID:%v\n", offset, count, total, uncTrxLen, uncTrxMinBlockID)
 
 	ret := make([]*entity.TransactionInfo, count, count)
 	if offset > uncTrxLen { // trx is in confirmed list or other
-		offset = offset - uncTrxLen
-		return b.getRestTrx(uncTrxMinBlockID, offset, count)
+		// offset = offset - uncTrxLen
+		return b.getRestTrx(uncTrxMinBlockID, offset, count, total)
 	} //else { // at least part of trx is in unconfirmed trx list
 
 	uncTrxBegin := offset
 	if uncTrxBegin+count > uncTrxLen { // part in unconfirmed, part in other
 		copy(ret, b.trxListUnconfirmed[uncTrxBegin:])
-		cList := b.getRestTrx(uncTrxMinBlockID, 0, uncTrxBegin+count-uncTrxLen)
+		cList := b.getRestTrx(uncTrxMinBlockID, 0, uncTrxBegin+count-uncTrxLen, total)
 		// TODO: verify the first element of cList's BlockID should be uncTRxMinBLockID -1
 		copy(ret[uncTrxLen-uncTrxBegin:], cList[:])
 		// ret = append(ret, cList...)

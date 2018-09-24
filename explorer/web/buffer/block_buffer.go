@@ -52,13 +52,13 @@ type Buffer interface {
 	GetBlock(blockID int64) (block *entity.BlockInfo)
 
 	// transaction
-	GetTransactions(offset, count int64) []*entity.TransactionInfo
+	GetTransactions(offset, count, total int64) []*entity.TransactionInfo
 	GetTransactionByBlockID(blockID int64) []*entity.TransactionInfo
 	GetTransactionByHash(hash string) *entity.TransactionInfo
 	GetTotalTransactions() int64
 
 	// transfer
-	GetTransfers(offset, count int64) []*entity.TransferInfo
+	GetTransfers(offset, count, total int64) []*entity.TransferInfo
 	GetTransferByBlockID(blockID int64) []*entity.TransferInfo
 	GetTransferByHash(hash string) *entity.TransferInfo
 	GetTotalTransfers() int64
