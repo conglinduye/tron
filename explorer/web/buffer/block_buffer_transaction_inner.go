@@ -397,7 +397,7 @@ func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count int64) []*entit
 		minCTrxBlockID = minBlockID
 	}
 	if offset > cTrxLen {
-		offset = offset - cTrxLen
+		// offset = offset - cTrxLen
 		return b.getRestTrxRedis(minCTrxBlockID, offset, count)
 	}
 	//else { // part in confirmed list ...

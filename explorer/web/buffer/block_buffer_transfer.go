@@ -89,7 +89,7 @@ func (b *blockBuffer) getRestTran(minBlockID int64, offset, count int64) []*enti
 		minCTranBlockID = minBlockID
 	}
 	if offset > cTranLen {
-		offset = offset - cTranLen
+		// offset = offset - cTranLen
 		return b.getRestTranRedis(minCTranBlockID, offset, count)
 	}
 	//else { // part in confirmed list ...
