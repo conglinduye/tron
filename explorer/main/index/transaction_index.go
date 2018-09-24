@@ -403,6 +403,19 @@ func storeIdxToDB(index []*TrxIndex, tableName string) {
 	}
 	defer txn.Commit()
 
+	cleanIndexSQL := fmt.Sprintf("truncate table %v_index", tableName)
+	stepRow := txn.QueryRow("select total_record from %v_index order by start_pos limit 1,1") // get index step
+	if nil != stepRow {
+		txn.Exec(cleanIndexSQL)
+	} else {
+		var oldStep int64
+		err = stepRow.Scan(&oldStep)
+		if nil != err || step != oldStep {
+			fmt.Printf("step change from [%v] to [%v], clean index....\n", oldStep, step)
+			txn.Exec(cleanIndexSQL)
+		}
+	}
+
 	strSQL1 := fmt.Sprintf("insert into %v_index (start_pos, block_id, inner_offset, total_record) values (?, ?, ?, ?)", tableName)
 
 	stmt1, err := txn.Prepare(strSQL1)
