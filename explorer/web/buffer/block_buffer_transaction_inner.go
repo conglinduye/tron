@@ -544,7 +544,7 @@ func (b *blockBuffer) getTransactionIndexOffset(offset, count, total int64) (fil
 		return
 	}
 
-	ascOffset := total - offset - 1 // offset start at 0, total count from 1
+	ascOffset := total - offset // offset start at 0, total count from 1
 	ascOffsetIdx := ascOffset / step
 	ascInnerOffsetIdx := ascOffset % step
 

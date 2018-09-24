@@ -241,7 +241,7 @@ func (b *blockBuffer) getTransferIndexOffset(offset, count, total int64) (filter
 		return
 	}
 
-	ascOffset := total - offset - 1
+	ascOffset := total - offset
 	ascOffsetIdx := ascOffset / step
 	ascInnerOffsetIdx := ascOffset % step
 
