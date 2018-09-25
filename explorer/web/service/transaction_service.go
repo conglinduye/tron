@@ -37,7 +37,7 @@ func QueryTransactionsBuffer(req *entity.Transactions) (*entity.TransactionsResp
 	} else if req.Address != "" { //按照交易所属人查询，包含转出的交易，和转入的交易
 		transactions, _ = QueryTransactionsByAddress(req)
 	} else { //分页查询
-		transactions.Data = buffer.GetBlockBuffer().GetTransactions(req.Start, req.Limit)
+		transactions.Data = buffer.GetBlockBuffer().GetTransactions(req.Start, req.Limit, buffer.GetBlockBuffer().GetTotalTransactions())
 		transactions.Total = buffer.GetBlockBuffer().GetTotalTransactions()
 	}
 
@@ -91,7 +91,7 @@ func QueryTransactionsByAddress(req *entity.Transactions) (*entity.TransactionsR
 
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
-	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL)
+	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL, true)
 }
 
 //QueryTransactions 条件查询  	//?sort=-number&limit=1&count=true&number=2135998 TODO: cache
@@ -148,7 +148,7 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
-	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL)
+	return module.QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL, true)
 }
 
 //QueryTransactionByHashFromBuffer 精确查询

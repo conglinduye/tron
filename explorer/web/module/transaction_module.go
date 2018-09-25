@@ -9,7 +9,7 @@ import (
 )
 
 //QueryTransactionsRealize 操作数据库
-func QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.TransactionsResp, error) {
+func QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL string, needTotal bool) (*entity.TransactionsResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
 	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
@@ -52,9 +52,11 @@ func QueryTransactionsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*enti
 
 	//查询该语句所查到的数据集合
 	var total = int64(len(transactionInfos))
-	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
-	if err != nil {
-		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
+	if needTotal {
+		total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
+		if err != nil {
+			log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
+		}
 	}
 	transactionResp.Total = total
 	transactionResp.Data = transactionInfos

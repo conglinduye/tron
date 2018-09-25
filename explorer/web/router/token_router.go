@@ -179,7 +179,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 		req := &entity.AssetTransferReq{}
 		req.Start = c.Query("start")
 		req.Limit = c.Query("limit")
-		req.Token = c.Query("token")
+		req.Token = c.Query("name")
 		log.Debugf("Hello /api/token/transfer?%#v", req)
 		if req.Start == "" || req.Limit == "" {
 			req.Start = "0"

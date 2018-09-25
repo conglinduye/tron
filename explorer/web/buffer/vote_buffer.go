@@ -5,11 +5,12 @@ import (
 	"sync"
 	"time"
 
+	"sort"
+
 	"github.com/wlcy/tron/explorer/core/grpcclient"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
-	"sort"
 )
 
 var _voteBuffer *voteBuffer
@@ -52,13 +53,12 @@ func maintenanceTimeStampLoader() {
 	}
 }
 
-
 func (w *voteBuffer) GetNextMaintenanceTime() int64 {
 	if w.nextMaintenanceTime == 0 {
-		log.Infof("get NextMaintenanceTime info from buffer nil, data reload")
+		log.Debugf("get NextMaintenanceTime info from buffer nil, data reload")
 		w.getMaintenanceTimeStamp()
 	}
-	log.Infof("get NextMaintenanceTime info from buffer, buffer data updated ")
+	log.Debugf("get NextMaintenanceTime info from buffer, buffer data updated ")
 	return w.nextMaintenanceTime
 }
 
@@ -85,14 +85,14 @@ func (w *voteBuffer) loadVoteWitness() {
 
 	voteWitnessResp, err := module.QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL)
 	if err != nil {
-		log.Errorf("QueryVoteWitness strSQL:%v, err:[%v]",strSQL, err)
+		log.Errorf("QueryVoteWitness strSQL:%v, err:[%v]", strSQL, err)
 		return
 	}
 
 	totalVotes := module.QueryTotalVotes()
 	voteWitnessResp.TotalVotes = totalVotes
 
-	voteWitnessList:= voteWitnessResp.Data
+	voteWitnessList := voteWitnessResp.Data
 	for index, voteWitness := range voteWitnessList {
 		voteWitness.ChangeVotes = voteWitness.RealTimeVotes - voteWitness.LastCycleVotes
 		if voteWitness.URL != "" {
@@ -125,11 +125,13 @@ func (w *voteBuffer) loadVoteWitness() {
 
 }
 
-
 //获取下轮开始时间戳
 func (w *voteBuffer) getMaintenanceTimeStamp() {
 
 	client := grpcclient.GetRandomWallet()
+	if nil != client {
+		defer client.Close()
+	}
 
 	nextMaintenanceTime, err := client.GetNextMaintenanceTime()
 	if err != nil {
@@ -158,9 +160,8 @@ func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
 		for index := range lastCycleSortList {
 			temp2 := lastCycleSortList[index]
 			if temp1.Address == temp2.Address {
-				temp1.ChangeCycle = int32(index+1)-temp1.RealTimeRanking
+				temp1.ChangeCycle = int32(index+1) - temp1.RealTimeRanking
 			}
 		}
 	}
 }
-

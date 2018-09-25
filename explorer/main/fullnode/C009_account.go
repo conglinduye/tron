@@ -28,6 +28,11 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 	}
 
 	client := grpcclient.GetRandomSolidity()
+	defer func() {
+		if nil != client {
+			client.Close()
+		}
+	}()
 	// client1 := grpcclient.GetRandomWallet()
 
 	errCnt := 0
@@ -47,26 +52,15 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 			errCnt++
 			restAddr = append(restAddr, addr)
 			if errCnt >= maxErrCnt {
+				client.Close()
 				client = grpcclient.GetRandomSolidity()
 				errCnt = 0
 			}
 			continue
 		}
 
-		// accNet, err := client1.GetAccountNetRawAddr([]byte(addr))
-		// if nil != err || nil == accNet {
-		// 	errCnt++
-		// 	restAddr = append(restAddr, addr)
-		// 	if errCnt > maxErrCnt {
-		// 		client1 = grpcclient.GetRandomWallet()
-		// 		errCnt = 0
-		// 	}
-		// 	continue
-		// }
-
 		acct := new(account)
 		acct.SetRaw(acc)
-		// acct.SetNetRaw(accNet)
 		accountList = append(accountList, acct)
 	}
 
@@ -114,6 +108,11 @@ func getAccountNet(accc []*account, process *int64, lock *sync.Mutex) {
 	wc2.startOne()
 	totalTask := int64(len(accc))
 	client := grpcclient.GetRandomWallet()
+	defer func() {
+		if nil != client {
+			client.Close()
+		}
+	}()
 	// ts := time.Now()
 	errCnt := 0
 
@@ -175,6 +174,11 @@ func getAccountNet(accc []*account, process *int64, lock *sync.Mutex) {
 func getAccountNetF(accc []*account, process *int64, lock *sync.Mutex) {
 	wc2.startOne()
 	client := grpcclient.GetRandomWallet()
+	defer func() {
+		if nil != client {
+			client.Close()
+		}
+	}()
 	// ts := time.Now()
 	errCnt := 0
 
@@ -221,6 +225,11 @@ func getAccountNetF(accc []*account, process *int64, lock *sync.Mutex) {
 func getAcoountF(addrs []string, result *[]*account, badAddr *[]string, lock *sync.Mutex, wg *sync.WaitGroup) {
 	wc2.startOne()
 	client := grpcclient.GetRandomSolidity()
+	defer func() {
+		if nil != client {
+			client.Close()
+		}
+	}()
 	// client1 := grpcclient.GetRandomWallet()
 	// fmt.Printf("getAccountFork task, address count:%v, client:%v\n", len(addrs), client.Target())
 

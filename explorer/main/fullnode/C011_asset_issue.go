@@ -32,6 +32,9 @@ func startAssetDaemon() {
 
 func getAssets() ([]*core.AssetIssueContract, bool) {
 	client := grpcclient.GetRandomSolidity()
+	if nil != client {
+		defer client.Close()
+	}
 
 	assetList, err := client.GetAssetIssueList()
 	if nil != err || len(assetList) == 0 {

@@ -8,7 +8,7 @@ import (
 )
 
 //QueryTransfersRealize 操作数据库
-func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL string) (*entity.TransfersResp, error) {
+func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL string, needTotal bool) (*entity.TransfersResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + "" + filterTempSQL + " " + sortSQL + " " + pageSQL
 	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
@@ -50,11 +50,13 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL st
 		transferInfos = append(transferInfos, transfer)
 	}
 
-	//查询该语句所查到的数据集合
 	var total = int64(len(transferInfos))
-	total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
-	if err != nil {
-		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
+	if needTotal {
+		//查询该语句所查到的数据集合
+		total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
+		if err != nil {
+			log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
+		}
 	}
 	transfersResp.Total = total
 	transfersResp.Data = transferInfos

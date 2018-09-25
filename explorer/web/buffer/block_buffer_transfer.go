@@ -13,22 +13,25 @@ import (
 	"github.com/wlcy/tron/explorer/web/module"
 )
 
-func (b *blockBuffer) GetTransfers(offset, count int64) []*entity.TransferInfo {
+// offset: 降序偏移量 最新的transfer offset ==0, offset 有效范围为 0～ total-1
+// count: 记录数
+// total: 请求时刻的记录总数, 用户计算生序偏移量(第一个transfer == total-1)
+func (b *blockBuffer) GetTransfers(offset, count, total int64) []*entity.TransferInfo {
 	// uncTrxLen := int64(len(b.trxListUnconfirmed))
 	uncTranLen, uncTranMinBlockID := b.getUnconfirmdTranListInfo()
 
-	log.Debugf("get tran(offset:%v, count:%v), uncLen:%v, uncMinBlockID:%v\n", offset, count, uncTranLen, uncTranMinBlockID)
+	log.Debugf("get tran(offset:%v, count:%v, total:%v), uncLen:%v, uncMinBlockID:%v\n", offset, count, total, uncTranLen, uncTranMinBlockID)
 
 	ret := make([]*entity.TransferInfo, count, count)
 	if offset > uncTranLen { // trx is in confirmed list or other
-		offset = offset - uncTranLen
-		return b.getRestTran(uncTranMinBlockID, offset, count)
+		// offset = offset - uncTranLen
+		return b.getRestTran(uncTranMinBlockID, offset, count, total)
 	} //else { // at least part of trx is in unconfirmed trx list
 
 	uncTranBegin := offset
 	if uncTranBegin+count > uncTranLen { // part in unconfirmed, part in other
 		copy(ret, b.tranListUnconfirmed[uncTranBegin:])
-		cList := b.getRestTran(uncTranMinBlockID, 0, uncTranBegin+count-uncTranLen)
+		cList := b.getRestTran(uncTranMinBlockID, offset, uncTranBegin+count-uncTranLen, total)
 		// TODO: verify the first element of cList's BlockID should be uncTRxMinBLockID -1
 		copy(ret[uncTranLen-uncTranBegin:], cList[:])
 		// ret = append(ret, cList...)
@@ -79,7 +82,7 @@ func (b *blockBuffer) GetTotalTransfers() int64 {
 }
 
 // minBlockID: -1 mean get from the very beginnin of the list, otherwise need minBlockID read transaction from db
-func (b *blockBuffer) getRestTran(minBlockID int64, offset, count int64) []*entity.TransferInfo {
+func (b *blockBuffer) getRestTran(minBlockID int64, offset, count, total int64) []*entity.TransferInfo {
 	ret := make([]*entity.TransferInfo, count, count)
 	// cTrxLen := int64(len(b.trxList))
 	cTranLen, minCTranBlockID := b.getConfirmdTranListInfo()
@@ -88,15 +91,15 @@ func (b *blockBuffer) getRestTran(minBlockID int64, offset, count int64) []*enti
 	if minCTranBlockID == -1 {
 		minCTranBlockID = minBlockID
 	}
-	if offset > cTranLen {
-		offset = offset - cTranLen
-		return b.getRestTranRedis(minCTranBlockID, offset, count)
+	if offset-int64(len(b.tranListUnconfirmed)) > cTranLen {
+		// offset = offset - cTranLen
+		return b.getRestTranRedis(minCTranBlockID, offset, count, total)
 	}
 	//else { // part in confirmed list ...
-	cTranBegin := offset
+	cTranBegin := offset - int64(len(b.tranListUnconfirmed))
 	if cTranBegin+count > cTranLen { // part in confirmed list, part in redis
 		copy(ret, b.tranList[cTranBegin:])
-		cList := b.getRestTranRedis(minCTranBlockID, 0, cTranBegin+count-cTranLen)
+		cList := b.getRestTranRedis(minCTranBlockID, offset, cTranBegin+count-cTranLen, total)
 		copy(ret[cTranLen-cTranBegin:], cList)
 		// ret = append(ret, cList...)
 		return ret
@@ -107,18 +110,18 @@ func (b *blockBuffer) getRestTran(minBlockID int64, offset, count int64) []*enti
 	return ret
 }
 
-func (b *blockBuffer) getRestTranRedis(blockID int64, offset, count int64) []*entity.TransferInfo {
-	// redisList := make([]*entity.TransferInfo, 0, count)
-	// retLen := int64(0)
+func (b *blockBuffer) getRestTranRedis(blockID int64, offset, count, total int64) []*entity.TransferInfo {
+	redisList := make([]*entity.TransferInfo, 0, count)
+	retLen := int64(0)
 
-	redisList := b.getTranDescListFromRedis(offset, count)
+	// redisList := b.getTranDescListFromRedis(offset, count)
 
-	retLen := int64(len(redisList))
-	if retLen >= count {
-		log.Debugf("get tran redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
+	// retLen := int64(len(redisList))
+	// if retLen >= count {
+	// 	log.Debugf("get tran redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
 
-		return redisList
-	}
+	// 	return redisList
+	// }
 
 	//else { load from db
 	var filter, limit string
@@ -137,7 +140,8 @@ func (b *blockBuffer) getRestTranRedis(blockID int64, offset, count int64) []*en
 	}
 	limit = fmt.Sprintf("limit %v, %v", offset, count)
 
-	filter, order, limit := b.getTransactionIndexOffset(offset+int64(len(redisList))+int64(len(b.trxList)), count)
+	// filter, order, limit := b.getTransferIndexOffset(offset+int64(len(redisList))+int64(len(b.trxList)), count)
+	filter, order, limit := b.getTransferIndexOffset(offset, count, total)
 
 	retList := b.loadTransferFromDB(filter, order, limit)
 	// b.storeTranDescListToRedis(retList, true)
@@ -212,7 +216,7 @@ func (b *blockBuffer) loadTransferFromDB(filter string, order string, limit stri
 	if len(order) == 0 {
 		order = "order by block_id desc"
 	}
-	ret, err := module.QueryTransfersRealize(strSQL, filter, order, limit, "")
+	ret, err := module.QueryTransfersRealize(strSQL, filter, order, limit, "", false)
 	if nil != err || nil == ret && 0 == len(ret.Data) {
 		log.Debugf("query trx failed:%v\n", err)
 		return nil
@@ -222,20 +226,22 @@ func (b *blockBuffer) loadTransferFromDB(filter string, order string, limit stri
 	return ret.Data
 }
 
-func (b *blockBuffer) getTransferIndexOffset(offset, count int64) (filter string, order string, limit string) {
+func (b *blockBuffer) getTransferIndexOffset(offset, count, total int64) (filter string, order string, limit string) {
 	order = " order by block_id asc "
 	limit = fmt.Sprintf("limit %v, %v", 0, count)
 
 	index := b.tranIndex.GetIndex()
-	totalTrn := b.tranIndex.GetTotal()
 	step := b.tranIndex.GetStep()
-
-	if offset >= totalTrn {
-		fmt.Printf("invalid offset:%v, total count:%v, index range:[0, %v]\n", offset, totalTrn, totalTrn-1)
+	if 0 == step {
 		return
 	}
 
-	ascOffset := totalTrn - offset - 1
+	if offset > total {
+		fmt.Printf("invalid offset:%v, total count:%v, index range:[0, %v]\n", offset, total, total-1)
+		return
+	}
+
+	ascOffset := total - offset
 	ascOffsetIdx := ascOffset / step
 	ascInnerOffsetIdx := ascOffset % step
 
@@ -244,7 +250,7 @@ func (b *blockBuffer) getTransferIndexOffset(offset, count int64) (filter string
 		return "", "", ""
 	}
 
-	fmt.Printf("offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
+	fmt.Printf("transfer index: totalTrn:%v (current total:%v), step:%v, offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", total, b.GetTotalTransfers(), step, offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
 
 	idx := index[ascOffsetIdx]
 	filter = fmt.Sprintf(" and block_id >= '%v'", idx.BlockID)

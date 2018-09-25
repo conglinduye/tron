@@ -14,9 +14,11 @@ var gIndexFile = flag.String("index", "index.idx", "file store the index info")
 var gDSN = flag.String("dsn", "tron:tron@tcp(mine:3306)/tron", "msyql dsn")
 var gWork = flag.String("work", "update", "work need to do, could be:\n\tupdate: update current index\n\tsearch: gen search sql\n\ttest: run test\n\tdaemon: run as daemon until receive signal")
 var gTable = flag.String("table", "transactions", "table need to update index, table need has trx_hash & block_id column")
+var gStep = flag.Int64("step", 1000, "step of records of each index")
 
 func main() {
 	flag.Parse()
+	step = *gStep
 	initDB(*gDSN)
 
 	// searchIdxIF(getIndex())

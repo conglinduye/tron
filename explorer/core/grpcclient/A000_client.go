@@ -28,3 +28,10 @@ func (c *_conn) GetState() string {
 func (c *_conn) Target() string {
 	return c.c.Target()
 }
+
+// Close release the connection
+func (c *_conn) Close() {
+	if nil != c {
+		c.c.Close()
+	}
+}

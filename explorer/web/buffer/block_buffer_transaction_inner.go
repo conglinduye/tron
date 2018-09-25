@@ -103,7 +103,7 @@ func (b *blockBuffer) loadTransactionFromDBFilter(filter string) []*entity.Trans
 	where 1=1 `)
 
 	order := " order by block_id desc "
-	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, "")
+	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, "", false)
 	if nil != err {
 		return nil
 	}
@@ -303,7 +303,7 @@ func (b *blockBuffer) loadTransactionFromDB(filter string, order string, limit s
 	if len(order) == 0 {
 		order = "order by block_id desc"
 	}
-	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, limit)
+	ret, err := module.QueryTransactionsRealize(strSQL, filter, order, limit, false)
 	if nil != err || nil == ret && 0 == len(ret.Data) {
 		log.Debugf("query trx failed:%v\n", err)
 		return nil
@@ -387,24 +387,26 @@ func parseBlockTransaction(block *core.Block, confirmed bool) (ret []*entity.Tra
 }
 
 // minBlockID: -1 mean get from the very beginnin of the list, otherwise need minBlockID read transaction from db
-func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count int64) []*entity.TransactionInfo {
+// offset == 0 表示从最新, 否则为相对与total的全量偏移(从最新为止开始)
+// offset 为正向偏移量，0表示最新记录，total为当前offset时刻的总记录数，用于计算从0位置开始的偏移量
+func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count, total int64) []*entity.TransactionInfo {
 	ret := make([]*entity.TransactionInfo, count, count)
 	// cTrxLen := int64(len(b.trxList))
 	cTrxLen, minCTrxBlockID := b.getConfirmdTrxListInfo()
-	log.Debugf("get trx confirmed(offset:%v, count:%v), cLen:%v, cMinBlockID:%v, uncMinBlockID:%v\n", offset, count, cTrxLen, minCTrxBlockID, minBlockID)
+	log.Debugf("get trx confirmed(offset:%v, count:%v, total:%v), cLen:%v, cMinBlockID:%v, uncMinBlockID:%v\n", offset, count, total, cTrxLen, minCTrxBlockID, minBlockID)
 
 	if minCTrxBlockID == -1 {
 		minCTrxBlockID = minBlockID
 	}
-	if offset > cTrxLen {
-		offset = offset - cTrxLen
-		return b.getRestTrxRedis(minCTrxBlockID, offset, count)
+	if offset-int64(len(b.trxListUnconfirmed)) > cTrxLen {
+		// offset = offset - cTrxLen
+		return b.getRestTrxRedis(minCTrxBlockID, offset, count, total)
 	}
 	//else { // part in confirmed list ...
-	cTrxBegin := offset
-	if cTrxBegin+count > cTrxLen { // part in confirmed list, part in redis
+	cTrxBegin := offset - int64(len(b.trxListUnconfirmed))
+	if count > cTrxLen { // part in confirmed list, part in redis
 		copy(ret, b.trxList[cTrxBegin:])
-		cList := b.getRestTrxRedis(minCTrxBlockID, 0, cTrxBegin+count-cTrxLen)
+		cList := b.getRestTrxRedis(minCTrxBlockID, offset, cTrxBegin+count-cTrxLen, total)
 		copy(ret[cTrxLen-cTrxBegin:], cList)
 		// ret = append(ret, cList...)
 		return ret
@@ -415,19 +417,19 @@ func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count int64) []*entit
 	return ret
 }
 
-func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*entity.TransactionInfo {
+func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count, total int64) []*entity.TransactionInfo {
 
-	// redisList := make([]*entity.TransactionInfo, 0, count)
-	// retLen := int64(0)
+	redisList := make([]*entity.TransactionInfo, 0, count)
+	retLen := int64(0)
 
-	redisList := b.getTrxDescListFromRedis(offset, count)
+	// redisList := b.getTrxDescListFromRedis(offset, count)
 
-	retLen := int64(len(redisList))
-	if retLen >= count {
-		log.Debugf("get trx redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
+	// retLen := int64(len(redisList))
+	// if retLen >= count {
+	// 	log.Debugf("get trx redis(offset:%v, count:%v), read redis Len:%v\n", offset, count, len(redisList))
 
-		return redisList
-	}
+	// 	return redisList
+	// }
 
 	//else { load from db
 	var filter, limit string
@@ -446,8 +448,8 @@ func (b *blockBuffer) getRestTrxRedis(blockID int64, offset, count int64) []*ent
 	}
 	limit = fmt.Sprintf("limit %v, %v", offset, count) // load from db +100  record
 
-	filter, order, limit := b.getTransactionIndexOffset(offset+int64(len(redisList))+int64(len(b.trxList)), count)
-	fmt.Printf("filter:%v\norder:%\nlimit:%v\n", filter, order, limit)
+	// filter, order, limit := b.getTransactionIndexOffset(offset+int64(len(redisList))+int64(len(b.trxList)), count)
+	filter, order, limit := b.getTransactionIndexOffset(offset, count, total)
 
 	retList := b.loadTransactionFromDB(filter, order, limit)
 	// b.storeTrxDescListToRedis(retList, true)
@@ -527,20 +529,22 @@ func (b *blockBuffer) sweepTransactionRedisList() {
 	}
 }
 
-func (b *blockBuffer) getTransactionIndexOffset(offset, count int64) (filter string, order string, limit string) {
+func (b *blockBuffer) getTransactionIndexOffset(offset, count, total int64) (filter string, order string, limit string) {
 	order = " order by block_id asc "
 	limit = fmt.Sprintf("limit %v, %v", 0, count)
 
 	index := b.trxIndex.GetIndex()
-	totalTrn := b.trxIndex.GetTotal()
 	step := b.trxIndex.GetStep()
-
-	if offset >= totalTrn {
-		fmt.Printf("invalid offset:%v, total count:%v, index range:[0, %v]\n", offset, totalTrn, totalTrn-1)
+	if 0 == step {
 		return
 	}
 
-	ascOffset := totalTrn - offset - 1
+	if offset > total {
+		fmt.Printf("invalid offset:%v, total count:%v, index range:[0, %v]\n", offset, total, total-1)
+		return
+	}
+
+	ascOffset := total - offset // offset start at 0, total count from 1
 	ascOffsetIdx := ascOffset / step
 	ascInnerOffsetIdx := ascOffset % step
 
@@ -549,7 +553,7 @@ func (b *blockBuffer) getTransactionIndexOffset(offset, count int64) (filter str
 		return "", "", ""
 	}
 
-	fmt.Printf("offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
+	fmt.Printf("transactions index: totalTrx:%v, (current total:%v) step:%v, offset:%v, ascOffset:%v, ascOffsetIdx:%v, ascInnerOffsetIdx:%v\n", total, b.GetTotalTransactions(), step, offset, ascOffset, ascOffsetIdx, ascInnerOffsetIdx)
 
 	idx := index[ascOffsetIdx]
 	filter = fmt.Sprintf(" and block_id >= '%v'", idx.BlockID)

@@ -24,9 +24,15 @@ func getBlock(id int, b, e int64) {
 	taskID := fmt.Sprintf("[%04v|%v~%v|%v]", id, b, e, servAddr)
 
 	client := grpcclient.NewWallet(servAddr)
-	client.Connect()
+	if nil != client {
+		client.Connect()
+		defer client.Close()
+	}
 	dbc := grpcclient.NewDatabase(servAddr)
-	dbc.Connect()
+	if nil != client {
+		dbc.Connect()
+		defer dbc.Close()
+	}
 
 	le := getLatestNum(dbc)
 	if le == 0 {
@@ -125,7 +131,11 @@ func getBlock(id int, b, e int64) {
 			runTaskCnt := wc1.currentWorker()
 			fmt.Printf("Current working task:[%v]--max task:[%v], latest block id handled:%v\n", runTaskCnt, *gIntMaxWorker, newE)
 			if e > 0 && 1 == runTaskCnt {
-				fmt.Printf("Sync all data cost:%v\n", time.Since(ts))
+				fmt.Printf("Sync all data cost:%v, last block need to sync is [%v] done!\n", time.Since(ts), e)
+				break
+			}
+			if needQuit() && 1 == runTaskCnt {
+				fmt.Printf("Sync all data cost:%v, receive signal quit\n", time.Since(ts))
 				break
 			}
 			time.Sleep(10 * time.Second)

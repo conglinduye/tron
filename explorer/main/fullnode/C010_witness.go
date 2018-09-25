@@ -32,6 +32,9 @@ func startWintnessDaemon() {
 
 func getWitness() ([]*core.Witness, bool) {
 	client := grpcclient.GetRandomSolidity()
+	if nil != client {
+		defer client.Close()
+	}
 
 	witnessList, err := client.ListWitnesses()
 	if nil != err || len(witnessList) == 0 {

@@ -27,7 +27,7 @@ func QueryReport() (*entity.ReportResp, error) {
 		return nil, err
 	}
 
-	if historyOverviewValue == "" {
+	if historyOverviewValue == "" || historyOverviewValue == "[]" {
 		SyncCacheHistoryReport()
 		historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
 	}
