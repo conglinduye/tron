@@ -71,6 +71,9 @@ func (b *blockBuffer) getSolidityNodeMaxBlockID() bool {
 	if nil != err || nil == block || nil == block.BlockHeader || nil == block.BlockHeader.RawData {
 		b.solidityErrCnt++
 		if b.solidityErrCnt > b.maxNodeErr {
+			if nil != b.solidityClient {
+				b.solidityClient.Close()
+			}
 			b.solidityClient = grpcclient.GetRandomSolidity()
 			b.solidityErrCnt = 0
 			log.Debugf("reset solidity connection, new client:%v!!!\n", b.solidityClient.Target())
@@ -92,6 +95,9 @@ func (b *blockBuffer) getNowBlock() bool {
 	if nil != err || nil == block || nil == block.BlockHeader || nil == block.BlockHeader.RawData {
 		b.walletErrCnt++
 		if b.walletErrCnt > b.maxNodeErr {
+			if nil != b.walletClient {
+				b.walletClient.Close()
+			}
 			b.walletClient = grpcclient.GetRandomWallet()
 			b.walletErrCnt = 0
 			log.Debugf("reset wallet connection, new client:%v!!!\n", b.walletClient.Target())
@@ -463,6 +469,9 @@ func (b *blockBuffer) getBlocksStable(numStart int64, numEnd int64) []*core.Bloc
 			if nil != err || nil == block || nil == block.BlockHeader || nil == block.BlockHeader.RawData || i != block.BlockHeader.RawData.Number {
 				b.walletErrCnt++
 				if b.walletErrCnt > b.maxNodeErr {
+					if nil != b.walletClient {
+						b.walletClient.Close()
+					}
 					b.walletClient = grpcclient.GetRandomWallet()
 					b.walletErrCnt = 0
 				}

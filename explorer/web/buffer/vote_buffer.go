@@ -129,6 +129,9 @@ func (w *voteBuffer) loadVoteWitness() {
 func (w *voteBuffer) getMaintenanceTimeStamp() {
 
 	client := grpcclient.GetRandomWallet()
+	if nil != client {
+		defer client.Close()
+	}
 
 	nextMaintenanceTime, err := client.GetNextMaintenanceTime()
 	if err != nil {
