@@ -190,16 +190,16 @@ func QueryAccountSr(req *entity.SuperAccountInfo) (*entity.SuperAccountInfo, err
 //QueryAccountStats 查询用户的交易统计信息
 func QueryAccountStats(address string) (*entity.AccountTransactionNum, error) {
 	strSQL := fmt.Sprintf(`
-	select trf.owner_address,outT.trxOut,inTrx.trxIn
+	select ifnull(outT.trxOut,0) as trxOut,ifnull(inTrx.trxIn,0) as trxIn
 	from tron.contract_transfer trf
 	left join (
 		select owner_address, count(1) as trxOut from tron.contract_transfer trf where owner_address='%v'
 	) outT on outT.owner_address=trf.owner_address
 	left join (
 		select to_address, count(1) as trxIn from tron.contract_transfer trf where to_address='%v'
-	) inTrx on inTrx.to_address=trf.owner_address
-	 where trf.owner_address='%v'
-	 limit 0,1`, address, address, address)
+	) inTrx on inTrx.to_address=trf.to_address
+	 where 1=1 and (trf.owner_address='%v' or trf.to_address='%v')
+	 limit 0,1`, address, address, address, address)
 
 	return module.QueryAccountStatsRealize(strSQL)
 }
