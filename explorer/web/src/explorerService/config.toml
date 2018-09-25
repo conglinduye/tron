@@ -47,8 +47,8 @@ charset = "utf8"
 [token]
 defaultPath   = "/data/images/tokenLogo"
 tokenTemplate = "/data/images/tokenTemplate/"
-imgURL        = "http://coin.top/tokenLogo"
-tokenTemplateFile = "http://coin.top/tokenTemplate/TronscanTokenInformationSubmissionTemplate.xlsx"
+imgURL        = "https://coin.top/tokenLogo"
+tokenTemplateFile = "https://coin.top/tokenTemplate/TronscanTokenInformationSubmissionTemplate.xlsx"
 
 [common]
 httpWebKey="WoiYeI5brZy4S8wQfVz7M5BczMkIhnugYW5QIibNgnWsAsktgHn5"
