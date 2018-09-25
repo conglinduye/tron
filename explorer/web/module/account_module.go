@@ -200,7 +200,16 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 					accountTokenMap[account.Address] = tokenInfo
 				} else {
 					tokenArr := make([]*entity.Balance, 0)
-					tokenArr = append(tokenArr, balance)
+					if account.Balance > 0 {
+						ownbalance := &entity.Balance{}
+						ownbalance.Name = "TRX"
+						ownbalance.Balance = float64(account.Balance)
+						tokenArr = append(tokenArr, ownbalance)
+					}
+					if balance.Balance > 0 {
+						tokenArr = append(tokenArr, balance)
+					}
+
 					accountTokenMap[account.Address] = tokenArr
 				}
 			}
