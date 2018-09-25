@@ -37,7 +37,7 @@ func QueryTransactionsBuffer(req *entity.Transactions) (*entity.TransactionsResp
 	} else if req.Address != "" { //按照交易所属人查询，包含转出的交易，和转入的交易
 		transactions, _ = QueryTransactionsByAddress(req)
 	} else { //分页查询
-		transactions.Data = buffer.GetBlockBuffer().GetTransactions(req.Start, req.Limit, buffer.GetBlockBuffer().GetTotalTransactions())
+		transactions.Data = buffer.GetBlockBuffer().GetTransactions(req.Start, req.Limit, req.Total)
 		transactions.Total = buffer.GetBlockBuffer().GetTotalTransactions()
 	}
 

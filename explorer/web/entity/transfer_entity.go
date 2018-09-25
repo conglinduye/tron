@@ -9,6 +9,7 @@ type Transfers struct {
 	Sort    string `json:"sort,omitempty"`    // 按时间戳倒序
 	Limit   int64  `json:"limit,omitempty"`   // 每页记录数
 	Count   string `json:"count,omitempty"`   // 是否返回总数
+	Total   int64  `json:"total,omitempty"`   // 上一次分页查询的总数，当且仅当分页查询接口使用
 	Start   int64  `json:"start,omitempty"`   // 记录的起始序号
 	Number  string `json:"number,omitempty"`  // 按照区块高度精确查询
 	Hash    string `json:"hash,omitempty"`    // 按照交易hash精确查询

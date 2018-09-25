@@ -26,6 +26,7 @@ func transferRegister(ginRouter *gin.Engine) {
 		if c.Query("block") != "" { //也能用block过滤
 			req.Number = c.Query("block")
 		}
+		req.Total = mysql.ConvertStringToInt64(c.Query("total"), 0) // 分页查询传入上次总计结果
 		log.Debugf("Hello /api/transfer?%#v", req)
 		resp, err := service.QueryTransfersBuffer(req)
 		//resp, err := service.QueryTransfers(req)

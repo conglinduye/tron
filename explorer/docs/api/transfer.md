@@ -8,6 +8,7 @@ input:param
 &count=true     //是否返回总数
 &start=0        //记录的起始序号
 &sort=-timestamp       //按照时间戳倒序排列
+&total=123421   //分页查询时，传入上一次接口返回的数据总量，用作分页查询数据校准
 
 http://18.216.57.65:20110/api/transfer?sort=-number&limit=40&start=0
 ```

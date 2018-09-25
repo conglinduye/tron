@@ -26,6 +26,7 @@ func transactionRegister(ginRouter *gin.Engine) {
 		if c.Query("block") != "" {      //还能用block查
 			req.Number = c.Query("block")
 		}
+		req.Total = mysql.ConvertStringToInt64(c.Query("total"), 0) // 分页查询传入上次总计结果
 		log.Debugf("Hello /api/transaction?%#v", req)
 		//resp, err := service.QueryTransactions(req)
 		resp, err := service.QueryTransactionsBuffer(req)
