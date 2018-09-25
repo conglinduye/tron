@@ -31,6 +31,9 @@ func startNodeDaemon() {
 
 func getNodes() ([]*api.Node, bool) {
 	client := grpcclient.GetRandomWallet()
+	if nil != client {
+		defer client.Close()
+	}
 
 	nodeList, err := client.ListNodes()
 	if nil != err || len(nodeList) == 0 {

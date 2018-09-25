@@ -24,9 +24,15 @@ func getBlock(id int, b, e int64) {
 	taskID := fmt.Sprintf("[%04v|%v~%v|%v]", id, b, e, servAddr)
 
 	client := grpcclient.NewWallet(servAddr)
-	client.Connect()
+	if nil != client {
+		client.Connect()
+		defer client.Close()
+	}
 	dbc := grpcclient.NewDatabase(servAddr)
-	dbc.Connect()
+	if nil != client {
+		dbc.Connect()
+		defer dbc.Close()
+	}
 
 	le := getLatestNum(dbc)
 	if le == 0 {
