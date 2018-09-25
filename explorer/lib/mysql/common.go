@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ var DBName = "user"     //用户名
 var DBPass = "password" //密码
 //数据库配置集合  map[primary]map[host]"localhost"
 var mysqlMain map[string]map[string]string
+var mysqlRad []string
 
 //数据库的连接配置
 type DBParam struct {
@@ -63,11 +65,15 @@ var dbInstance *TronDB
 //InitializeReader 初始化
 // appInfo spaceInfo user report appType
 // centerControl
-func InitializeReader(dbSet map[string]map[string]string) bool {
+func InitializeReader(dbSet map[string]map[string]string, dbRad []string) bool {
 	if len(dbSet) == 0 {
 		return false
 	}
 	mysqlMain = dbSet
+	if len(dbRad) == 0 {
+		return false
+	}
+	mysqlRad = dbRad
 	return true
 }
 
@@ -98,12 +104,53 @@ func GetMysqlMutiConnectionInfo(db map[string]string) DBParam {
 	return dbConfig
 }
 
+func getRandomDbParam() string {
+	size := len(mysqlRad)
+	if size == 0 {
+		return ""
+	}
+	rand.Seed(time.Now().UnixNano())
+	index := rand.Int31n(int32(size))
+	return mysqlRad[index]
+}
+func removeArr(mysqlType string) {
+	for key, val := range mysqlRad {
+		if val == mysqlType {
+			kk := key + 1
+			mysqlRad = append(mysqlRad[:key], mysqlRad[kk:]...)
+		}
+	}
+}
+
 //RefreshDatabase 刷新DB的连接
 func retrieveDatabase() (*TronDB, error) {
 	defer CatchError()
-
 	if nil == dbInstance {
-		for mysqlType, param := range mysqlMain {
+		for _, para := range mysqlMain { //此处for循环仅提供连接失败重试机制
+			mysqlType := getRandomDbParam()
+			if param, ok := mysqlMain[mysqlType]; ok {
+				//连接数据库的参数
+				para := GetMysqlMutiConnectionInfo(param)
+				//打开这个DB对象
+				dbPtr, err := OpenDB(para.Mode, para.ConnSQL)
+				if err != nil || dbPtr == nil {
+					log.Errorf("can't connect the [%v] mysql,param:[%v]", mysqlType, param)
+					removeArr(mysqlType)
+					log.Debugf("remove the useless mysql connect config:[%v] left :[%v]", mysqlType, mysqlRad)
+					continue
+					//return nil, util.NewError(util.Error_common_db_not_connected, util.GetErrorMsgSleek(util.Error_common_db_not_connected))
+				}
+				log.Debugf("the [%v] mysql connect successfully,para.ConnSQL:[%v]", mysqlType, para.ConnSQL)
+				//设置连接池信息
+				dbPtr.SetConnsParam(para.MaxOpenconns, para.MaxIdleConns)
+				dbInstance = dbPtr
+				break
+			} else {
+				log.Debugf("can't get value for [%v],[%v]", para, mysqlType)
+			}
+
+		}
+		/*for mysqlType, param := range mysqlMain {
 			//连接数据库的参数
 			para := GetMysqlMutiConnectionInfo(param)
 			//打开这个DB对象
@@ -118,7 +165,7 @@ func retrieveDatabase() (*TronDB, error) {
 			dbPtr.SetConnsParam(para.MaxOpenconns, para.MaxIdleConns)
 			dbInstance = dbPtr
 			break
-		}
+		}*/
 	}
 
 	//测试一下是否是连接成功的

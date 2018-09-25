@@ -116,9 +116,9 @@ func initMutilDB(config *toml.Tree) error {
 
 	mysql.InitializeWriter(host, port, schema, user, passwd)
 	var dbParams = make(map[string]map[string]string, 0)
-
+	var dbConns = strings.Split(readConnections, ",")
 	//init read database
-	for _, db := range strings.Split(readConnections, ",") {
+	for _, db := range dbConns {
 		params := make(map[string]string, 0)
 		params[mysql.DBHost] = config.GetDefault(fmt.Sprintf("%v.host", db), "127.0.0.1").(string)
 		params[mysql.DBPort] = config.GetDefault(fmt.Sprintf("%v.port", db), "3306").(string)
@@ -132,7 +132,7 @@ func initMutilDB(config *toml.Tree) error {
 		log.Error("init read database err")
 		return util.NewErrorMsg(util.Error_common_db_not_connected)
 	}
-	mysql.InitializeReader(dbParams)
+	mysql.InitializeReader(dbParams, dbConns)
 	log.Debug("init read database success")
 
 	return nil
