@@ -75,8 +75,12 @@ func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, erro
 	resp.Total = transOutResp.Total + transInResp.Total
 	transferInfos := append(transOutResp.Data, transInResp.Data...)
 	sort.SliceStable(transferInfos, func(i, j int) bool { return transferInfos[i].CreateTime > transferInfos[j].CreateTime })
+	if int64(len(transferInfos)) > req.Limit {
+		resp.Data = transferInfos[:req.Limit]
+	} else {
+		resp.Data = transferInfos
+	}
 
-	resp.Data = transferInfos[:req.Limit]
 	return resp, nil
 }
 
