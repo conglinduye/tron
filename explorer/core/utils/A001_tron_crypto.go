@@ -74,6 +74,9 @@ func GetTronHexAddress(in string) (out string, err error) {
 // VerifyTronAddrByte ...
 func VerifyTronAddrByte(addr []byte) bool {
 	ret := HexEncode(addr)
+	if 2 > len(ret) {
+		return false
+	}
 	if (ret[0] == '4' && ret[1] == '1') || (ret[0] == 'a' && ret[1] == '0') {
 		return true
 	}
