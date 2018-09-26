@@ -111,7 +111,7 @@ func QueryBlockBuffer(req *entity.Blocks) (*entity.BlockInfo, error) {
 	blockBuffer := buffer.GetBlockBuffer()
 	if req.Number != "" {
 		if req.Number == "latest" {
-			blocks, err := blockBuffer.GetBlocks(0, 0, 1)
+			blocks, err := blockBuffer.GetBlocks(-1, 0, 1)
 			if err == nil && len(blocks) > 0 {
 				block = blocks[0]
 			}
