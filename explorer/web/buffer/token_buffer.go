@@ -229,14 +229,13 @@ func calculateTokens(tokenList []*entity.TokenInfo) {
 // calculateToken
 func calculateToken(token *entity.TokenInfo) {
 	frozenList := token.Frozen
-
 	var frozenSupply int64 = 0
 	if frozenList != nil {
 		for _, frozen := range frozenList {
 			frozenSupply = frozenSupply + frozen.Amount
 		}
 	} else {
-		token.Frozen = make([]entity.TokenFrozenInfo, 0)
+		token.Frozen = make([]*entity.TokenFrozenInfo, 0)
 	}
 
 	totalSupply := token.TotalSupply
