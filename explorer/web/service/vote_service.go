@@ -209,17 +209,19 @@ func QueryVoteWitnessDetail(address string) (*entity.VoteWitnessDetail, error) {
 	return voteWitnessDetail, nil
 }
 
-// QueryVoterAvailableVotes
-func QueryVoterAvailableVotes(address string) *entity.AddressVotes {
+// QueryAddressVoter
+func QueryAddressVoter(address string) *entity.AddressVotes {
 	addressVotes := &entity.AddressVotes{}
-	votes := make(map[string]float64, 0)
+	votes := make(map[string]int64, 0)
 	addressVotes.Votes = votes
-	strSQL:= fmt.Sprintf(`select frozen from tron_account where address = '%v'`, address)
-	voterAvailableVotes, err := module.QueryVoterAvailableVotes(strSQL)
+	strSQL:= fmt.Sprintf(`select address, to_address, vote from account_vote_result where address = '%v'`, address)
+	AddressVoteInfoList, err := module.QueryAddressVoter(strSQL)
 	if err != nil {
 		log.Errorf("QueryVoterAvailableVotes strSQL:%v, err:[%v]",strSQL, err)
 	} else {
-		votes[address] =  voterAvailableVotes
+		for _, addressVoteInfo := range  AddressVoteInfoList {
+			votes[addressVoteInfo.CandidateAddress] = addressVoteInfo.Votes
+		}
 	}
 	return addressVotes
 }
