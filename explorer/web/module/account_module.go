@@ -210,6 +210,7 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 					if account.Balance > 0 {
 						ownbalance := &entity.Balance{}
 						ownbalance.Name = "TRX"
+						balance.Address = account.Address
 						ownbalance.Balance = float64(account.Balance) / 1000000 //单位换算，页面按照TRX显示
 						tokenArr = append(tokenArr, ownbalance)
 					}
