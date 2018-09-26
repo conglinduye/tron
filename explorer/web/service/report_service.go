@@ -148,7 +148,7 @@ func SyncPersistYesterdayReport() {
 	dateTime := t3.UnixNano() / 1e6
 
 	key := YesterdayOverviewKey + "." + strconv.FormatInt(dateTime,10)
-	if !lock(key) {
+	if !lockYesterdayOverview(key) {
 		log.Infof("SyncPersistYesterdayReport lock exit, key:%v", key)
 		return
 	}
@@ -252,7 +252,7 @@ func SyncCacheTodayReport() {
 	log.Info("SyncCacheTodayReport handle done")
 }
 
-func lock(key string) bool {
+func lockYesterdayOverview(key string) bool {
 	value, err := config.RedisCli.Get(key).Result()
 	if err == redis.Nil {
 		return true
