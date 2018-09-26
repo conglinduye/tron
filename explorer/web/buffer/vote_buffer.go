@@ -49,7 +49,7 @@ func voteWitnessBufferLoader() {
 func maintenanceTimeStampLoader() {
 	for {
 		_voteBuffer.getMaintenanceTimeStamp()
-		time.Sleep(60 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
 
@@ -157,7 +157,6 @@ func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
 		}
 	}
 }
-
 
 // getVoteWitnessFastestRise
 func getVoteWitnessFastestRise(voteWitnessList []*entity.VoteWitness) *entity.VoteWitness {

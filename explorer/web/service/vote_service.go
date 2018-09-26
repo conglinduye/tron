@@ -6,13 +6,11 @@ import (
 
 	"github.com/wlcy/tron/explorer/core/grpcclient"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
-	"github.com/wlcy/tron/explorer/lib/util"
 )
-
-
 
 // QueryVoteWitnessBuffer
 func QueryVoteWitnessBuffer() (*entity.VoteWitnessResp, error) {
@@ -38,10 +36,10 @@ func QueryVoteNextCycleBuffer() (*entity.VoteNextCycleResp, error) {
 	nextCycle.NextCycle = 0
 	currentTime := buffer.GetBlockBuffer().GetMaxBlockTimestamp()
 	nextMaintenanceTime := buffer.GetVoteBuffer().GetNextMaintenanceTime()
-	if currentTime == 0 || nextMaintenanceTime == 0 {
+	nextCycle.NextCycle = nextMaintenanceTime - currentTime
+	if currentTime == 0 || nextMaintenanceTime == 0 || nextCycle.NextCycle < 0 {
 		return QueryVoteNextCycle()
 	}
-	nextCycle.NextCycle = nextMaintenanceTime - currentTime
 	return nextCycle, nil
 }
 
@@ -112,7 +110,7 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	}
 
 	if len(accountVoteResultRes.Data) == 0 {
-		votesResp.Data = make([]*entity.VotesInfo , 0)
+		votesResp.Data = make([]*entity.VotesInfo, 0)
 		return votesResp, nil
 	}
 
@@ -149,7 +147,7 @@ func queryVotesSubHandle(votesResp *entity.VotesResp) {
 
 		candidateInfo, err := module.QueryCandidateInfo(strSQLOne)
 		if err != nil {
-			log.Errorf("QueryVotesSubHandle queryCandidateInfo strSQL:%v, err:[%v]",strSQLOne,  err)
+			log.Errorf("QueryVotesSubHandle queryCandidateInfo strSQL:%v, err:[%v]", strSQLOne, err)
 		} else {
 			votesInfo.CandidateName = candidateInfo.CandidateName
 			votesInfo.CandidateURL = candidateInfo.CandidateUrl
@@ -159,13 +157,12 @@ func queryVotesSubHandle(votesResp *entity.VotesResp) {
 
 		voterAvailableVotes, err := module.QueryVoterAvailableVotes(strSQLTwo)
 		if err != nil {
-			log.Errorf("QueryVotesSubHandle queryVoterAvailableVotes strSQL:%v, err:[%v]",strSQLTwo, err)
+			log.Errorf("QueryVotesSubHandle queryVoterAvailableVotes strSQL:%v, err:[%v]", strSQLTwo, err)
 		} else {
 			votesInfo.VoterAvailableVotes = voterAvailableVotes
 		}
 	}
 }
-
 
 func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
 	filterSQL := ""
@@ -181,8 +178,6 @@ func QueryRealTimeTotalVotes(req *entity.Votes) int64 {
 	totalVotes := module.QueryRealTimeTotalVotes(strSQL + filterSQL)
 	return totalVotes
 }
-
-
 
 // QueryVoteWitnessDetail
 func QueryVoteWitnessDetail(address string) (*entity.VoteWitnessDetail, error) {
@@ -214,12 +209,12 @@ func QueryVoterAvailableVotes(address string) *entity.AddressVotes {
 	addressVotes := &entity.AddressVotes{}
 	votes := make(map[string]float64, 0)
 	addressVotes.Votes = votes
-	strSQL:= fmt.Sprintf(`select frozen from tron_account where address = '%v'`, address)
+	strSQL := fmt.Sprintf(`select frozen from tron_account where address = '%v'`, address)
 	voterAvailableVotes, err := module.QueryVoterAvailableVotes(strSQL)
 	if err != nil {
-		log.Errorf("QueryVoterAvailableVotes strSQL:%v, err:[%v]",strSQL, err)
+		log.Errorf("QueryVoterAvailableVotes strSQL:%v, err:[%v]", strSQL, err)
 	} else {
-		votes[address] =  voterAvailableVotes
+		votes[address] = voterAvailableVotes
 	}
 	return addressVotes
 }
