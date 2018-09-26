@@ -10,9 +10,9 @@ import (
 )
 
 //QueryTransfersByAddressRealize 操作数据库
-func QueryTransfersByAddressRealize(strSQL string, needTotal bool) (*entity.TransfersResp, error) {
-	log.Sql(strSQL)
-	dataPtr, err := mysql.QueryTableData(strSQL)
+func QueryTransfersByAddressRealize(strSQL, pageSQL string, needTotal bool) (*entity.TransfersResp, error) {
+	log.Sql(strSQL + " " + pageSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL + " " + pageSQL)
 	if err != nil {
 		log.Errorf("QueryTransfersByAddressRealize error :[%v]\n", err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)

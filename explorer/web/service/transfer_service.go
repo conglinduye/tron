@@ -53,9 +53,9 @@ func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, erro
 			asset_name,trx_hash,
 			contract_type,confirmed,create_time
 			from tron.contract_transfer
-			where 1=1 and owner_address='%v' %v`, req.Address, pageSQL)
+			where 1=1 and owner_address='%v'`, req.Address)
 
-	transOutResp, err := module.QueryTransfersByAddressRealize(strSQL, true)
+	transOutResp, err := module.QueryTransfersByAddressRealize(strSQL, pageSQL, true)
 	if err != nil {
 		log.Errorf("QueryTransfersByAddressRealize query out transfer for address[%v] error[%v] ", req.Address, err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
@@ -65,9 +65,9 @@ func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, erro
 			asset_name,trx_hash,
 			contract_type,confirmed,create_time
 			from tron.contract_transfer
-			where 1=1 and owner_address='%v' %v`, req.Address, pageSQL)
+			where 1=1 and to_address='%v'`, req.Address)
 
-	transInResp, err := module.QueryTransfersByAddressRealize(strSQL, true)
+	transInResp, err := module.QueryTransfersByAddressRealize(strSQL, pageSQL, true)
 	if err != nil {
 		log.Errorf("QueryTransfersByAddressRealize query in transfer for address[%v] error[%v] ", req.Address, err)
 		return nil, util.NewErrorMsg(util.Error_common_internal_error)
