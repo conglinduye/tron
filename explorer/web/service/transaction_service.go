@@ -49,12 +49,12 @@ func QueryTransactionsByAddress(req *entity.Transactions) (*entity.TransactionsR
 	var filterSQL, sortSQL, pageSQL string
 	mutiFilter := false
 	strSQL := fmt.Sprintf(`
-	select oo.contract_type,oo.trx_hash,oo.create_time from (
-	SELECT contract_type,trx_hash,create_time 
+	select oo.block_id,oo.contract_type,oo.trx_hash,oo.create_time from (
+	SELECT block_id,contract_type,trx_hash,create_time 
 	FROM tron.contract_transfer 
 	where to_address='%v' 
 	union 
-	SELECT contract_type,trx_hash,create_time 
+	SELECT block_id,contract_type,trx_hash,create_time 
 	FROM tron.transactions 
 	where owner_address='%v') oo
 	where 1=1 `, req.Address, req.Address)
