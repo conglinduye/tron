@@ -55,7 +55,12 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL st
 	var total = int64(len(transferInfos))
 	if needTotal {
 		//查询该语句所查到的数据集合
-		total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL)
+		if filterTempSQL != "" { //按地址查询总数  按地址查询太慢，变更查询总计方式
+			total, err = querySQLCount(filterTempSQL)
+		} else {
+			total, err = mysql.QuerySQLViewCount(strSQL + " " + filterSQL) //
+		}
+
 		if err != nil {
 			log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
 		}
@@ -65,6 +70,33 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL st
 
 	return transfersResp, nil
 
+}
+func querySQLCount(address string) (int64, error) {
+	strFullSQL := fmt.Sprintf(`select count(1) as total
+	from tron.contract_transfer
+	   where 1=1   and owner_address='%v' 
+    union
+    select count(1) as total
+	  from tron.contract_transfer
+	where 1=1   and  to_address='%v'
+    `, address, address)
+	log.Sql(strFullSQL)
+	dataPtr, err := mysql.QueryTableData(strFullSQL)
+	if err != nil {
+		log.Errorf("querySQLCount error :[%v]\n", err)
+		return 0, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("querySQLCount dataPtr is nil ")
+		return 0, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	var totalNum = int64(0)
+
+	//填充数据
+	for dataPtr.NextT() {
+		totalNum += mysql.ConvertDBValueToInt64(dataPtr.GetField("total"))
+	}
+	return totalNum, nil
 }
 
 //QueryTransferRealize 操作数据库
