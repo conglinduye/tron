@@ -2,9 +2,12 @@ package service
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
+	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
@@ -26,7 +29,8 @@ func QueryTransfersBuffer(req *entity.Transfers) (*entity.TransfersResp, error) 
 		transfers.Data = transacts
 		transfers.Total = int64(len(transfers.Data))
 	} else if req.Address != "" { //按照交易所属人查询，包含转出的交易，和转入的交易， 分页 总量等于用户的transactions
-		return QueryTransfers(req)
+		//return QueryTransfers(req)
+		return QueryTransfersByAddress(req)
 	} else { //分页查询, 分页 总量== totalTransaction
 		transfers.Data = buffer.GetBlockBuffer().GetTransfers(req.Start, req.Limit, req.Total)
 		transfers.Total = buffer.GetBlockBuffer().GetTotalTransfers()
@@ -35,12 +39,52 @@ func QueryTransfersBuffer(req *entity.Transfers) (*entity.TransfersResp, error) 
 
 }
 
-//QueryTransferByHashFromBuffer 从缓存中精确查询  	//number=2135998   TODO: cache
+//QueryTransferByHashFromBuffer 从缓存中精确查询  	//number=2135998
 func QueryTransferByHashFromBuffer(req *entity.Transfers) (*entity.TransferInfo, error) {
 	return buffer.GetBlockBuffer().GetTransferByHash(req.Hash), nil
 }
 
-//QueryTransfers 条件查询  	//?sort=-number&limit=1&count=true&number=2135998  TODO: cache
+//QueryTransfersByAddress 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
+func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, error) {
+	var resp = &entity.TransfersResp{}
+	pageSQL := fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+	strSQL := fmt.Sprintf(`
+			select block_id,owner_address,to_address,amount,
+			asset_name,trx_hash,
+			contract_type,confirmed,create_time
+			from tron.contract_transfer
+			where 1=1 and owner_address='%v'`, req.Address)
+
+	transOutResp, err := module.QueryTransfersByAddressRealize(strSQL, pageSQL, true)
+	if err != nil {
+		log.Errorf("QueryTransfersByAddressRealize query out transfer for address[%v] error[%v] ", req.Address, err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	strSQL = fmt.Sprintf(`
+			select block_id,owner_address,to_address,amount,
+			asset_name,trx_hash,
+			contract_type,confirmed,create_time
+			from tron.contract_transfer
+			where 1=1 and to_address='%v'`, req.Address)
+
+	transInResp, err := module.QueryTransfersByAddressRealize(strSQL, pageSQL, true)
+	if err != nil {
+		log.Errorf("QueryTransfersByAddressRealize query in transfer for address[%v] error[%v] ", req.Address, err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	resp.Total = transOutResp.Total + transInResp.Total
+	transferInfos := append(transOutResp.Data, transInResp.Data...)
+	sort.SliceStable(transferInfos, func(i, j int) bool { return transferInfos[i].CreateTime > transferInfos[j].CreateTime })
+	if int64(len(transferInfos)) > req.Limit {
+		resp.Data = transferInfos[:req.Limit]
+	} else {
+		resp.Data = transferInfos
+	}
+
+	return resp, nil
+}
+
+//QueryTransfers 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
 func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 	var filterSQL, sortSQL, pageSQL, filterTempSQL string
 	mutiFilter := false
@@ -61,6 +105,7 @@ func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 	}
 	if req.Address != "" {
 		filterSQL = fmt.Sprintf(" and (owner_address='%v' or to_address='%v')", req.Address, req.Address)
+		filterTempSQL = req.Address
 	}
 	for _, v := range strings.Split(req.Sort, ",") {
 		if strings.Index(v, "timestamp") > 0 {

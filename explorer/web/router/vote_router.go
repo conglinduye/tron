@@ -53,4 +53,12 @@ func voteRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, resp)
 	})
 
+
+	ginRouter.GET("/api/account/:address/votes", func(c *gin.Context) {
+		address := c.Param("address")
+		log.Debugf("Hello /api/account/:%#v//votes", address)
+		resp := service.QueryAddressVoter(address)
+		c.JSON(http.StatusOK, resp)
+	})
+
 }

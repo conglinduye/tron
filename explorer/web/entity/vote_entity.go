@@ -86,3 +86,16 @@ type VoteWitnessDetail struct {
 	Data 					*VoteWitness			`json:"data"`
 
 }
+
+//AddressVotes
+type AddressVotes struct {
+	Votes					map[string]int64		`json:"votes"`
+}
+
+
+//VotesInfo
+type AddressVoteInfo struct {
+	VoterAddress        string 	`json:"voterAddress"`        // 投票人地址
+	CandidateAddress    string 	`json:"candidateAddress"`    // 被投票人(候选人)地址
+	Votes               int64  	`json:"votes"`               // 票数
+}

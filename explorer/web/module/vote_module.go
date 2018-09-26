@@ -149,7 +149,7 @@ func QueryVoterAvailableVotes(strSQL string) (float64, error) {
 // QueryVoteWitness
 func QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.VoteWitnessResp, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
-	log.Info(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryVoteWitness error :[%v]\n", err)
@@ -189,7 +189,7 @@ func QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.VoteW
 // QueryRealTimeVoteWitnessTotal
 func QueryRealTimeVoteWitnessTotal(strSQL string) (int64) {
 	var realTimeVotes = int64(0)
-	log.Info(strSQL)
+	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryRealTimeVoteWitnessTotal error :[%v]\n", err)
@@ -227,5 +227,31 @@ func QueryVoteWitnessRanking(strSQL string) ([]*entity.VoteWitnessRanking, error
 	}
 
 	return voteWitnessRankingList, nil
+}
+
+// QueryAddressVoter
+func QueryAddressVoter(strSQL string) ([]*entity.AddressVoteInfo, error) {
+	log.Sql(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryAddressVoter error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryAddressVoter dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	AddressVoteInfoList := make([]*entity.AddressVoteInfo, 0)
+
+	for dataPtr.NextT() {
+		var addressVoteInfo = &entity.AddressVoteInfo{}
+		addressVoteInfo.VoterAddress = dataPtr.GetField("address")
+		addressVoteInfo.CandidateAddress = dataPtr.GetField("to_address")
+		addressVoteInfo.Votes = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote"))
+
+		AddressVoteInfoList = append(AddressVoteInfoList, addressVoteInfo)
+	}
+	return AddressVoteInfoList, nil
 }
 

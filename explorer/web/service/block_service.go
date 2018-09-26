@@ -111,9 +111,9 @@ func QueryBlockBuffer(req *entity.Blocks) (*entity.BlockInfo, error) {
 	blockBuffer := buffer.GetBlockBuffer()
 	if req.Number != "" {
 		if req.Number == "latest" {
-			maxNumber := blockBuffer.GetFullNodeMaxBlockID()
-			if maxNumber > 0 {
-				block = blockBuffer.GetBlock(maxNumber)
+			blocks, err := blockBuffer.GetBlocks(-1, 0, 1)
+			if err == nil && len(blocks) > 0 {
+				block = blocks[0]
 			}
 		} else {
 			block = blockBuffer.GetBlock(mysql.ConvertStringToInt64(req.Number, 0))

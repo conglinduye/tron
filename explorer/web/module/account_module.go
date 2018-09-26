@@ -152,8 +152,8 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 				represent.LastWithDrawTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("latest_withdraw_time"))
 				represent.URL = dataPtr.GetField("url")
 				account.Representative = represent
-				//acc.net_usage,acc.free_net_limit,acc.net_used,acc.net_limit,acc.asset_net_used,acc.asset_net_limit,
-				bandwidth.FreeNetUsed = mysql.ConvertDBValueToInt64(dataPtr.GetField("net_usage"))
+				//acc.free_net_used,acc.free_net_limit,acc.net_used,acc.net_limit,acc.asset_net_used,acc.asset_net_limit,
+				bandwidth.FreeNetUsed = mysql.ConvertDBValueToInt64(dataPtr.GetField("free_net_used"))
 				bandwidth.FreeNetLimit = mysql.ConvertDBValueToInt64(dataPtr.GetField("free_net_limit"))
 				bandwidth.FreeNetRemaining = bandwidth.FreeNetLimit - bandwidth.FreeNetUsed
 				bandwidth.FreeNetPercentage = 0
@@ -203,7 +203,7 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 					if account.Balance > 0 {
 						ownbalance := &entity.Balance{}
 						ownbalance.Name = "TRX"
-						ownbalance.Balance = float64(account.Balance)
+						ownbalance.Balance = float64(account.Balance) / 1000000 //单位换算，页面按照TRX显示
 						tokenArr = append(tokenArr, ownbalance)
 					}
 					if balance.Balance > 0 {
