@@ -86,6 +86,7 @@ type account struct {
 	Votes        string
 
 	// acccount net info
+	freeNetUsed    int64
 	freeNetLimit   int64
 	netUsed        int64
 	netLimit       int64
@@ -146,6 +147,7 @@ func (a *account) SetNetRaw(netRaw *api.AccountNetMessage) {
 	a.netRaw = netRaw
 	a.AssetNetUsed = utils.ToJSONStr(netRaw.AssetNetUsed)
 	a.AssetNetLimit = utils.ToJSONStr(netRaw.AssetNetLimit)
+	a.freeNetUsed = netRaw.FreeNetUsed
 	a.freeNetLimit = netRaw.FreeNetLimit
 	a.netLimit = netRaw.NetLimit
 	a.netUsed = netRaw.NetUsed

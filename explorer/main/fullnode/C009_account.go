@@ -328,11 +328,11 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 	sqlI := `insert into tron_account 
 		(account_name, address, balance, create_time, latest_operation_time, is_witness, asset_issue_name,
 			frozen, allowance, latest_withdraw_time, latest_consume_time, latest_consume_free_time, votes,
-			net_usage,
+			net_usage, free_net_used,
 			free_net_limit, net_used, net_limit, total_net_limit, total_net_weight, asset_net_used, asset_net_limit
 			) values 
 		(?, ?, ?, ?, ?, ?, ?,
-			?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?,
 			?, ?, ?, ?, ?, ?, ?)`
 	stmtI, err := txn.Prepare(sqlI)
 	if nil != err {
@@ -343,7 +343,7 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 
 	sqlU := `update tron_account set account_name = ?, balance = ?, latest_operation_time = ?, is_witness = ?, asset_issue_name = ?,
 		frozen = ?, allowance = ?, latest_withdraw_time = ?, latest_consume_time = ?, latest_consume_free_time = ?, votes = ?, net_usage = ?,
-		free_net_limit = ?, net_used = ?, net_limit = ?, total_net_limit = ?, total_net_weight = ?, asset_net_used = ?, asset_net_limit = ?
+		free_net_used = ?, free_net_limit = ?, net_used = ?, net_limit = ?, total_net_limit = ?, total_net_weight = ?, asset_net_used = ?, asset_net_limit = ?
 		where address = ?`
 	stmtU, err := txn.Prepare(sqlU)
 	if nil != err {
@@ -389,6 +389,7 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 			acc.raw.LatestConsumeFreeTime,
 			acc.Votes,
 			acc.raw.NetUsage,
+			acc.freeNetUsed,
 			acc.freeNetLimit,
 			acc.netUsed,
 			acc.netLimit,
@@ -413,6 +414,7 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 				acc.raw.LatestConsumeFreeTime,
 				acc.Votes,
 				acc.raw.NetUsage,
+				acc.freeNetUsed,
 				acc.freeNetLimit,
 				acc.netUsed,
 				acc.netLimit,
