@@ -11,7 +11,7 @@ import (
 
 //QueryTransfersRealize 操作数据库
 func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL string, needTotal bool) (*entity.TransfersResp, error) {
-	strFullSQL := strSQL + " " + filterSQL + "" + filterTempSQL + " " + sortSQL + " " + pageSQL
+	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
 	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
