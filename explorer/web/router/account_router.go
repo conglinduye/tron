@@ -112,7 +112,7 @@ func accountRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, resp)
 	})
 
-	// 查询用户的投票数
+	// 查询用户的可用投票数
 	ginRouter.GET("/api/account/:address/votes", func(c *gin.Context) {
 		address := c.Param("address")
 		log.Debugf("Hello /api/account/:%#v//votes", address)
