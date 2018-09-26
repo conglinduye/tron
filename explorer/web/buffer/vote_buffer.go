@@ -107,17 +107,8 @@ func (w *voteBuffer) loadVoteWitness() {
 	// getVoteWitnessRankingChange
 	getVoteWitnessRankingChange(voteWitnessList)
 
-	sortList := make([]*entity.VoteWitness, 0, len(voteWitnessList))
-	for _, temp := range voteWitnessList {
-		voteWitness := new(entity.VoteWitness)
-		*voteWitness = *temp
-		sortList = append(sortList, voteWitness)
-	}
-
-	if len(sortList) > 0 {
-		sort.SliceStable(sortList, func(i, j int) bool { return sortList[i].ChangeCycle > sortList[j].ChangeCycle })
-		voteWitnessResp.FastestRise = sortList[0]
-	}
+	// getVoteWitnessFastestRise
+	voteWitnessResp.FastestRise = getVoteWitnessFastestRise(voteWitnessList)
 
 	w.Lock()
 	w.voteWitness = voteWitnessResp
@@ -161,7 +152,25 @@ func getVoteWitnessRankingChange(voteWitnessList []*entity.VoteWitness) {
 			temp2 := lastCycleSortList[index]
 			if temp1.Address == temp2.Address {
 				temp1.ChangeCycle = int32(index+1) - temp1.RealTimeRanking
+				break
 			}
 		}
 	}
+}
+
+
+// getVoteWitnessFastestRise
+func getVoteWitnessFastestRise(voteWitnessList []*entity.VoteWitness) *entity.VoteWitness {
+	fastestRise := &entity.VoteWitness{}
+	sortList := make([]*entity.VoteWitness, 0, len(voteWitnessList))
+	for _, temp := range voteWitnessList {
+		voteWitness := new(entity.VoteWitness)
+		*voteWitness = *temp
+		sortList = append(sortList, voteWitness)
+	}
+	if len(sortList) > 0 {
+		sort.SliceStable(sortList, func(i, j int) bool { return sortList[i].ChangeCycle > sortList[j].ChangeCycle })
+		fastestRise = sortList[0]
+	}
+	return fastestRise
 }
