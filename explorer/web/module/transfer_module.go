@@ -1,6 +1,8 @@
 package module
 
 import (
+	"fmt"
+
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/lib/util"
@@ -100,4 +102,38 @@ func QueryTransferRealize(strSQL, filterSQL string) (*entity.TransferInfo, error
 
 	return transfer, nil
 
+}
+
+//QueryTrxOutByAddress 查询该地址的转出数
+func QueryTrxOutByAddress(address string) int64 {
+	strSQL := fmt.Sprintf(`select owner_address, count(1) as trxOut from tron.contract_transfer trf where owner_address='%v'`, address)
+	log.Sql(strSQL)
+	trxOut := int64(0)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil || dataPtr == nil {
+		log.Errorf("QueryTrxOutByAddress error :[%v]\n", err)
+		return trxOut
+	}
+	//填充数据
+	for dataPtr.NextT() {
+		trxOut = mysql.ConvertDBValueToInt64(dataPtr.GetField("trxOut"))
+	}
+	return trxOut
+}
+
+//QueryTrxInByAddress 查询改地址的转入数
+func QueryTrxInByAddress(address string) int64 {
+	strSQL := fmt.Sprintf(`select to_address, count(1) as trxIn from tron.contract_transfer trf where to_address='%v'`, address)
+	log.Sql(strSQL)
+	trxIn := int64(0)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil || dataPtr == nil {
+		log.Errorf("QueryTrxOutByAddress error :[%v]\n", err)
+		return trxIn
+	}
+	//填充数据
+	for dataPtr.NextT() {
+		trxIn = mysql.ConvertDBValueToInt64(dataPtr.GetField("trxIn"))
+	}
+	return trxIn
 }

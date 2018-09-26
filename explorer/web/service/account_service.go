@@ -189,6 +189,14 @@ func QueryAccountSr(req *entity.SuperAccountInfo) (*entity.SuperAccountInfo, err
 
 //QueryAccountStats 查询用户的交易统计信息
 func QueryAccountStats(address string) (*entity.AccountTransactionNum, error) {
+	trxOut := module.QueryTrxOutByAddress(address)
+	trxIn := module.QueryTrxInByAddress(address)
+	var acountTrxInfo = &entity.AccountTransactionNum{TransactionIn: trxIn, TransactionsOut: trxOut, Transactions: trxIn + trxOut}
+	return acountTrxInfo, nil
+}
+
+//QueryAccountStatsOld 查询用户的交易统计信息
+func QueryAccountStatsOld(address string) (*entity.AccountTransactionNum, error) {
 	strSQL := fmt.Sprintf(`
 	select ifnull(outT.trxOut,0) as trxOut,ifnull(inTrx.trxIn,0) as trxIn
 	from tron.contract_transfer trf
