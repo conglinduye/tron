@@ -192,12 +192,15 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 			}
 			balance := &entity.Balance{}
 			balance.Name = dataPtr.GetField("token_name")
+			balance.Address = dataPtr.GetField("owner_address")
 			balance.Balance = mysql.ConvertDBValueToFloat64(dataPtr.GetField("balance"))
 
 			if account.Address != "" {
 				if tokenInfo, ok := accountTokenMap[account.Address]; ok {
-					tokenInfo = append(tokenInfo, balance)
-					accountTokenMap[account.Address] = tokenInfo
+					if balance.Name != "" {
+						tokenInfo = append(tokenInfo, balance)
+						accountTokenMap[account.Address] = tokenInfo
+					}
 				} else {
 					tokenArr := make([]*entity.Balance, 0)
 					if account.Balance > 0 {
