@@ -46,7 +46,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 			return
 		} else if tokenReq.Name != "" && strings.HasPrefix(tokenReq.Name, "%") && strings.HasSuffix(tokenReq.Name, "%") {
 			log.Info("service.QueryCommonTokenListBuffer NameFuzzyQuery")
-			tokenList, _ = service.QueryTokenDetailListBuffer()
+			tokenList, _ = service.QueryCommonTokenListBuffer()
 			tokenList, total := hanldeTokenList4FuzzyQuery(tokenReq.Name, tokenList)
 			tokenResp.Total = total
 			tokenResp.Data = tokenList

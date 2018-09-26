@@ -62,8 +62,7 @@ func (w *tokenBuffer) loadQueryCommonTokenList() {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople', 'binance') 
-			order by participated desc `)
+			where 1=1 order by participated desc `)
 
 	commonTokenList, err := module.QueryTokenList(strSQL, "", "", "")
 	if err != nil {
@@ -96,7 +95,7 @@ func (w *tokenBuffer) loadQueryIcoTokenList() {
 			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
 			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
 			from asset_issue
-			where 1=1 and asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople', 'binance') `)
+			where 1=1 `)
 
 	t := time.Now()
 	dateTime := t.UnixNano() / 1e6
@@ -148,8 +147,7 @@ func (w *tokenBuffer) loadQueryTokensDetailList() {
 				from account_asset_balance 
 				group by asset_name
 			) c on c.asset_name = a.asset_name
-		where 1=1 and a.asset_name not in('XP', 'WWGoneWGA', 'ZTX', 'Fortnite', 'ZZZ', 'VBucks', 'CheapAirGoCoin', 'Skypeople', 'binance') 
-		order by a.participated desc  `)
+		where 1=1 order by a.participated desc  `)
 
 	tokenDetailList, err := module.QueryTokenList(strSQL, "", "", "")
 	if err != nil {
@@ -168,6 +166,9 @@ func (w *tokenBuffer) loadQueryTokensDetailList() {
 
 // subHandle
 func subHandle(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
+	// filterAssetBlacklist
+	tokenList = filterAssetBlacklist(tokenList)
+
 	// calculateTokens
 	calculateTokens(tokenList)
 
@@ -177,14 +178,7 @@ func subHandle(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 		token.DateCreated = createTime
 	}
 
-	tokenAddressList := make([]string, 0)
-	for _, tokenInfo := range tokenList {
-		if tokenInfo.OwnerAddress != "" {
-			tokenAddressList = append(tokenAddressList, tokenInfo.OwnerAddress)
-		}
-	}
-
-	tokenExtList, err := module.QueryTokenExtInfo(tokenAddressList)
+	tokenExtList, err := module.QueryTokenExtInfo()
 	if err != nil {
 		log.Errorf("queryTokenExtInfo list is nil or err:[%v]", err)
 	}
@@ -208,9 +202,9 @@ func subHandle(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 				tokenInfo.SocialMedia = tokenExtInfo.SocialMedia
 				break
 			} else {
-				tokenInfo.ImgURL = tokenExtEmptyInfoList[0].ImgURL
 				tokenInfo.Country = tokenExtEmptyInfoList[0].Country
 				tokenInfo.GitHub = tokenExtEmptyInfoList[0].GitHub
+				tokenInfo.ImgURL = tokenExtEmptyInfoList[0].ImgURL
 				tokenInfo.Reputation = tokenExtEmptyInfoList[0].Reputation
 				tokenInfo.TokenID = tokenExtEmptyInfoList[0].TokenID
 				tokenInfo.WebSite = tokenExtEmptyInfoList[0].WebSite
@@ -313,4 +307,30 @@ func filterIcoTokenExpire(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 		}
 	}
 	return newTokenList
+}
+
+// filterAssetBlacklist
+func filterAssetBlacklist(tokenList []*entity.TokenInfo) []*entity.TokenInfo{
+	newTokenInfoList := make([]*entity.TokenInfo, 0)
+	assetBlacklists, err := module.QueryAssetBlacklist()
+	if err != nil {
+		log.Errorf("QueryAssetBlacklist err:[%v]", err)
+	}
+
+	if len(assetBlacklists) == 0 {
+		return tokenList
+	}
+	for _, token := range tokenList {
+		flag := false
+		for _, assetBlacklist := range assetBlacklists {
+			if assetBlacklist.OwnerAddress == token.OwnerAddress && assetBlacklist.AssetName == token.Name {
+				flag = true
+				break
+			}
+		}
+		if flag == false {
+			newTokenInfoList =append(newTokenInfoList, token)
+		}
+	}
+	return newTokenInfoList
 }

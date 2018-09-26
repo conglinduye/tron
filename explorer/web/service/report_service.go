@@ -9,11 +9,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"gopkg.in/redis.v4"
+	"strconv"
 )
 
 const HistoryOverviewKey = "org.tron.explorer.report.history.overview"
 
 const TodayOverviewKey = "org.tron.explorer.report.today.overview"
+
+const YesterdayOverviewKey = "org.tron.explorer.report.yesterday.overview"
 
 func QueryReport() (*entity.ReportResp, error) {
 	reportResp := &entity.ReportResp{}
@@ -144,6 +147,16 @@ func SyncPersistYesterdayReport() {
 	t3 := t1.Add(-24 * time.Hour)
 	dateTime := t3.UnixNano() / 1e6
 
+	key := YesterdayOverviewKey + "." + strconv.FormatInt(dateTime,10)
+	if !lockYesterdayOverview(key) {
+		log.Infof("SyncPersistYesterdayReport lock exit, key:%v", key)
+		return
+	}
+	err := config.RedisCli.Set(key, "SyncPersistYesterdayReport", 60 * time.Second).Err()
+	if err != nil {
+		log.Errorf("SyncPersistYesterdayReport lock redis set err:[%v]", err)
+	}
+
 	strSQL := fmt.Sprintf(`
 			select date, avg_block_time, avg_block_size, new_block_seen, new_transaction_seen, 
 			new_address_seen, total_block_count, total_transaction, total_address, blockchain_size
@@ -163,8 +176,11 @@ func SyncPersistYesterdayReport() {
 		syncReportBetweenTime(startTime, endTime, reportOverview)
 		syncReportByTime(endTime, reportOverview)
 		reportOverview.Date = startTime
-		module.InsertStatistics(reportOverview)
-
+		err := module.InsertStatistics(reportOverview)
+		if err != nil {
+			log.Errorf("InsertStatistics error :[%v]\n", err)
+			return
+		}
 		historyOverviewValue, err := config.RedisCli.Get(HistoryOverviewKey).Result()
 		if err == redis.Nil {
 			SyncCacheHistoryReport()
@@ -234,4 +250,19 @@ func SyncCacheTodayReport() {
 	}
 
 	log.Info("SyncCacheTodayReport handle done")
+}
+
+func lockYesterdayOverview(key string) bool {
+	value, err := config.RedisCli.Get(key).Result()
+	if err == redis.Nil {
+		return true
+	} else if err != nil {
+		log.Errorf("lock redis get value error :[%v]\n", err)
+		return false
+	}
+	if value == "" {
+		return true
+	} else {
+		return false
+	}
 }

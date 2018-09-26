@@ -161,3 +161,10 @@ type AssetTransfer struct {
 	Confirmed				bool				`json:"confirmed"`				// confirmed
 }
 
+type AssetBlacklist struct {
+	OwnerAddress     		string 				`json:"ownerAddress"`    		// ownerAddress
+	AssetName				string 				`json:"assetName"`				// assetName
+}
+
+
+

@@ -137,15 +137,14 @@ func QueryTotalTokenHolders(tokenName string) (int64, error) {
 }
 
 // QueryTokenExtInfo
-func QueryTokenExtInfo(addressList []string) ([]*entity.TokenExtInfo, error) {
-	filterSQL := mysql.GenSQLPartInStrList("logo.address", addressList, true)
+func QueryTokenExtInfo() ([]*entity.TokenExtInfo, error) {
 	strSQL := fmt.Sprintf(`
 	SELECT logo.address,token_id,token_name,brief, website, white_paper,logo.logo_url,
     	github,country, credit, reddit,twitter,facebook, telegram,steam,
     	medium, webchat,Weibo,review
 	FROM wlcy_asset_logo logo
 	left join wlcy_asset_info info on logo.address=info.address and info.status=1
-	where 1=1 and %v order by info.address `, filterSQL)
+	where 1=1 order by info.address `)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -465,4 +464,29 @@ func QueryAssetTransfer(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Ass
 	assetTransferResp.Data = assetTransferList
 
 	return assetTransferResp, nil
+}
+
+// QueryAssetBlacklist
+func QueryAssetBlacklist() ([]*entity.AssetBlacklist, error) {
+	assetBlackLists := make([]*entity.AssetBlacklist, 0)
+	strSQL := fmt.Sprintf(`select owner_address, asset_name from wlcy_asset_blacklist`)
+	log.Sql(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryAssetBlacklist error :[%v]", err)
+		return assetBlackLists, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryAssetBlacklist dataPtr is nil ")
+		return assetBlackLists, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	for dataPtr.NextT() {
+		assetBlackList := &entity.AssetBlacklist{}
+		assetBlackList.OwnerAddress = dataPtr.GetField("owner_address")
+		assetBlackList.AssetName = dataPtr.GetField("asset_name")
+		assetBlackLists = append(assetBlackLists, assetBlackList)
+	}
+
+	return assetBlackLists, nil
 }
