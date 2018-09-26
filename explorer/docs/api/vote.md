@@ -129,6 +129,24 @@ output:json
 }
 ```
 
+## 根据地址查看投票(投给谁)信息
+- url:/api/account/:address/votes
+- method:GET
+
+input:param
+```param
+eg: 
+http://18.216.57.65:20110/api/account/TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp/votes
+```
+output:json
+```json
+{
+    "votes":{
+        "TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp":10
+    }
+}
+```
+
 
 
 ## 返回倒计时时间

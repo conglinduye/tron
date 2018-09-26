@@ -42,9 +42,19 @@ func QueryTokenList(strSQL, filterSQL, sortSQL, pageSQL string) ([]*entity.Token
 		token.Description = string(utils.HexDecode(dataPtr.GetField("asset_desc")))
 		token.Url = dataPtr.GetField("utl")
 		frozenJson := dataPtr.GetField("frozen_supply")
-		var tokenFrozenInfo []entity.TokenFrozenInfo
-		if err := json.Unmarshal([]byte(frozenJson), &tokenFrozenInfo); err == nil {
-			token.Frozen = tokenFrozenInfo
+		tokenFrozenInfoList := make([]*entity.TokenFrozenInfo, 0)
+		tokenFrozenSupplyList := make([]*entity.TokenFrozenSupply, 0)
+		err := json.Unmarshal([]byte(frozenJson), &tokenFrozenSupplyList)
+		if err != nil {
+			log.Errorf("QueryTokenList json.Unmarshal error :[%v]\n", err)
+		} else {
+			for _, tokenFrozenSupply := range tokenFrozenSupplyList {
+				tokenFrozenInfo := &entity.TokenFrozenInfo{}
+				tokenFrozenInfo.Amount = tokenFrozenSupply.FrozenAmount
+				tokenFrozenInfo.Days = tokenFrozenSupply.FrozenDays
+				tokenFrozenInfoList = append(tokenFrozenInfoList, tokenFrozenInfo)
+			}
+			token.Frozen = tokenFrozenInfoList
 		}
 		token.Abbr = dataPtr.GetField("asset_abbr")
 

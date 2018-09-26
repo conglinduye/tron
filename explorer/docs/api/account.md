@@ -362,21 +362,3 @@ output:json
 }
 ```
 交易数包括TRX 交易和asset 交易
-
-## 查询用户的可用投票数
-- url:/api/account/:address/votes
-- method:GET
-
-input:param
-```param
-eg: 
-http://18.216.57.65:20110/api/account/TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp/votes
-```
-output:json
-```json
-{
-    "votes":{
-        "TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp":10
-    }
-}
-```
