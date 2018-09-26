@@ -72,6 +72,7 @@ type AssetInfo struct {
 //Balance ...
 type Balance struct {
 	Name    string  `json:"name"`    //:3006,
+	Address string  `json:"address"` //:3006,
 	Balance float64 `json:"balance"` //:3006,
 }
 
