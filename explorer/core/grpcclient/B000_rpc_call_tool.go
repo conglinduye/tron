@@ -9,7 +9,7 @@ import (
 
 // default setting for grpc call
 var (
-	defaultTimeout = 3 * time.Second
+	defaultTimeout = 120 * time.Second
 )
 
 func getTimeoutContext(timeout time.Duration) (context.Context, func()) {
