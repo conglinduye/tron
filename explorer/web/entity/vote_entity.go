@@ -86,3 +86,8 @@ type VoteWitnessDetail struct {
 	Data 					*VoteWitness			`json:"data"`
 
 }
+
+//AddressVotes
+type AddressVotes struct {
+	Votes					map[string]float64		`json:"votes"`
+}
