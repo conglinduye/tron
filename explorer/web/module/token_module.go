@@ -158,7 +158,6 @@ func QueryTokenExtInfo() ([]*entity.TokenExtInfo, error) {
 	var index int32
 
 	var tokenExtInfos = make([]*entity.TokenExtInfo, 0)
-	var socialMediaInfos = make([]*entity.SocialMediaInfo, 0)
 	if dataPtr.ResNum() == 0 {
 		tokenExtInfos = InitTokenExtInfos()
 	}
@@ -187,6 +186,7 @@ func QueryTokenExtInfo() ([]*entity.TokenExtInfo, error) {
 		tokenExtInfo.TokenID = dataPtr.GetField("token_id")
 		tokenExtInfo.WebSite = mysql.SetDefaultVal(dataPtr.GetField("website"), "no_message")
 		tokenExtInfo.WhitePaper = mysql.SetDefaultVal(dataPtr.GetField("white_paper"), "no_message")
+		var socialMediaInfos = make([]*entity.SocialMediaInfo, 0)
 		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Reddit", URL: dataPtr.GetField("reddit")})
 		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Twitter", URL: dataPtr.GetField("twitter")})
 		socialMediaInfos = append(socialMediaInfos, &entity.SocialMediaInfo{Name: "Facebook", URL: dataPtr.GetField("facebook")})
@@ -224,6 +224,7 @@ func InitTokenExtInfos() []*entity.TokenExtInfo {
 	tokenExtInfo.SocialMedia = socialMediaInfos
 
 	tokenExtInfos = append(tokenExtInfos, tokenExtInfo)
+
 	return tokenExtInfos
 }
 
