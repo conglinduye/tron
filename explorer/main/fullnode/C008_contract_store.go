@@ -68,26 +68,29 @@ func storeContractDetail(txn *sql.Tx, confirmed int, trxHash string, trx *core.T
 		storeUpdateAssetContract(txn, confirmed, trxHash, trx, v)
 
 	case *core.ProposalCreateContract:
+		storeProposalCreateContract(txn, confirmed, trxHash, trx, v)
 	case *core.ProposalApproveContract:
+		storeProposalApproveContract(txn, confirmed, trxHash, trx, v)
 	case *core.ProposalDeleteContract:
+		storeProposalDeleteContract(txn, confirmed, trxHash, trx, v)
 	case *core.CreateSmartContract:
 		storeCreateSmartContract(txn, confirmed, trxHash, trx, v)
 	case *core.TriggerSmartContract:
 		storeTriggerSmartContract(txn, confirmed, trxHash, trx, v)
 	case *core.BuyStorageContract:
-		// storeCreateSmartContract(txn, confirmed, trxHash, trx, v)
+		storeBuyStorageContract(txn, confirmed, trxHash, trx, v)
 	case *core.BuyStorageBytesContract:
-		// storeCreateSmartContract(txn, confirmed, trxHash, trx, v)
+		storeBuyStorageBytesContract(txn, confirmed, trxHash, trx, v)
 	case *core.SellStorageContract:
-		// storeCreateSmartContract(txn, confirmed, trxHash, trx, v)
+		storeSellStorageContract(txn, confirmed, trxHash, trx, v)
 	case *core.ExchangeCreateContract:
-		// storeCreateSmartContract(txn, confirmed, trxHash, trx, v)
+		storeExchangeCreateContract(txn, confirmed, trxHash, trx, v)
 	case *core.ExchangeInjectContract:
-		// storeCreateSmartContract(txn, confirmed, trxHash, trx, v)
+		storeExchangeInjectContract(txn, confirmed, trxHash, trx, v)
 	case *core.ExchangeWithdrawContract:
-		// storeCreateSmartContract(txn, confirmed, trxHash, trx, v)
+		storeExchangeWithdrawContract(txn, confirmed, trxHash, trx, v)
 	case *core.ExchangeTransactionContract:
-		// storeCreateSmartContract(txn, confirmed, trxHash, trx, v)
+		storeExchangeTransactionContract(txn, confirmed, trxHash, trx, v)
 	default:
 		fmt.Printf("new type:%T-->%v\n", v, v)
 	}
@@ -980,6 +983,446 @@ func storeTriggerSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
 	AddRefreshAddress(ctx.OwnerAddress, ctx.ContractAddress)
+
+	return
+}
+
+func storeBuyStorageContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.BuyStorageContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_buy_storage` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `quant` bigint(20) NOT NULL DEFAULT '0',
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_buy_storage
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, quant)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		ctx.Quant)
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
+
+	return
+}
+
+func storeBuyStorageBytesContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.BuyStorageBytesContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_buy_storage_bytes` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `buy_bytes` bigint(20) NOT NULL DEFAULT '0',
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_buy_storage_bytes
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, buy_bytes)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		ctx.Bytes)
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
+
+	return
+}
+
+func storeSellStorageContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.SellStorageContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_sell_storage` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `sell_storage_bytes` bigint(20) NOT NULL DEFAULT '0',
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_sell_storage
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, sell_storage_bytes)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		ctx.StorageBytes)
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
+
+	return
+}
+
+func storeExchangeCreateContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.ExchangeCreateContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_exchange_create` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `firest_token_id` varchar(500) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+		  `first_token_balance` bigint(20) NOT NULL DEFAULT '0',
+		  `second_token_id` varchar(500) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+		  `second_token_balance` bigint(20) NOT NULL DEFAULT '0',
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_exchange_create
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, firest_token_id, first_token_balance, second_token_id, second_token_balance)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?, ?, ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		ctx.FirstTokenId,
+		ctx.FirstTokenBalance,
+		ctx.SecondTokenId,
+		ctx.SecondTokenBalance)
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
+
+	return
+}
+
+func storeExchangeInjectContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.ExchangeInjectContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_exchange_inject` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `exchange_id` bigint NOT NULL DEFAULT '0',
+		  `token_id` varchar(500) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+		  `quant` bigint NOT NULL DEFAULT '0',
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_exchange_inject
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, exchange_id, token_id, quant)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?, ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		ctx.ExchangeId,
+		ctx.TokenId,
+		ctx.Quant)
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
+
+	return
+}
+
+func storeExchangeWithdrawContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.ExchangeWithdrawContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_exchange_withdraw` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `exchange_id` bigint NOT NULL DEFAULT '0',
+		  `token_id` varchar(500) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+		  `quant` bigint NOT NULL DEFAULT '0',
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_exchange_withdraw
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, exchange_id, token_id, quant)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?, ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		ctx.ExchangeId,
+		ctx.TokenId,
+		ctx.Quant)
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
+
+	return
+}
+
+func storeExchangeTransactionContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.ExchangeTransactionContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_exchange_transaction` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `exchange_id` bigint NOT NULL DEFAULT '0',
+		  `token_id` varchar(500) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+		  `quant` bigint NOT NULL DEFAULT '0',
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_exchange_transaction
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, exchange_id, token_id, quant)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?, ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		ctx.ExchangeId,
+		ctx.TokenId,
+		ctx.Quant)
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
+
+	return
+}
+
+func storeProposalCreateContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.ProposalCreateContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_proposal_create` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `proposal_parameters` text COLLATE utf8mb4_bin NOT NULL,
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_proposal_create
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, proposal_parameters)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		utils.ToJSONStr(ctx.Parameters))
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
+
+	return
+}
+
+func storeProposalApproveContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.ProposalApproveContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_proposal_approve` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `proposal_id` bigint NOT NULL DEFAULT '0',
+		  `is_add_proposal` tinyint NOT NULL DEFAULT '0',
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_proposal_approve
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, proposal_id, is_add_proposal)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		ctx.ProposalId,
+		ctx.IsAddApproval)
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
+
+	return
+}
+
+func storeProposalDeleteContract(txn *sql.Tx, confirmed int, trxHash string, trx *core.Transaction, ctx *core.ProposalDeleteContract) (err error) {
+	if nil == txn || nil == trx || nil == ctx {
+		return
+	}
+	/*
+		CREATE TABLE `contract_proposal_delete` (
+		  `trx_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '交易hash',
+		  `block_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '区块ID',
+		  `contract_type` int(8) NOT NULL DEFAULT '0' COMMENT '交易类型\\\\nAccountCreateContract = 0;\\\\r\\\\nTransferContract = 1;\\\\r\\\\nTransferAssetContract = 2;\\\\r\\\\nVoteAssetContract = 3;\\\\r\\\\nVoteWitnessContract = 4;\\\\r\\\\nWitnessCreateContract = 5;\\\\r\\\\nAssetIssueContract = 6;\\\\r\\\\nWitnessUpdateContract = 8;\\\\r\\\\nParticipateAssetIssueContract = 9;\\\\r\\\\nAccountUpdateContract = 10;\\\\r\\\\nFreezeBalanceContract = 11;\\\\r\\\\nUnfreezeBalanceContract = 12;\\\\r\\\\nWithdrawBalanceContract = 13;\\\\r\\\\nUnfreezeAssetContract = 14;\\\\r\\\\nUpdateAssetContract = 15;\\\\r\\\\nProposalCreateContract = 16;\\\\r\\\\nProposalApproveContract = 17;\\\\r\\\\nProposalDeleteContract = 18;\\\\r\\\\nSetAccountIdContract = 19;\\\\r\\\\nCustomContract = 20;\\\\r\\\\n// BuyStorageContract = 21;\\\\r\\\\n// BuyStorageBytesContract = 22;\\\\r\\\\n// SellStorageContract = 23;\\\\r\\\\nCreateSmartContract = 30;\\\\r\\\\nTriggerSmartContract = 31;\\\\r\\\\nGetContract = 32;\\\\r\\\\nUpdateSettingContract = 33;\\\\r\\\\nExchangeCreateContract = 41;\\\\r\\\\nExchangeInjectContract = 42;\\\\r\\\\nExchangeWithdrawContract = 43;\\\\r\\\\nExchangeTransactionContract = 44;',
+		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '交易创建时间',
+		  `expire_time` bigint(20) NOT NULL DEFAULT '0',
+		  `confirmed` tinyint(4) NOT NULL DEFAULT '0' COMMENT '确认状态。0 未确认。1 已确认',
+		  `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
+		  `proposal_id` bigint NOT NULL DEFAULT '0',
+		  PRIMARY KEY (`trx_hash`,`block_id`),
+		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+		/*!50100 PARTITION BY HASH (`block_id`)
+		PARTITIONS 100 */
+	/**/
+	_, err = txn.Exec(`insert into contract_proposal_delete
+		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
+			owner_address, proposal_id)
+		values 
+		(?, ?, ?, ?, ?, ?,
+			 ?, ?)`,
+		trxHash,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
+		trx.RawData.Contract[0].Type,
+		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[2])),
+		trx.RawData.Expiration,
+		confirmed,
+		utils.Base58EncodeAddr(ctx.OwnerAddress),
+		ctx.ProposalId)
+	if nil != err {
+		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
+	}
+	AddRefreshAddress(ctx.OwnerAddress)
 
 	return
 }
