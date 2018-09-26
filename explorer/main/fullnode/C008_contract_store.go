@@ -978,7 +978,7 @@ func storeTriggerSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		utils.Base58EncodeAddr(ctx.ContractAddress),
 		ctx.CallValue,
-		string(ctx.Data))
+		utils.HexEncode(ctx.Data))
 	if nil != err {
 		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}
