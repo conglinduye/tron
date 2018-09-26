@@ -61,8 +61,12 @@ func GetTronHexAddress(in string) (out string, err error) {
 	sha3Hash.Write(rawPubKey)
 	hashRet := sha3Hash.Sum(nil)
 
-	hashRetStr := HexEncode(hashRet)                              // covert to hex string
-	out = fmt.Sprintf("%s%s", AddressPrefixMain, hashRetStr[24:]) // address prefix + hash remove first 24 length
+	hashRetStr := HexEncode(hashRet) // covert to hex string
+	addrPrefix := AddressPrefixMain
+	if TestNet {
+		addrPrefix = AddressPrefixTest
+	}
+	out = fmt.Sprintf("%s%s", addrPrefix, hashRetStr[24:]) // address prefix + hash remove first 24 length
 
 	return
 }

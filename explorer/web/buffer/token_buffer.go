@@ -187,11 +187,9 @@ func subHandle(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 	tokenExtEmptyInfoList := module.InitTokenExtInfos()
 
 	for _, tokenInfo := range tokenList {
-
+		flag := true
 		for _, tokenExtInfo := range tokenExtList {
-
 			if tokenInfo.OwnerAddress == tokenExtInfo.OwnerAddress {
-				//tokenInfo.TokenExtInfo = tokenExtInfo
 				tokenInfo.Country = tokenExtInfo.Country
 				tokenInfo.GitHub = tokenExtInfo.GitHub
 				tokenInfo.ImgURL = tokenExtInfo.ImgURL
@@ -200,17 +198,19 @@ func subHandle(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 				tokenInfo.WebSite = tokenExtInfo.WebSite
 				tokenInfo.WhitePaper = tokenExtInfo.WhitePaper
 				tokenInfo.SocialMedia = tokenExtInfo.SocialMedia
+				flag = false
 				break
-			} else {
-				tokenInfo.Country = tokenExtEmptyInfoList[0].Country
-				tokenInfo.GitHub = tokenExtEmptyInfoList[0].GitHub
-				tokenInfo.ImgURL = tokenExtEmptyInfoList[0].ImgURL
-				tokenInfo.Reputation = tokenExtEmptyInfoList[0].Reputation
-				tokenInfo.TokenID = tokenExtEmptyInfoList[0].TokenID
-				tokenInfo.WebSite = tokenExtEmptyInfoList[0].WebSite
-				tokenInfo.WhitePaper = tokenExtEmptyInfoList[0].WhitePaper
-				tokenInfo.SocialMedia = tokenExtEmptyInfoList[0].SocialMedia
 			}
+		}
+		if flag == true {
+			tokenInfo.Country = tokenExtEmptyInfoList[0].Country
+			tokenInfo.GitHub = tokenExtEmptyInfoList[0].GitHub
+			tokenInfo.ImgURL = tokenExtEmptyInfoList[0].ImgURL
+			tokenInfo.Reputation = tokenExtEmptyInfoList[0].Reputation
+			tokenInfo.TokenID = tokenExtEmptyInfoList[0].TokenID
+			tokenInfo.WebSite = tokenExtEmptyInfoList[0].WebSite
+			tokenInfo.WhitePaper = tokenExtEmptyInfoList[0].WhitePaper
+			tokenInfo.SocialMedia = tokenExtEmptyInfoList[0].SocialMedia
 		}
 		newTokenList = append(newTokenList, tokenInfo)
 	}

@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/wlcy/tron/explorer/core/utils"
 )
 
 var gIntMaxWorker = flag.Int("worker", 10, "maximum worker for fetch blocks")
@@ -23,6 +24,7 @@ var gMaxErrCntPerNode = flag.Int("max_err_per_node", 10, "max error before we tr
 var gMaxAccountWorkload = flag.Int("max_account_workload", 200, "max account a node need handle not fork new worker")
 var gIntHandleAccountInterval = flag.Int("account_handle_interval", 30, "account info synchronize handle minmum interval in seconds")
 var gMaxTrxDB = flag.Int("trxdb_oper_cnt", 8, "the block/transaction db operation routine limit at the same time")
+var gNetType = flag.String("net", "main", "connect to main net or test net, default main net")
 
 var quit = make(chan struct{}) // quit signal channel
 var wg sync.WaitGroup
@@ -63,6 +65,10 @@ func startDaemon() {
 func main() {
 	flag.Parse()
 	initDBLimit()
+
+	if *gNetType == "test" {
+		utils.TestNet = true
+	}
 
 	maxErrCnt = *gMaxErrCntPerNode
 	getAccountWorkerLimit = *gMaxAccountWorkload

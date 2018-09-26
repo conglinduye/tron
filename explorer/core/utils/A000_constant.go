@@ -9,13 +9,22 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
+// TestNet 是否连接 testNet，默认false
+var TestNet bool
+
 // GetRandSolidityNodeAddr 随机获取一个solidity node ip
 func GetRandSolidityNodeAddr() string {
+	if TestNet {
+		return TestSolidityNodeList[rand.Int31n(int32(len(TestSolidityNodeList)))]
+	}
 	return SolidityNodeList[rand.Int31n(int32(len(SolidityNodeList)))]
 }
 
 // GetRandFullNodeAddr 随机获取一个full node ip
 func GetRandFullNodeAddr() string {
+	if TestNet {
+		return TestFullNodeList[rand.Int31n(int32(len(TestFullNodeList)))]
+	}
 	return FullNodeList[rand.Int31n(int32(len(FullNodeList)))]
 }
 
@@ -81,3 +90,39 @@ var FullNodeList = []string{
 }
 
 // Faield, error:rpc error: code = Unavailable desc = all SubConns are in TransientFailure, latest connection error: connection error: desc = "transport: Error while dialing dial tcp 47.104.11.194:50051: connect: connection refused"
+
+// TestSolidityNodeList ...
+var TestSolidityNodeList = []string{
+	"47.75.13.181",
+}
+
+// TestFullNodeList ...
+var TestFullNodeList = []string{
+	"47.90.240.201",
+	"47.89.188.246",
+	"47.90.208.195",
+	"47.89.188.162",
+	"47.89.185.110",
+	"47.89.183.137",
+	"47.90.240.239",
+	"47.88.55.186",
+	"47.254.75.152",
+	"47.254.36.2",
+	"47.254.73.154",
+	"47.254.20.22",
+	"47.254.33.129",
+	"47.254.45.208",
+	"47.74.159.205",
+	"47.74.149.105",
+	"47.74.144.205",
+	"47.74.159.52",
+	"47.88.237.77",
+	"47.74.149.180",
+	"47.88.229.149",
+	"47.74.182.133",
+	"47.88.229.123",
+	"47.74.152.210",
+	"47.75.205.223",
+	"47.75.113.95",
+	"47.75.57.234",
+}
