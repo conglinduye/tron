@@ -3,6 +3,7 @@ package module
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
@@ -193,6 +194,9 @@ func QueryAccountRealize(strSQL, filterSQL, address string) (*entity.AccountDeta
 			balance := &entity.Balance{}
 			balance.Name = dataPtr.GetField("token_name")
 			balance.Address = dataPtr.GetField("owner_address")
+			if strings.ToUpper(balance.Name) == "TRX" { //如果通证是波场币，地址替换为当前持有者账户的地址
+				balance.Address = account.Address
+			}
 			balance.Balance = mysql.ConvertDBValueToFloat64(dataPtr.GetField("balance"))
 
 			if account.Address != "" {
