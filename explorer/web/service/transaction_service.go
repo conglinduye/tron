@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/tronprotocol/grpc-gateway/api"
 	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/grpcclient"
 	"github.com/wlcy/tron/explorer/core/utils"
@@ -18,6 +20,40 @@ import (
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 )
+
+// WalletClient ...
+type WalletClient struct {
+	*grpcclient.Wallet
+	sync.Mutex
+}
+
+// Refresh ...
+func (wc *WalletClient) Refresh() {
+	wc.Lock()
+	if nil != wc.Wallet {
+		wc.Wallet.Close()
+	}
+	wc.Wallet = grpcclient.GetRandomWallet()
+	wc.Unlock()
+}
+
+// BroadcastTransaction ...
+func (wc *WalletClient) BroadcastTransaction(trx *core.Transaction) (*api.Return, error) {
+	tryCnt := 3
+	for tryCnt > 0 {
+		tryCnt--
+		ret, err := wc.Wallet.BroadcastTransaction(trx)
+		if nil != err {
+			wc.Refresh()
+			continue
+		}
+		return ret, err
+	}
+	return nil, nil
+}
+
+var _wallet *WalletClient
+var _walletOnce sync.Once
 
 //QueryTransactionsBuffer ...
 func QueryTransactionsBuffer(req *entity.Transactions) (*entity.TransactionsResp, error) {
@@ -51,11 +87,11 @@ func QueryTransactionsByAddress(req *entity.Transactions) (*entity.TransactionsR
 	strSQL := fmt.Sprintf(`
 	select oo.block_id,oo.owner_address,oo.to_address,oo.contract_type,oo.trx_hash,oo.create_time from (
 	SELECT block_id,owner_address,to_address,contract_type,trx_hash,create_time 
-	FROM tron.contract_transfer 
+	FROM contract_transfer 
 	where to_address='%v' 
 	union 
 	SELECT block_id,owner_address,to_address,contract_type,trx_hash,create_time 
-	FROM tron.transactions 
+	FROM transactions 
 	where owner_address='%v') oo
 	where 1=1 `, req.Address, req.Address)
 
@@ -103,7 +139,7 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 			select block_id,owner_address,to_address,
 			trx_hash,contract_data,result_data,fee,
 			contract_type,confirmed,create_time,expire_time
-			from tron.transactions
+			from transactions
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -163,7 +199,7 @@ func QueryTransaction(req *entity.Transactions) (*entity.TransactionInfo, error)
 		select block_id,owner_address,to_address,
 		trx_hash,contract_data,result_data,fee,
 		contract_type,confirmed,create_time,expire_time
-		from tron.transactions
+		from transactions
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -193,8 +229,7 @@ func PostTransaction(req *entity.PostTransaction, dryRun string) (*entity.PostTr
 	}
 	if dryRun != "1" {
 		//向主网发布广播
-		client := grpcclient.GetRandomWallet()
-		result, err := client.BroadcastTransaction(transaction)
+		result, err := GetWalletClient().BroadcastTransaction(transaction)
 		if err != nil {
 			log.Errorf("call broadcastTransaction err[%v],transaction:[%#v]", err, transaction)
 			return postResult, err
@@ -250,4 +285,13 @@ func PostTransaction(req *entity.PostTransaction, dryRun string) (*entity.PostTr
 	ss, _ := mysql.JSONObjectToString(postResult)
 	log.Debugf("Post transaction result:[%v]", ss)
 	return postResult, nil
+}
+
+// GetWalletClient ...
+func GetWalletClient() *WalletClient {
+	_walletOnce.Do(func() {
+		_wallet = new(WalletClient)
+		_wallet.Wallet = grpcclient.GetRandomWallet()
+	})
+	return _wallet
 }

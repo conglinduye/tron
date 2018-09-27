@@ -210,7 +210,7 @@ func (b *blockBuffer) loadTransferFromDB(filter string, order string, limit stri
 		select block_id,owner_address,to_address,amount,
 		asset_name,trx_hash,
 		contract_type,confirmed,create_time
-		from tron.contract_transfer
+		from contract_transfer
 		where 1=1  `)
 
 	if len(order) == 0 {

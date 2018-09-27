@@ -13,7 +13,7 @@ import (
 //QueryTotalVotes
 func QueryTotalVotes() int64 {
 	strSQL := fmt.Sprintf(`
-	SELECT sum(vote_count) as totalVotes FROM tron.witness`)
+	SELECT sum(vote_count) as totalVotes FROM witness`)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -51,7 +51,6 @@ func QueryRealTimeTotalVotes(strSQL string) int64 {
 
 	return votes
 }
-
 
 //QueryAccountVoteResultRealize
 func QueryAccountVoteResultRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.AccountVoteResultRes, error) {
@@ -187,7 +186,7 @@ func QueryVoteWitness(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.VoteW
 }
 
 // QueryRealTimeVoteWitnessTotal
-func QueryRealTimeVoteWitnessTotal(strSQL string) (int64) {
+func QueryRealTimeVoteWitnessTotal(strSQL string) int64 {
 	var realTimeVotes = int64(0)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
@@ -254,4 +253,3 @@ func QueryAddressVoter(strSQL string) ([]*entity.AddressVoteInfo, error) {
 	}
 	return AddressVoteInfoList, nil
 }
-

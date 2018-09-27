@@ -1,13 +1,14 @@
 package service
 
 import (
+	"fmt"
+	"sort"
+
 	"github.com/wlcy/tron/explorer/core/grpcclient"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
-	"fmt"
 	"github.com/wlcy/tron/explorer/web/module"
-	"sort"
 )
 
 //QueryWitnessBuffer 从QueryWitnessBuffer中获取witness信息
@@ -40,12 +41,12 @@ func QueryWitness() ([]*entity.WitnessInfo, error) {
 	for index := range witnessInfoList {
 		witnessInfo := witnessInfoList[index]
 		if witnessInfo.ProducedTotal != 0 {
-			witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal)/float64(witnessInfo.ProducedTotal) * 100
+			witnessInfo.ProducePercentage = float64(witnessInfo.ProducedTotal-witnessInfo.MissedTotal) / float64(witnessInfo.ProducedTotal) * 100
 		} else {
 			witnessInfo.ProducePercentage = 0
 		}
 		if totalVotes != 0 {
-			witnessInfo.VotesPercentage = float64(witnessInfo.Votes)/float64(totalVotes) * 100
+			witnessInfo.VotesPercentage = float64(witnessInfo.Votes) / float64(totalVotes) * 100
 		} else {
 			witnessInfo.VotesPercentage = 0
 		}
@@ -71,7 +72,7 @@ func QueryWitnessStatisticBuffer() ([]*entity.WitnessStatisticInfo, error) {
 }
 
 // QueryWitnessStatistic
-func QueryWitnessStatistic() ([]*entity.WitnessStatisticInfo, error)  {
+func QueryWitnessStatistic() ([]*entity.WitnessStatisticInfo, error) {
 	var blocks int64
 	curMaintenanceTime, err := getMaintenanceTimeStamp()
 	if err != nil {
@@ -93,11 +94,11 @@ func QueryWitnessStatistic() ([]*entity.WitnessStatisticInfo, error)  {
 	select acc.address, acc.account_name,witt.url
 		   ,ifnull(blocks.blockproduce,0) as blockproduce , 
 		   ifnull(blocks.blockproduce,0)/%v as blockRate
-    from  tron.tron_account acc
-    left join tron.witness witt on witt.address=acc.address 
+    from  tron_account acc
+    left join witness witt on witt.address=acc.address 
     left join (
 	    select witness_address,count(block_id) as blockproduce
-        from tron.blocks blk
+        from blocks blk
         where 1=1 and blk.create_time>%v 
         group by witness_address
     ) blocks on blocks.witness_address=acc.address

@@ -63,7 +63,7 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 
 	//查询该语句所查到的数据集合
 	var total = int64(len(accountInfos))
-	total, err = mysql.QueryTableDataCount("tron.tron_account")
+	total, err = mysql.QueryTableDataCount("tron_account")
 	if err != nil {
 		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
 	}
@@ -78,7 +78,7 @@ func QueryAccountsRealize(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.A
 func querytokenBalanceInfo(address string) (map[string]int64, error) {
 	strSQL := fmt.Sprintf(`
 	select acc.address,acc.asset_name as token_name,acc.creator_address,acc.balance
-	from tron.account_asset_balance acc
+	from account_asset_balance acc
 	where 1=1 order by `)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
@@ -264,7 +264,7 @@ func CheckSrAccountExist(address string) bool {
 	exist := false
 	strSQL := fmt.Sprintf(`
 	SELECT address,github_link 
-	FROM tron.wlcy_sr_account
+	FROM wlcy_sr_account
 	where 1=1   `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -292,7 +292,7 @@ func CheckSrAccountExist(address string) bool {
 
 //InsertSrAccount 插入github地址
 func InsertSrAccount(address, github string) (int64, error) {
-	strSQL := fmt.Sprintf(`insert into tron.wlcy_sr_account
+	strSQL := fmt.Sprintf(`insert into wlcy_sr_account
 			(address,github_link) value( '%v','%v')`,
 		address, github)
 
@@ -307,7 +307,7 @@ func InsertSrAccount(address, github string) (int64, error) {
 
 //UpdateSrAccount 更新github地址
 func UpdateSrAccount(address, github string) (int64, error) {
-	strSQL := fmt.Sprintf(`update tron.wlcy_sr_account set github_link='%v' where address='%v'`,
+	strSQL := fmt.Sprintf(`update wlcy_sr_account set github_link='%v' where address='%v'`,
 		github, address)
 
 	log.Sql(strSQL)

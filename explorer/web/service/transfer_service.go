@@ -52,7 +52,7 @@ func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, erro
 			select block_id,owner_address,to_address,amount,
 			asset_name,trx_hash,
 			contract_type,confirmed,create_time
-			from tron.contract_transfer
+			from contract_transfer
 			where 1=1 and owner_address='%v'`, req.Address)
 
 	transOutResp, err := module.QueryTransfersByAddressRealize(strSQL, pageSQL, true)
@@ -64,7 +64,7 @@ func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, erro
 			select block_id,owner_address,to_address,amount,
 			asset_name,trx_hash,
 			contract_type,confirmed,create_time
-			from tron.contract_transfer
+			from contract_transfer
 			where 1=1 and to_address='%v'`, req.Address)
 
 	transInResp, err := module.QueryTransfersByAddressRealize(strSQL, pageSQL, true)
@@ -93,7 +93,7 @@ func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 			select block_id,owner_address,to_address,amount,
 			asset_name,trx_hash,
 			contract_type,confirmed,create_time
-			from tron.contract_transfer
+			from contract_transfer
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -154,7 +154,7 @@ func QueryTransfer(req *entity.Transfers) (*entity.TransferInfo, error) {
 		select block_id,owner_address,to_address,amount,
 		asset_name,trx_hash,
 		contract_type,confirmed,create_time
-		from tron.contract_transfer
+		from contract_transfer
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意

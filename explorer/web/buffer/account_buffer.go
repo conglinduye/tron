@@ -57,7 +57,7 @@ func (w *accountTokenBuffer) GetAccountTokenBuffer(address string) (tokenBalance
 func (w *accountTokenBuffer) getAccountTokenBuffer() {
 	strSQL := fmt.Sprintf(`
 	select acc.address,acc.asset_name as token_name,acc.creator_address,acc.balance
-	from tron.account_asset_balance acc
+	from account_asset_balance acc
 	where 1=1 `)
 	log.Info(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)

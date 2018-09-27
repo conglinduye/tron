@@ -41,7 +41,7 @@ type TokenInfo struct {
 	VoteScore				int64 				`json:"voteScore"`				// voteScore
 	Description				string 				`json:"description"`			// asset_desc
 	Url 					string				`json:"url"`					// url
-	Frozen				    []TokenFrozenInfo	`json:"frozen"`					// frozen
+	Frozen				    []*TokenFrozenInfo	`json:"frozen"`					// frozen
 	Abbr					string 				`json:"abbr"`					// asset_abbr
 	Participated			int64				`json:"participated"`			// 已筹集资金
 
@@ -167,4 +167,8 @@ type AssetBlacklist struct {
 }
 
 
+type TokenFrozenSupply struct {
+	FrozenDays 				int64			`json:"frozen_days"`				// frozen_days
+	FrozenAmount  			int64			`json:"frozen_amount"`				// frozen_amount
+}
 
