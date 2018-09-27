@@ -647,7 +647,7 @@ CREATE TABLE `tron_account` (
   KEY `idx_tron_account_create_time` (`create_time`),
   KEY `idx_account_name` (`account_name`),
   KEY `idx_account_address` (`address`),
-  KEY `idx_account_type` (`account_type`),
+  KEY `idx_account_type` (`account_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
