@@ -42,6 +42,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 			tokenList, total := hanldeTokenDetail(tokenReq.Owner, tokenReq.Name, tokenList, flag)
 			tokenResp.Total = total
 			tokenResp.Data = tokenList
+			handleTokenListIndex(tokenReq, tokenResp.Data)
 			c.JSON(http.StatusOK, tokenResp)
 			return
 		} else if tokenReq.Name != "" && strings.HasPrefix(tokenReq.Name, "%") && strings.HasSuffix(tokenReq.Name, "%") {
@@ -50,6 +51,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 			tokenList, total := hanldeTokenList4FuzzyQuery(tokenReq.Name, tokenList)
 			tokenResp.Total = total
 			tokenResp.Data = tokenList
+			handleTokenListIndex(tokenReq, tokenResp.Data)
 			c.JSON(http.StatusOK, tokenResp)
 			return
 		} else {
@@ -58,6 +60,7 @@ func tokenRegister(ginRouter *gin.Engine) {
 			tokenList, total := hanldeTokenList4QueryCondition(tokenReq, tokenList)
 			tokenResp.Total = total
 			tokenResp.Data = tokenList
+			handleTokenListIndex(tokenReq, tokenResp.Data)
 			c.JSON(http.StatusOK, tokenResp)
 			return
 		}

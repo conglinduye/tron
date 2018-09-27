@@ -2,12 +2,9 @@ package service
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
-	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
-	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
@@ -44,6 +41,7 @@ func QueryTransferByHashFromBuffer(req *entity.Transfers) (*entity.TransferInfo,
 	return buffer.GetBlockBuffer().GetTransferByHash(req.Hash), nil
 }
 
+/*
 //QueryTransfersByAddress 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
 func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, error) {
 	var resp = &entity.TransfersResp{}
@@ -83,7 +81,7 @@ func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, erro
 
 	return resp, nil
 }
-
+*/
 //QueryTransfers 条件查询  	//?sort=-number&limit=1&count=true&number=2135998
 func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 	var filterSQL, sortSQL, pageSQL, filterTempSQL string
@@ -145,6 +143,63 @@ func QueryTransfers(req *entity.Transfers) (*entity.TransfersResp, error) {
 	}*/
 
 	return module.QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL, true)
+}
+
+//QueryTransfersByAddress  根据地址查询其下所有相关的交易列表
+func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, error) {
+	var filterSQL, sortSQL, pageSQL string
+	mutiFilter := false
+	strSQL := fmt.Sprintf(`
+	select oo.block_id,oo.owner_address,oo.to_address,oo.amount,
+	oo.asset_name,oo.trx_hash,
+	oo.contract_type,oo.confirmed,oo.create_time
+	from
+	(select block_id,owner_address,to_address,amount,
+			asset_name,trx_hash,
+			contract_type,confirmed,create_time
+			from contract_transfer
+			where 1=1 and owner_address='%v'
+	union 
+	select block_id,owner_address,to_address,amount,
+			asset_name,trx_hash,
+			contract_type,confirmed,create_time
+			from contract_transfer
+			where 1=1 and to_address='%v'
+	) oo where 1=1`, req.Address, req.Address)
+
+	for _, v := range strings.Split(req.Sort, ",") {
+		if strings.Index(v, "timestamp") > 0 {
+			if mutiFilter {
+				sortSQL = fmt.Sprintf("%v ,", sortSQL)
+			}
+			sortSQL = fmt.Sprintf("%v create_time", sortSQL)
+			if strings.Index(v, "-") == 0 {
+				sortSQL = fmt.Sprintf("%v desc", sortSQL)
+			}
+			mutiFilter = true
+		}
+
+		if strings.Index(v, "number") > 0 {
+			if mutiFilter {
+				sortSQL = fmt.Sprintf("%v ,", sortSQL)
+			}
+			sortSQL = fmt.Sprintf("%v block_id", sortSQL)
+			if strings.Index(v, "-") == 0 {
+				sortSQL = fmt.Sprintf("%v desc", sortSQL)
+			}
+			mutiFilter = true
+		}
+	}
+	if sortSQL != "" {
+		if strings.Index(sortSQL, ",") == 0 {
+			sortSQL = sortSQL[1:]
+		}
+		sortSQL = fmt.Sprintf("order by %v", sortSQL)
+	}
+
+	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
+
+	return module.QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, "", true)
 }
 
 //QueryTransfer 精确查询  	//number=2135998   TODO: cache
