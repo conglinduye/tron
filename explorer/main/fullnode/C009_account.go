@@ -27,7 +27,7 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 		addrs = addrs[len(addrs)-getAccountWorkerLimit:]
 	}
 
-	client := grpcclient.GetRandomSolidity()
+	client := grpcclient.GetRandomWallet()
 	defer func() {
 		if nil != client {
 			client.Close()
@@ -53,7 +53,7 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 			restAddr = append(restAddr, addr)
 			if errCnt >= maxErrCnt {
 				client.Close()
-				client = grpcclient.GetRandomSolidity()
+				client = grpcclient.GetRandomWallet()
 				errCnt = 0
 			}
 			continue
