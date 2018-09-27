@@ -158,11 +158,11 @@ func (w *witnessBuffer) loadStatistic() { //QueryWitnessStatistic()
 	select acc.address, acc.account_name,witt.url
 		   ,ifnull(blocks.blockproduce,0) as blockproduce , 
 		   ifnull(blocks.blockproduce,0)/%v as blockRate
-    from  tron.tron_account acc
-    left join tron.witness witt on witt.address=acc.address 
+    from  tron_account acc
+    left join witness witt on witt.address=acc.address 
     left join (
 	    select witness_address,count(block_id) as blockproduce
-        from tron.blocks blk
+        from blocks blk
         where 1=1 and blk.create_time>%v 
         group by witness_address
     ) blocks on blocks.witness_address=acc.address

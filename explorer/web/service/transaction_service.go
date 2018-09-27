@@ -87,11 +87,11 @@ func QueryTransactionsByAddress(req *entity.Transactions) (*entity.TransactionsR
 	strSQL := fmt.Sprintf(`
 	select oo.block_id,oo.owner_address,oo.to_address,oo.contract_type,oo.trx_hash,oo.create_time from (
 	SELECT block_id,owner_address,to_address,contract_type,trx_hash,create_time 
-	FROM tron.contract_transfer 
+	FROM contract_transfer 
 	where to_address='%v' 
 	union 
 	SELECT block_id,owner_address,to_address,contract_type,trx_hash,create_time 
-	FROM tron.transactions 
+	FROM transactions 
 	where owner_address='%v') oo
 	where 1=1 `, req.Address, req.Address)
 
@@ -139,7 +139,7 @@ func QueryTransactions(req *entity.Transactions) (*entity.TransactionsResp, erro
 			select block_id,owner_address,to_address,
 			trx_hash,contract_data,result_data,fee,
 			contract_type,confirmed,create_time,expire_time
-			from tron.transactions
+			from transactions
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -199,7 +199,7 @@ func QueryTransaction(req *entity.Transactions) (*entity.TransactionInfo, error)
 		select block_id,owner_address,to_address,
 		trx_hash,contract_data,result_data,fee,
 		contract_type,confirmed,create_time,expire_time
-		from tron.transactions
+		from transactions
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意

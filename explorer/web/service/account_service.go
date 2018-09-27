@@ -24,14 +24,14 @@ func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 		   select account_name,acc.address,acc.balance as totalBalance,
 		   frozen,create_time,latest_operation_time,votes ,
 	       ass.asset_name as token_name,ass.creator_address,ass.balance
-	       from tron.tron_account acc
-	       left join tron.account_asset_balance ass on ass.address=acc.address
+	       from tron_account acc
+	       left join account_asset_balance ass on ass.address=acc.address
 		   where 1=1 `)
 	*/
 	strSQL := fmt.Sprintf(`
 		   select account_name,address,balance as totalBalance,
 		   frozen,create_time,latest_operation_time,votes
-	       from tron.tron_account acc
+	       from tron_account acc
 		   where 1=1 `)
 	//按传入条件拼接sql，很容易错误，需要注意
 	if req.Address != "" {
@@ -104,7 +104,7 @@ func QueryAccounts(req *entity.Accounts) (*entity.AccountsResp, error) {
 
 	//查询该语句所查到的数据集合
 	var total = int64(len(accountInfos))
-	total, err = mysql.QueryTableDataCount("tron.tron_account")
+	total, err = mysql.QueryTableDataCount("tron_account")
 	if err != nil {
 		log.Errorf("query view count error:[%v], SQL:[%v]", err, strSQL)
 	}
@@ -123,10 +123,10 @@ func QueryAccount(req *entity.Accounts) (*entity.AccountDetail, error) {
 		wit.url,wit.is_job,acc.allowance,acc.latest_withdraw_time,acc.is_witness,
 		acc.free_net_used,acc.free_net_limit,acc.net_used,acc.net_limit,acc.asset_net_used,acc.asset_net_limit,
         ass.asset_name as token_name,ass.creator_address,ass.balance,asset.owner_address
-    from tron.tron_account acc
-	left join tron.account_asset_balance ass on ass.address=acc.address
-	left join tron.asset_issue asset on asset.asset_name=ass.asset_name
-    left join tron.witness wit on wit.address=acc.address
+    from tron_account acc
+	left join account_asset_balance ass on ass.address=acc.address
+	left join asset_issue asset on asset.asset_name=ass.asset_name
+    left join witness wit on wit.address=acc.address
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -141,7 +141,7 @@ func QueryAccountMedia(req *entity.Accounts) (*entity.AccountMediaInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
 	select address,url
-	from tron.wlcy_witness_create_info
+	from wlcy_witness_create_info
 	where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -178,7 +178,7 @@ func UpdateAccountSr(req *entity.SuperAccountInfo, token string) (*entity.SuperA
 func QueryAccountSr(req *entity.SuperAccountInfo) (*entity.SuperAccountInfo, error) {
 	var filterSQL string
 	strSQL := fmt.Sprintf(`
-		select address,github_link as url from tron.wlcy_sr_account
+		select address,github_link as url from wlcy_sr_account
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -200,12 +200,12 @@ func QueryAccountStats(address string) (*entity.AccountTransactionNum, error) {
 func QueryAccountStatsOld(address string) (*entity.AccountTransactionNum, error) {
 	strSQL := fmt.Sprintf(`
 	select ifnull(outT.trxOut,0) as trxOut,ifnull(inTrx.trxIn,0) as trxIn
-	from tron.contract_transfer trf
+	from contract_transfer trf
 	left join (
-		select owner_address, count(1) as trxOut from tron.contract_transfer trf where owner_address='%v'
+		select owner_address, count(1) as trxOut from contract_transfer trf where owner_address='%v'
 	) outT on outT.owner_address=trf.owner_address
 	left join (
-		select to_address, count(1) as trxIn from tron.contract_transfer trf where to_address='%v'
+		select to_address, count(1) as trxIn from contract_transfer trf where to_address='%v'
 	) inTrx on inTrx.to_address=trf.to_address
 	 where 1=1 and (trf.owner_address='%v' or trf.to_address='%v')
 	 limit 0,1`, address, address, address, address)

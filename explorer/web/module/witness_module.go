@@ -50,7 +50,7 @@ func QueryTotalBlocks(curTime int64) (int64, error) {
 	var totalBlock = int64(0)
 	strSQL := fmt.Sprintf(`
     select ifnull(count(block_id),0) as totalBlock
-    from tron.blocks blk
+    from blocks blk
 	where 1=1 and blk.create_time>=%v `, curTime)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
@@ -98,5 +98,3 @@ func QueryWitnessStatisticRealize(strSQL string, totalBlocks int64) ([]*entity.W
 	return witnessInfos, nil
 
 }
-
-

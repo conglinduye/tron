@@ -51,7 +51,7 @@ func (b *blockBuffer) sweepTrxHash() {
 }
 
 func (b *blockBuffer) loadTransactionCountFromDB() {
-	strSQL := fmt.Sprintf(`select count(1) as totalNum from tron.transactions`)
+	strSQL := fmt.Sprintf(`select count(1) as totalNum from transactions`)
 	log.Debug(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -73,7 +73,7 @@ func (b *blockBuffer) loadTransactionCountFromDB() {
 }
 
 func (b *blockBuffer) loadTransferCountFromDB() {
-	strSQL := fmt.Sprintf(`select count(1) as totalNum from tron.contract_transfer`)
+	strSQL := fmt.Sprintf(`select count(1) as totalNum from contract_transfer`)
 	log.Debug(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
@@ -99,7 +99,7 @@ func (b *blockBuffer) loadTransactionFromDBFilter(filter string) []*entity.Trans
 	select block_id,owner_address,to_address,
 	trx_hash,contract_data,result_data,fee,
 	contract_type,confirmed,create_time,expire_time
-	from tron.transactions
+	from transactions
 	where 1=1 `)
 
 	order := " order by block_id desc "
@@ -297,7 +297,7 @@ func (b *blockBuffer) loadTransactionFromDB(filter string, order string, limit s
 			select block_id,owner_address,to_address,
 			trx_hash,contract_data,result_data,fee,
 			contract_type,confirmed,create_time,expire_time
-			from tron.transactions
+			from transactions
 			where 1=1 `)
 
 	if len(order) == 0 {

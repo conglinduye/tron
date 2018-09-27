@@ -130,11 +130,11 @@ func QueryTransfersRealize(strSQL, filterSQL, sortSQL, pageSQL, filterTempSQL st
 }
 func querySQLCount(address string) (int64, error) {
 	strFullSQL := fmt.Sprintf(`select count(1) as total
-	from tron.contract_transfer
+	from contract_transfer
 	   where 1=1   and owner_address='%v' 
     union
     select count(1) as total
-	  from tron.contract_transfer
+	  from contract_transfer
 	where 1=1   and  to_address='%v'
     `, address, address)
 	log.Sql(strFullSQL)
@@ -195,7 +195,7 @@ func QueryTransferRealize(strSQL, filterSQL string) (*entity.TransferInfo, error
 
 //QueryTrxOutByAddress 查询该地址的转出数
 func QueryTrxOutByAddress(address string) int64 {
-	strSQL := fmt.Sprintf(`select owner_address, count(1) as trxOut from tron.contract_transfer trf where owner_address='%v'`, address)
+	strSQL := fmt.Sprintf(`select owner_address, count(1) as trxOut from contract_transfer trf where owner_address='%v'`, address)
 	log.Sql(strSQL)
 	trxOut := int64(0)
 	dataPtr, err := mysql.QueryTableData(strSQL)
@@ -212,7 +212,7 @@ func QueryTrxOutByAddress(address string) int64 {
 
 //QueryTrxInByAddress 查询改地址的转入数
 func QueryTrxInByAddress(address string) int64 {
-	strSQL := fmt.Sprintf(`select to_address, count(1) as trxIn from tron.contract_transfer trf where to_address='%v'`, address)
+	strSQL := fmt.Sprintf(`select to_address, count(1) as trxIn from contract_transfer trf where to_address='%v'`, address)
 	log.Sql(strSQL)
 	trxIn := int64(0)
 	dataPtr, err := mysql.QueryTableData(strSQL)

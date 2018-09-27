@@ -52,7 +52,7 @@ func QueryBlocks(req *entity.Blocks) (*entity.BlocksResp, error) {
 			select block_id,block_hash,block_size,create_time,
 			transaction_num,
 			tx_trie_hash,parent_hash,witness_address,confirmed
-			from tron.blocks
+			from blocks
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意
@@ -95,7 +95,7 @@ func QueryBlock(req *entity.Blocks) (*entity.BlockInfo, error) {
 			select block_id,block_hash,block_size,create_time,
 			transaction_num,
 			tx_trie_hash,parent_hash,witness_address,confirmed
-			from tron.blocks
+			from blocks
 			where 1=1 `)
 
 	//按传入条件拼接sql，很容易错误，需要注意

@@ -10,6 +10,9 @@ package main
 
 import (
 	"flag"
+	"strings"
+
+	"github.com/wlcy/tron/explorer/core/utils"
 
 	"github.com/wlcy/tron/explorer/lib/config"
 	"github.com/wlcy/tron/explorer/lib/log"
@@ -29,6 +32,9 @@ func main() {
 
 	//初始化db redis
 	config.LoadConfig(*configfile)
+	if strings.ToUpper(config.NetType) == "TESTNET" {
+		utils.TestNet = true
+	}
 
 	//获取服务启动参数或其他参数
 	var conf config.ConfigServer
@@ -43,7 +49,6 @@ func main() {
 	*/
 
 	go Async()
-
 
 	router.Start(conf.Address, conf.Objectpool)
 
