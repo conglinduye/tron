@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -244,17 +245,21 @@ func PostTransaction(req *entity.PostTransaction, dryRun string) (*entity.PostTr
 	postData := &entity.PostTransData{}
 	postData.Hash = utils.HexEncode(utils.CalcTransactionHash(transaction))
 	postData.Timestamp = transaction.RawData.Timestamp
-	// contracts := make([]interface{}, 0)
-	// contractNew := &entity.TransContract{}
+	contracts := make([]interface{}, 0)
 	for _, contractOri := range transaction.GetRawData().Contract {
 		if contractOri == nil {
 			continue
 		}
-		// _, transferContract := utils.GetContractInfoStr2(int32(contractOri.Type), contractOri.Parameter.Value)
 		_, transferContract := utils.GetContractInfoStr3(int32(contractOri.Type), contractOri.Parameter.Value)
-		postData.Contracts = transferContract
+		data, _ := json.Marshal(transferContract)
+		tmpMap := make(map[string]interface{}, 0)
+		json.Unmarshal(data, &tmpMap)
+		tmpMap["ContractType"] = contractOri.Type.String()
+		tmpMap["ContractTypeID"] = int32(contractOri.Type)
+		contracts = append(contracts, tmpMap)
+
 	}
-	// postData.Contracts = contracts
+	postData.Contracts = contracts
 	postData.Data = string(transaction.RawData.Data)
 	signs := make([]*entity.Signatures, 0)
 
