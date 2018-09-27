@@ -16,6 +16,10 @@ var _refresgAddrBuffer = make([]interface{}, 0, _bufCap)
 var _refBufLock = sync.Mutex{}
 var _latestPushTS = time.Now()
 
+func setTestNetRedisKey() {
+	RedisSetAccountRefresh = fmt.Sprintf("test_net:%s", RedisSetAccountRefresh)
+}
+
 // AddRefreshAddress ...
 func AddRefreshAddress(addrs ...interface{}) (newLen int, err error) {
 	if 0 == len(addrs) {
