@@ -33,6 +33,8 @@ func Start(address string, objectpool int) {
 
 	//ginRouter.Use(cors.Default())
 
+	ginRouter.POST("/api/login", Login)
+
 	service := http.Server{
 		Addr:           address,
 		Handler:        ginRouter,
