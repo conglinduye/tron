@@ -16,6 +16,7 @@ import (
 	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/lib/redis"
 	"github.com/wlcy/tron/explorer/lib/util"
+	"github.com/wlcy/tron/explorer/web/buffer"
 
 	"github.com/pelletier/go-toml"
 )
@@ -81,6 +82,7 @@ func initRedis(config *toml.Tree) error {
 	log.Debugf("redis init:Addr:%v, Password:%v, Db:%v, PoolSize:%v", redisInfo.Addr, redisInfo.Password, redisInfo.Db, redisInfo.PoolSize)
 	RedisCli = redis.NewClient(redisInfo.Addr, redisInfo.Password, redisInfo.Db, redisInfo.PoolSize)
 
+	buffer.BufferRedisDSN = redisInfo.Addr // init buffer redis server address
 	return nil
 }
 
