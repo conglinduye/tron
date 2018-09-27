@@ -40,7 +40,7 @@ func QueryTokenList(strSQL, filterSQL, sortSQL, pageSQL string) ([]*entity.Token
 		token.StartTime = mysql.ConvertDBValueToInt64(dataPtr.GetField("start_time"))
 		token.VoteScore = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote_score"))
 		token.Description = string(utils.HexDecode(dataPtr.GetField("asset_desc")))
-		token.Url = dataPtr.GetField("utl")
+		token.Url = dataPtr.GetField("url")
 		frozenJson := dataPtr.GetField("frozen_supply")
 		tokenFrozenInfoList := make([]*entity.TokenFrozenInfo, 0)
 		tokenFrozenSupplyList := make([]*entity.TokenFrozenSupply, 0)
