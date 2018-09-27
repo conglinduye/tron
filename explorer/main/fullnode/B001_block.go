@@ -68,6 +68,7 @@ func main() {
 
 	if *gNetType == "test" {
 		utils.TestNet = true
+		setTestNetRedisKey()
 	}
 
 	maxErrCnt = *gMaxErrCntPerNode
