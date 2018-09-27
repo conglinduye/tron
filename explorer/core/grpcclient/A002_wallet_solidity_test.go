@@ -202,3 +202,13 @@ transaction_num: 9
   modified_time: 2018-09-12 03:21:42.449452
 
 */
+
+func TestGetAccount(*testing.T) {
+	utils.TestNet = true
+
+	sw := GetRandomSolidity()
+	addr := "TCaCaa6DhXkaRXu4T2BwCfu14WPyBwx2Ef" // smart contract addr
+	addr = "TAHAyhFkRz37o6mYepBtikrrnCNETEFtW5"  // common addr
+	account, err := sw.GetAccount(addr)
+	fmt.Printf("%v\n%v\n", utils.ToJSONStr(account), err)
+}
