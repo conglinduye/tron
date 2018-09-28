@@ -172,7 +172,7 @@ func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, erro
 			if mutiFilter {
 				sortSQL = fmt.Sprintf("%v ,", sortSQL)
 			}
-			sortSQL = fmt.Sprintf("%v create_time", sortSQL)
+			sortSQL = fmt.Sprintf("%v oo.block_id", sortSQL)
 			if strings.Index(v, "-") == 0 {
 				sortSQL = fmt.Sprintf("%v desc", sortSQL)
 			}
@@ -183,7 +183,7 @@ func QueryTransfersByAddress(req *entity.Transfers) (*entity.TransfersResp, erro
 			if mutiFilter {
 				sortSQL = fmt.Sprintf("%v ,", sortSQL)
 			}
-			sortSQL = fmt.Sprintf("%v block_id", sortSQL)
+			sortSQL = fmt.Sprintf("%v oo.block_id", sortSQL)
 			if strings.Index(v, "-") == 0 {
 				sortSQL = fmt.Sprintf("%v desc", sortSQL)
 			}

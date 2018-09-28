@@ -64,7 +64,7 @@ func QueryBlocks(req *entity.Blocks) (*entity.BlocksResp, error) {
 	}
 	sortTemp = "order by"
 	if strings.Index(req.Order, "timestamp") > 0 {
-		sortTemp = fmt.Sprintf("%v create_time", sortTemp)
+		sortTemp = fmt.Sprintf("%v block_id", sortTemp)
 		if strings.Index(req.Order, "-") == 0 {
 			sortTemp = fmt.Sprintf("%v desc", sortTemp)
 		}
