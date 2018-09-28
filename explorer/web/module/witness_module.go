@@ -46,28 +46,30 @@ func QueryWitnessRealize(strSQL string) ([]*entity.WitnessInfo, error) {
 }
 
 //QueryTotalBlocks 查询总block
-func QueryTotalBlocks(curTime int64) (int64, error) {
+func QueryTotalBlocks(curTime int64) (int64, int64, error) {
 	var totalBlock = int64(0)
+	var minBlockId = int64(0)
 	strSQL := fmt.Sprintf(`
-    select ifnull(count(block_id),0) as totalBlock
+    select ifnull(count(block_id),0) as totalBlock, ifnull(min(block_id),0) as minBlockId
     from blocks blk
 	where 1=1 and blk.create_time>=%v `, curTime)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
 		log.Errorf("QueryTotalBlocks error :[%v]\n", err)
-		return totalBlock, util.NewErrorMsg(util.Error_common_internal_error)
+		return totalBlock, minBlockId, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 	if dataPtr == nil {
 		log.Errorf("QueryTotalBlocks dataPtr is nil ")
-		return totalBlock, util.NewErrorMsg(util.Error_common_internal_error)
+		return totalBlock, minBlockId, util.NewErrorMsg(util.Error_common_internal_error)
 	}
 
 	//填充数据
 	for dataPtr.NextT() {
 		totalBlock = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalBlock"))
+		minBlockId = mysql.ConvertDBValueToInt64(dataPtr.GetField("minBlockId"))
 	}
-	return totalBlock, nil
+	return totalBlock,minBlockId,  nil
 
 }
 

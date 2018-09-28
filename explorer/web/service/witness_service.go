@@ -79,7 +79,7 @@ func QueryWitnessStatistic() ([]*entity.WitnessStatisticInfo, error) {
 		log.Error(err)
 		return make([]*entity.WitnessStatisticInfo, 0), err
 	}
-	totalBlocks, err := module.QueryTotalBlocks(curMaintenanceTime)
+	totalBlocks, _, err := module.QueryTotalBlocks(curMaintenanceTime)
 	if err != nil {
 		log.Error(err)
 		return make([]*entity.WitnessStatisticInfo, 0), err

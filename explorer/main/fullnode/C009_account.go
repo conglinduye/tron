@@ -27,7 +27,7 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 		addrs = addrs[len(addrs)-getAccountWorkerLimit:]
 	}
 
-	client := grpcclient.GetRandomSolidity()
+	client := grpcclient.GetRandomWallet()
 	defer func() {
 		if nil != client {
 			client.Close()
@@ -53,7 +53,7 @@ func getAccount(addrs []string) ([]*account, []string, error) {
 			restAddr = append(restAddr, addr)
 			if errCnt >= maxErrCnt {
 				client.Close()
-				client = grpcclient.GetRandomSolidity()
+				client = grpcclient.GetRandomWallet()
 				errCnt = 0
 			}
 			continue
@@ -330,10 +330,10 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 			frozen, allowance, latest_withdraw_time, latest_consume_time, latest_consume_free_time, votes,
 			net_usage, free_net_used,
 			free_net_limit, net_used, net_limit, total_net_limit, total_net_weight, asset_net_used, asset_net_limit
-			) values 
+			, account_type) values 
 		(?, ?, ?, ?, ?, ?, ?,
 			?, ?, ?, ?, ?, ?, ?, ?,
-			?, ?, ?, ?, ?, ?, ?)`
+			?, ?, ?, ?, ?, ?, ?, ?)`
 	stmtI, err := txn.Prepare(sqlI)
 	if nil != err {
 		fmt.Printf("prepare insert tron_account SQL failed:%v\n", err)
@@ -344,7 +344,8 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 	sqlU := `update tron_account set account_name = ?, balance = ?, latest_operation_time = ?, is_witness = ?, asset_issue_name = ?,
 		frozen = ?, allowance = ?, latest_withdraw_time = ?, latest_consume_time = ?, latest_consume_free_time = ?, votes = ?, net_usage = ?,
 		free_net_used = ?, free_net_limit = ?, net_used = ?, net_limit = ?, total_net_limit = ?, total_net_weight = ?, asset_net_used = ?, asset_net_limit = ?
-		where address = ?`
+		, account_type = ? 
+		where address = ? and latest_operation_time <= ?`
 	stmtU, err := txn.Prepare(sqlU)
 	if nil != err {
 		fmt.Printf("prepare update tron_account SQL failed:%v\n", err)
@@ -396,7 +397,8 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 			acc.totalNetLimit,
 			acc.totalNetWeight,
 			acc.AssetNetUsed,
-			acc.AssetNetLimit)
+			acc.AssetNetLimit,
+			acc.raw.Type)
 
 		if err != nil {
 			// fmt.Printf("insert into account failed:%v-->[%v]\n", err, acc.Addr)
@@ -422,7 +424,9 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 				acc.totalNetWeight,
 				acc.AssetNetUsed,
 				acc.AssetNetLimit,
-				acc.Addr)
+				acc.raw.Type,
+				acc.Addr,
+				acc.raw.LatestOprationTime)
 
 			if err != nil {
 				errCnt++

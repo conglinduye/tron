@@ -100,7 +100,7 @@ func QueryTransactionsByAddress(req *entity.Transactions) (*entity.TransactionsR
 			if mutiFilter {
 				sortSQL = fmt.Sprintf("%v ,", sortSQL)
 			}
-			sortSQL = fmt.Sprintf("%v create_time", sortSQL)
+			sortSQL = fmt.Sprintf("%v oo.block_id", sortSQL)
 			if strings.Index(v, "-") == 0 {
 				sortSQL = fmt.Sprintf("%v desc", sortSQL)
 			}
@@ -111,7 +111,7 @@ func QueryTransactionsByAddress(req *entity.Transactions) (*entity.TransactionsR
 			if mutiFilter {
 				sortSQL = fmt.Sprintf("%v ,", sortSQL)
 			}
-			sortSQL = fmt.Sprintf("%v block_id", sortSQL)
+			sortSQL = fmt.Sprintf("%v oo.block_id", sortSQL)
 			if strings.Index(v, "-") == 0 {
 				sortSQL = fmt.Sprintf("%v desc", sortSQL)
 			}
@@ -227,6 +227,7 @@ func PostTransaction(req *entity.PostTransaction, dryRun string) (*entity.PostTr
 		log.Errorf("pb unmarshal err:[%v];hexData:[%v]", err, tranHexData)
 		return postResult, err
 	}
+	log.Printf("transaction:[%#v]", proto.MarshalTextString(transaction))
 	if dryRun != "1" {
 		//向主网发布广播
 		result, err := GetWalletClient().BroadcastTransaction(transaction)
@@ -245,21 +246,18 @@ func PostTransaction(req *entity.PostTransaction, dryRun string) (*entity.PostTr
 	postData.Hash = utils.HexEncode(utils.CalcTransactionHash(transaction))
 	postData.Timestamp = transaction.RawData.Timestamp
 	contracts := make([]interface{}, 0)
-	contractNew := &entity.TransContract{}
 	for _, contractOri := range transaction.GetRawData().Contract {
 		if contractOri == nil {
 			continue
 		}
-		_, transferContract := utils.GetContractInfoStr2(1, contractOri.Parameter.Value)
-		if err := json.Unmarshal([]byte(transferContract), contractNew); err != nil {
-			log.Errorf("json unmarshal err:[%v];hexData:[%v]", err, transferContract)
-			contracts = append(contracts, transferContract)
-			//return postResult, err
-		} else {
-			contractNew.ContractType = "TransferContract"
-			contractNew.ContractTypeID = 1
-			contracts = append(contracts, contractNew)
-		}
+		_, transferContract := utils.GetContractInfoStr3(int32(contractOri.Type), contractOri.Parameter.Value)
+		data, _ := json.Marshal(transferContract)
+		tmpMap := make(map[string]interface{}, 0)
+		json.Unmarshal(data, &tmpMap)
+		tmpMap["contractType"] = contractOri.Type.String()
+		tmpMap["contractTypeID"] = int32(contractOri.Type)
+		contracts = append(contracts, tmpMap)
+
 	}
 	postData.Contracts = contracts
 	postData.Data = string(transaction.RawData.Data)

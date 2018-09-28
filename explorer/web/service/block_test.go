@@ -11,7 +11,7 @@ import (
 )
 
 func Init() {
-	mysql.Initialize("127.0.0.1", "3306", "tron", "budev", "tron**1")
+	//mysql.InitializeReader("127.0.0.1", "3306", "tron", "budev", "tron**1")
 	/*	blockBuffer := module.GetBlockBuffer()
 		go blockBuffer.BackgroundWorker()*/
 }

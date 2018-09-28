@@ -621,6 +621,7 @@ DROP TABLE IF EXISTS `tron_account`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tron_account` (
   `account_name` varchar(300) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'Account name',
+  `account_type` integer not null default '0' comment 'account type, 0 for common account, 2 for contract account',
   `address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Base 58 encoding address',
   `balance` bigint(20) NOT NULL DEFAULT '0' COMMENT 'TRX balance, in sun',
   `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户创建时间',
@@ -645,7 +646,8 @@ CREATE TABLE `tron_account` (
   PRIMARY KEY (`address`),
   KEY `idx_tron_account_create_time` (`create_time`),
   KEY `idx_account_name` (`account_name`),
-  KEY `idx_account_address` (`address`)
+  KEY `idx_account_address` (`address`),
+  KEY `idx_account_type` (`account_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
