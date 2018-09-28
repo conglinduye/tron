@@ -138,10 +138,13 @@ func (b *blockBuffer) GetBlock(blockID int64) (block *entity.BlockInfo) {
 	return nil
 }
 
+var BufferRedisDSN = "oline-tronscan-redis.jw6c3k.ng.0001.use2.cache.amazonaws.com:6379"
+
 // GetBlockBuffer ...
 func GetBlockBuffer() Buffer {
 	_onceBlockBuffer.Do(func() {
-		initRedis([]string{"oline-tronscan-redis.jw6c3k.ng.0001.use2.cache.amazonaws.com:6379"})
+		log.Infof("buffer redis server:%v", BufferRedisDSN)
+		initRedis([]string{BufferRedisDSN})
 
 		_blockBuffer = &blockBuffer{}
 

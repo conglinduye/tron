@@ -254,8 +254,8 @@ func PostTransaction(req *entity.PostTransaction, dryRun string) (*entity.PostTr
 		data, _ := json.Marshal(transferContract)
 		tmpMap := make(map[string]interface{}, 0)
 		json.Unmarshal(data, &tmpMap)
-		tmpMap["ContractType"] = contractOri.Type.String()
-		tmpMap["ContractTypeID"] = int32(contractOri.Type)
+		tmpMap["contractType"] = contractOri.Type.String()
+		tmpMap["contractTypeID"] = int32(contractOri.Type)
 		contracts = append(contracts, tmpMap)
 
 	}
