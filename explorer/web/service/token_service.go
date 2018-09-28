@@ -197,7 +197,7 @@ func QueryAssetTransfer(req *entity.AssetTransferReq) (*entity.AssetTransferResp
 		filterSQL = fmt.Sprintf(" and asset_name='%v' ", req.Token)
 	}
 
-	sortSQL = fmt.Sprintf("order by create_time desc ")
+	sortSQL = fmt.Sprintf("order by block_id desc ")
 
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 
