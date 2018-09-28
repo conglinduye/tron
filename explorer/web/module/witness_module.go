@@ -50,7 +50,7 @@ func QueryTotalBlocks(curTime int64) (int64, int64, error) {
 	var totalBlock = int64(0)
 	var minBlockId = int64(0)
 	strSQL := fmt.Sprintf(`
-    select ifnull(count(block_id),0) as totalBlock, min(block_id) as minBlockId
+    select ifnull(count(block_id),0) as totalBlock, ifnull(min(block_id),0) as minBlockId
     from blocks blk
 	where 1=1 and blk.create_time>=%v `, curTime)
 	log.Sql(strSQL)
