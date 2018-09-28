@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
 func jsonPrint(val interface{}) {
@@ -22,6 +23,10 @@ func VerifyCall(val interface{}, err error) {
 // ToJSONStr ...
 func ToJSONStr(val interface{}) string {
 	if nil == val {
+		return ""
+	}
+	real := reflect.ValueOf(val)
+	if real.Kind() == reflect.Ptr && !real.Elem().IsValid() {
 		return ""
 	}
 	data, err := json.Marshal(val)
