@@ -260,7 +260,7 @@ func UpdateLogoInfo(address, url string) error {
 	update wlcy_asset_logo
 	set logo_url='%v' where address='%v'`,
 		url, address)
-	_, _, err := mysql.ExecuteSQLCommand(strSQL, true)
+	_, _, err := mysql.ExecuteSQLCommand(strSQL, false)
 	if err != nil {
 		log.Errorf("update logoInfo result fail:[%v]  sql:%s", err, strSQL)
 		return err

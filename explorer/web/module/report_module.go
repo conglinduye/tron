@@ -170,7 +170,7 @@ func InsertStatistics(overview *entity.ReportOverview) error {
 		values(%v, %v, %v, %v, %v, %v, %v, %v, %v, %v)`,
 		overview.Date, overview.AvgBlockTime, overview.AvgBlockSize, overview.NewBlockSeen, overview.NewTransactionSeen,
 		overview.NewAddressSeen, overview.TotalBlockCount, overview.TotalTransaction, overview.TotalAddress, overview.BlockchainSize)
-	insID, _, err := mysql.ExecuteSQLCommand(strSQL, true)
+	insID, _, err := mysql.ExecuteSQLCommand(strSQL, false)
 	if err != nil {
 		log.Errorf("insert logo url fail:[%v]  sql:%s", err, strSQL)
 		return err
