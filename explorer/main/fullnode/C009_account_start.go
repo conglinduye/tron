@@ -52,7 +52,9 @@ func syncAccount() {
 	accList, restAddr, _ := getAccount(list)
 	fmt.Printf("### total account syncrhonzed:%-10v, bad address:%-10v, cost:%v, synchronize to db .....\n", len(accList), len(restAddr), time.Since(ts))
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		wc3.startOne()
 		ts1 := time.Now()
 		blukStoreAccount(accList)
