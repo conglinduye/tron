@@ -31,7 +31,7 @@ func startAccountDaemon() {
 		}
 
 		syncAccount()
-		fmt.Printf("Account Daemon QUIT")
+		fmt.Printf("Account Daemon QUIT\n")
 	}()
 
 }

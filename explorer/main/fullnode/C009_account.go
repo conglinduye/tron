@@ -308,32 +308,51 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 		return false
 	}
 	/*
-		CREATE TABLE `account` (
-		  `account_name` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Account name',
-		  `address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Base 58 encoding address',
-		  `balance` bigint(20) NOT NULL DEFAULT '0' COMMENT 'TRX balance, in sun',
-		  `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户创建时间',
-		  `latest_operation_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户最后操作时间',
-		  `is_witness` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否为wintness; 0: 不是，1:是',
-		  `asset_issue_name` varchar(100) NOT NULL DEFAULT '' COMMENT '发行代币名称',
-		  `allowance` bigint(20) DEFAULT '0',
-		  `latest_withdraw_time` bigint(20) DEFAULT '0',
-		  `latest_consum_time` bigint(20) DEFAULT '0',
-		  `latest_consume_free_time` bigint(20) DEFAULT '0',
-		  `frozen` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '冻结金额, 投票权',
-		  `votes` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT '',
-		  PRIMARY KEY (`address`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		CREATE TABLE `tron_account` (
+			`account_name` varchar(300) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'Account name',
+			`account_type` integer not null default '0' comment 'account type, 0 for common account, 2 for contract account',
+			`address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Base 58 encoding address',
+			`balance` bigint(20) NOT NULL DEFAULT '0' COMMENT 'TRX balance, in sun',
+			`create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户创建时间',
+			`latest_operation_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户最后操作时间',
+			`asset_issue_name` varchar(100) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+			`is_witness` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否为wintness; 0: 不是，1:是',
+			`allowance` bigint(20) NOT NULL DEFAULT '0',
+			`latest_withdraw_time` bigint(20) NOT NULL DEFAULT '0',
+			`latest_consume_time` bigint(20) NOT NULL DEFAULT '0',
+			`latest_consume_free_time` bigint(20) NOT NULL DEFAULT '0',
+			`frozen` text COLLATE utf8mb4_bin NOT NULL COMMENT '冻结信息',
+			`votes` text COLLATE utf8mb4_bin NOT NULL,
+			`free_net_used` bigint(20) NOT NULL DEFAULT '0',
+			`free_net_limit` bigint(20) NOT NULL DEFAULT '0',
+			`net_usage` bigint(20) NOT NULL DEFAULT '0' COMMENT 'bandwidth, get from frozen',
+			`net_used` bigint(20) NOT NULL DEFAULT '0',
+			`net_limit` bigint(20) NOT NULL DEFAULT '0',
+			`total_net_limit` bigint(20) NOT NULL DEFAULT '0',
+			`total_net_weight` bigint(20) NOT NULL DEFAULT '0',
+			`asset_net_used` text COLLATE utf8mb4_bin NOT NULL,
+			`asset_net_limit` text COLLATE utf8mb4_bin NOT NULL,
+			`frozen_supply` text COLLATE utf8mb4_bin not NULL,
+			`is_committee` tinyint not null default '0',
+			`latest_asset_operation_time` text COLLATE utf8mb4_bin not null,
+			`account_resource` text COLLATE utf8mb4_bin not null,
+			PRIMARY KEY (`address`),
+			KEY `idx_tron_account_create_time` (`create_time`),
+			KEY `idx_account_name` (`account_name`),
+			KEY `idx_account_address` (`address`),
+			KEY `idx_account_type` (`account_type`)
+		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 	*/
 	sqlI := `insert into tron_account 
 		(account_name, address, balance, create_time, latest_operation_time, is_witness, asset_issue_name,
 			frozen, allowance, latest_withdraw_time, latest_consume_time, latest_consume_free_time, votes,
 			net_usage, free_net_used,
 			free_net_limit, net_used, net_limit, total_net_limit, total_net_weight, asset_net_used, asset_net_limit
-			, account_type) values 
+			, account_type, frozen_supply, is_committee, latest_asset_operation_time, account_resource) values 
 		(?, ?, ?, ?, ?, ?, ?,
 			?, ?, ?, ?, ?, ?, ?, ?,
-			?, ?, ?, ?, ?, ?, ?, ?)`
+			?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?)`
 	stmtI, err := txn.Prepare(sqlI)
 	if nil != err {
 		fmt.Printf("prepare insert tron_account SQL failed:%v\n", err)
@@ -344,7 +363,7 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 	sqlU := `update tron_account set account_name = ?, balance = ?, latest_operation_time = ?, is_witness = ?, asset_issue_name = ?,
 		frozen = ?, allowance = ?, latest_withdraw_time = ?, latest_consume_time = ?, latest_consume_free_time = ?, votes = ?, net_usage = ?,
 		free_net_used = ?, free_net_limit = ?, net_used = ?, net_limit = ?, total_net_limit = ?, total_net_weight = ?, asset_net_used = ?, asset_net_limit = ?
-		, account_type = ? 
+		, account_type = ?, frozen_supply = ?, is_committee = ?, latest_asset_operation_time = ?, account_resource = ? 
 		where address = ? and latest_operation_time <= ?`
 	stmtU, err := txn.Prepare(sqlU)
 	if nil != err {
@@ -398,7 +417,11 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 			acc.totalNetWeight,
 			acc.AssetNetUsed,
 			acc.AssetNetLimit,
-			acc.raw.Type)
+			acc.raw.Type,
+			utils.ToJSONStr(acc.raw.FrozenSupply),
+			acc.raw.IsCommittee,
+			utils.ToJSONStr(acc.raw.LatestAssetOperationTime),
+			utils.ToJSONStr(acc.raw.AccountResource))
 
 		if err != nil {
 			// fmt.Printf("insert into account failed:%v-->[%v]\n", err, acc.Addr)
@@ -425,6 +448,10 @@ func storeAccount(accountList []*account, dbb *sql.DB) bool {
 				acc.AssetNetUsed,
 				acc.AssetNetLimit,
 				acc.raw.Type,
+				utils.ToJSONStr(acc.raw.FrozenSupply),
+				acc.raw.IsCommittee,
+				utils.ToJSONStr(acc.raw.LatestAssetOperationTime),
+				utils.ToJSONStr(acc.raw.AccountResource),
 				acc.Addr,
 				acc.raw.LatestOprationTime)
 

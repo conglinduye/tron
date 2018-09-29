@@ -957,6 +957,7 @@ func storeTriggerSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 		  `contract_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '',
 		  `call_value` bigint(20) NOT NULL DEFAULT '0',
 		  `call_data` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '',
+		  `result` text utf8mb4_unicode_ci not null comment 'transaction result',
 		  PRIMARY KEY (`trx_hash`,`block_id`),
 		  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time` DESC)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -965,10 +966,10 @@ func storeTriggerSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 	/**/
 	_, err = txn.Exec(`insert into contract_trigger_smart
 		(trx_hash, block_id, contract_type, create_time, expire_time, confirmed, 
-			owner_address, contract_address, call_value, call_data)
+			owner_address, contract_address, call_value, call_data, result)
 		values 
 		(?, ?, ?, ?, ?, ?,
-			 ?, ?, ?, ?)`,
+			 ?, ?, ?, ?, ?)`,
 		trxHash,
 		int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])),
 		trx.RawData.Contract[0].Type,
@@ -978,7 +979,8 @@ func storeTriggerSmartContract(txn *sql.Tx, confirmed int, trxHash string, trx *
 		utils.Base58EncodeAddr(ctx.OwnerAddress),
 		utils.Base58EncodeAddr(ctx.ContractAddress),
 		ctx.CallValue,
-		utils.HexEncode(ctx.Data))
+		utils.HexEncode(ctx.Data),
+		utils.ToJSONStr(trx.Ret))
 	if nil != err {
 		fmt.Printf("insert contract(%T) trx_hash:[%v], blockID:[%v] failed:%v\n", ctx, trxHash, int64(utils.BinaryBigEndianDecodeUint64(trx.Signature[1])), err)
 	}

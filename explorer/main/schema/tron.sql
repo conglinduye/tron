@@ -367,6 +367,7 @@ CREATE TABLE `contract_trigger_smart` (
   `contract_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `call_value` bigint(20) NOT NULL DEFAULT '0',
   `call_data` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `result` text COLLATE utf8mb4_bin NOT NULL COMMENT 'transaction result, include fee and result code, []Ret in json format',
   PRIMARY KEY (`trx_hash`,`block_id`),
   KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -641,8 +642,12 @@ CREATE TABLE `tron_account` (
   `net_limit` bigint(20) NOT NULL DEFAULT '0',
   `total_net_limit` bigint(20) NOT NULL DEFAULT '0',
   `total_net_weight` bigint(20) NOT NULL DEFAULT '0',
-  `asset_net_used` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `asset_net_limit` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `asset_net_used` text COLLATE utf8mb4_bin NOT NULL,
+  `asset_net_limit` text COLLATE utf8mb4_bin NOT NULL,
+  `frozen_supply` text COLLATE utf8mb4_bin not NULL,
+  `is_committee` tinyint not null default '0',
+  `latest_asset_operation_time` text COLLATE utf8mb4_bin not null,
+  `account_resource` text COLLATE utf8mb4_bin not null
   PRIMARY KEY (`address`),
   KEY `idx_tron_account_create_time` (`create_time`),
   KEY `idx_account_name` (`account_name`),
