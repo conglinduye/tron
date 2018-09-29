@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"fmt"
 	"github.com/wlcy/tron/explorer/web/errno"
-	"api-server-jugg/handler"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/wlcy/tron/explorer/web/handler"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
