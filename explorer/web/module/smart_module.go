@@ -58,6 +58,7 @@ func QueryContractsRealize(strSQL, filterSQL, sortSQL, pageSQL string, needTotal
 	contractsResp.Total = total
 	status.Code = util.OK
 	status.Message = util.Success
+	contractsResp.Status = status
 	contractsResp.Data = contractListInfos
 
 	return contractsResp, nil
@@ -97,6 +98,7 @@ func QueryContractsByAddressRealize(strSQL, filterSQL, sortSQL, pageSQL string, 
 	}
 	status.Code = util.OK
 	status.Message = util.Success
+	contractsResp.Status = status
 	contractsResp.Data = contractInfos
 
 	return contractsResp, nil
@@ -147,6 +149,7 @@ func QueryContractTnxRealize(strSQL, filterSQL, sortSQL, pageSQL string, needTot
 	contractsResp.Total = total
 	status.Code = util.OK
 	status.Message = util.Success
+	contractsResp.Status = status
 	contractsResp.Data = contractInfos
 
 	return contractsResp, nil
@@ -196,6 +199,7 @@ func QueryContractsCodeRealize(strSQL, filterSQL, sortSQL, pageSQL string, needT
 
 	status.Code = util.OK
 	status.Message = util.Success
+	contractsResp.Status = status
 	contractsResp.Data = contractCodeInfo
 
 	return contractsResp, nil

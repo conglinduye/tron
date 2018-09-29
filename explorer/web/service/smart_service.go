@@ -18,10 +18,10 @@ func QueryContracts(req *entity.Contracts) (*entity.ContractsResp, error) {
 	select acc.address,sm.contract_name,sm.compiler_version,
 	sm.is_optimized,-- source_code,byte_code,abi,abi_encoded,contract_library,
 	sm.verify_time,acc.balance,trxCount.trxNum
-	from tron_test_net.tron_account acc
-	left join tron_test_net.wlcy_smart_contract sm on acc.address=sm.address 
+	from tron_account acc
+	left join wlcy_smart_contract sm on acc.address=sm.address 
 	left join (
-		select contract_address,count(1) as trxNum from tron_test_net.contract_trigger_smart group by contract_address
+		select contract_address,count(1) as trxNum from contract_trigger_smart group by contract_address
 	) trxCount on trxCount.contract_address=acc.address
 	where 1=1 and acc.account_type=2 `)
 
@@ -33,16 +33,17 @@ func QueryContractByAddress(req *entity.Contracts) (*entity.ContractBaseResp, er
 	filterSQL, sortSQL, pageSQL := parsingSQL(req)
 
 	strSQL := fmt.Sprintf(`
-			select sm.address,contract_name,compiler_version,
-			is_optimized,verify_time,ta.balance,trxCount.trxNum,
+			select distinct acc.address,contract_name,compiler_version,
+			is_optimized,verify_time,acc.balance,trxCount.trxNum,
 			cr.owner_address,cr.trx_hash,cr.name
-			from tron_account ta 
-			left join wlcy_smart_contract sm on ta.address=sm.address 
-			left join contract_create_smart cr on cr.contract_address=sm.address
+			from tron_account acc 
+			left join wlcy_smart_contract sm on acc.address=sm.address 
+			left join contract_trigger_smart ts on ts.contract_address=acc.address
+			left join contract_create_smart cr on cr.owner_address=ts.owner_address
 			left join (
 				select contract_address,count(1) as trxNum from contract_trigger_smart group by contract_address
-			) trxCount on trxCount.contract_address=sm.address
-			where 1=1 and ta.account_type=2 `)
+			) trxCount on trxCount.contract_address=acc.address
+			where 1=1 and acc.account_type=2 `)
 
 	return module.QueryContractsByAddressRealize(strSQL, filterSQL, sortSQL, pageSQL, true)
 }
@@ -66,10 +67,10 @@ func QueryContractsCode(req *entity.Contracts) (*entity.ContractCodeResp, error)
 	filterSQL, sortSQL, pageSQL := parsingSQL(req)
 
 	strSQL := fmt.Sprintf(`
-			select sm.address,sm.contract_name,sm.compiler_version,
-			sm.is_optimized,sm.verify_time,sm.source_code,sm.byte_code,sm.abi,
-			sm.abi_encoded,sm.contract_library
-			from wlcy_smart_contract sm
+			select acc.address,acc.contract_name,acc.compiler_version,
+			acc.is_optimized,acc.verify_time,acc.source_code,acc.byte_code,acc.abi,
+			acc.abi_encoded,acc.contract_library
+			from wlcy_smart_contract acc
 			where 1=1 `)
 
 	return module.QueryContractsCodeRealize(strSQL, filterSQL, sortSQL, pageSQL, true)
@@ -98,14 +99,14 @@ func parsingSQL(req *entity.Contracts) (string, string, string) {
 	mutiFilter := false
 	//按传入条件拼接sql，很容易错误，需要注意
 	if req.Address != "" {
-		filterSQL = fmt.Sprintf(" %v and sm.address='%v'", filterSQL, req.Address)
+		filterSQL = fmt.Sprintf(" %v and acc.address='%v'", filterSQL, req.Address)
 	}
-	if req.Type == "internal" {
+	/*if req.Type == "internal" {
 		filterSQL = fmt.Sprintf(" %v and sm.contract_type='%v'", filterSQL, 31) //TODO
 	}
 	if req.Type == "token" {
 		filterSQL = fmt.Sprintf(" %v and sm.contract_type='%v'", filterSQL, 30) //TODO
-	}
+	}*/
 	for _, v := range strings.Split(req.Sort, ",") {
 		if strings.Index(v, "timestamp") > 0 {
 			if mutiFilter {

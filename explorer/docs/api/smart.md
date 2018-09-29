@@ -195,7 +195,7 @@ output:json
 合约详情页-【Events】页     
 返回合约详情页的event信息
 
-## 查询智能合约内部交易
+## 查询智能合约内部交易-TODO
 - url:/api/contracts/internalTxs
 - method:get
 

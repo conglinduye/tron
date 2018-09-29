@@ -20,7 +20,7 @@ func Init() {
 		params[mysql.DBPort] = "3306"
 		params[mysql.DBSchema] = "tron_test_net"
 		params[mysql.DBName] = "budev"
-		params[mysql.DBPass] = "budev**1"
+		params[mysql.DBPass] = "tron**1"
 		dbParams[db] = params
 		log.Debugf("read database init:db:[%v],param:[%v]", db, params)
 	}
