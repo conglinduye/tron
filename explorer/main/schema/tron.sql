@@ -147,7 +147,7 @@ CREATE TABLE `contract_account_update` (
   `owner_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发起方地址',
   `account_name` varchar(300) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'account_name',
   PRIMARY KEY (`trx_hash`,`block_id`),
-  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time`)
+  KEY `idx_ctx_acc_update_hash_create_time` (`block_id`,`trx_hash`,`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 /*!50100 PARTITION BY HASH (`block_id`)
 PARTITIONS 100 */;
@@ -210,8 +210,8 @@ CREATE TABLE `contract_asset_transfer` (
   `amount` bigint(20) NOT NULL DEFAULT '0' COMMENT '转账金额。单位sun',
   `asset_name` varchar(200) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   PRIMARY KEY (`trx_hash`,`block_id`),
-  KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time`),
-  KEY `idx_asset_name` (`asset_name`)
+  KEY `idx_trx_ctx_asset_create_time` (`block_id`,`trx_hash`,`create_time`),
+  KEY `idx_ctx_asset_name` (`asset_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 /*!50100 PARTITION BY HASH (`block_id`)
 PARTITIONS 100 */;
@@ -647,7 +647,7 @@ CREATE TABLE `tron_account` (
   `frozen_supply` text COLLATE utf8mb4_bin not NULL,
   `is_committee` tinyint not null default '0',
   `latest_asset_operation_time` text COLLATE utf8mb4_bin not null,
-  `account_resource` text COLLATE utf8mb4_bin not null
+  `account_resource` text COLLATE utf8mb4_bin not null,
   PRIMARY KEY (`address`),
   KEY `idx_tron_account_create_time` (`create_time`),
   KEY `idx_account_name` (`account_name`),
