@@ -13,6 +13,11 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 )
 
+const (
+	OK      = 0
+	Success = "SUCCESS"
+)
+
 // SendRequest 发送请求
 func SendRequest(urlStr, method, queryParam string, postData io.Reader) (buffer *bytes.Buffer, err error) {
 

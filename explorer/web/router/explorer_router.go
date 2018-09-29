@@ -28,6 +28,8 @@ func Start(address string, objectpool int) {
 	tokenRegister(ginRouter)
 	// 注册统计查询路由
 	reportRegister(ginRouter)
+	// 注册智能合约查询路由
+	smartRegister(ginRouter)
 	// 注册其他查询路由
 	otherRegister(ginRouter)
 

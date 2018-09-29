@@ -27,6 +27,7 @@ var DBPort = "port"     //端口
 var DBSchema = "schema" //db schema
 var DBName = "user"     //用户名
 var DBPass = "password" //密码
+
 //数据库配置集合  map[primary]map[host]"localhost"
 var mysqlMain map[string]map[string]string
 var mysqlRad []string
@@ -54,11 +55,11 @@ var dbInstance *TronDB
 		return false
 	}
 
-	dbHost = strings.TrimSpace(host)
-	dbPort = strings.TrimSpace(port)
-	dbSchema = strings.TrimSpace(schema)
-	dbName = strings.TrimSpace(user)
-	dbPass = strings.TrimSpace(passwd)
+	Host = strings.TrimSpace(host)
+	Port = strings.TrimSpace(port)
+	Schema = strings.TrimSpace(schema)
+	Name = strings.TrimSpace(user)
+	Pass = strings.TrimSpace(passwd)
 	return true
 }*/
 
@@ -86,7 +87,7 @@ func GetDatabase() (*TronDB, error) {
 /*func GetMysqlConnectionInfo() DBParam {
 	dbConfig := DBParam{
 		Mode:         string("mysql"),
-		ConnSQL:      fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", dbName, dbPass, dbHost, dbPort, dbSchema),
+		ConnSQL:      fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8", Name, Pass, Host, Port, Schema),
 		MaxOpenconns: 10,
 		MaxIdleConns: 10,
 	}
