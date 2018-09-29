@@ -367,6 +367,7 @@ CREATE TABLE `contract_trigger_smart` (
   `contract_address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `call_value` bigint(20) NOT NULL DEFAULT '0',
   `call_data` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `result` text COLLATE utf8mb4_bin NOT NULL COMMENT 'transaction result, include fee and result code, []Ret in json format',
   PRIMARY KEY (`trx_hash`,`block_id`),
   KEY `idx_trx_transfe_hash_create_time` (`block_id`,`trx_hash`,`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
