@@ -311,7 +311,7 @@ func filterIcoTokenExpire(tokenList []*entity.TokenInfo) []*entity.TokenInfo {
 // filterAssetBlacklist
 func filterAssetBlacklist(tokenList []*entity.TokenInfo) []*entity.TokenInfo{
 	newTokenInfoList := make([]*entity.TokenInfo, 0)
-	assetBlacklists, err := module.QueryAssetBlacklist()
+	assetBlacklists, err := module.QueryAllAssetBlacklist()
 	if err != nil {
 		log.Errorf("QueryAssetBlacklist err:[%v]", err)
 	}
@@ -322,7 +322,7 @@ func filterAssetBlacklist(tokenList []*entity.TokenInfo) []*entity.TokenInfo{
 	for _, token := range tokenList {
 		flag := false
 		for _, assetBlacklist := range assetBlacklists {
-			if assetBlacklist.OwnerAddress == token.OwnerAddress && assetBlacklist.AssetName == token.Name {
+			if assetBlacklist.OwnerAddress == token.OwnerAddress && assetBlacklist.TokenName == token.Name {
 				flag = true
 				break
 			}
