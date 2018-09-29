@@ -26,7 +26,14 @@ func ToJSONStr(val interface{}) string {
 		return ""
 	}
 	real := reflect.ValueOf(val)
+	if real.IsNil() {
+		return ""
+	}
 	if real.Kind() == reflect.Ptr && !real.Elem().IsValid() {
+		return ""
+	}
+	if (real.Kind() == reflect.Slice || real.Kind() == reflect.Array || real.Kind() == reflect.Map) && real.IsNil() {
+		fmt.Printf("list:%#v\n", real)
 		return ""
 	}
 	data, err := json.Marshal(val)
