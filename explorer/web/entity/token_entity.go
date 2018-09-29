@@ -1,6 +1,5 @@
 package entity
 
-
 //Token		查询token的请求参数
 type Token struct {
 	Start  					string 				`json:"start,omitempty"`  		// 记录的起始序号
@@ -160,12 +159,6 @@ type AssetTransfer struct {
 	TokenName				string 				`json:"tokenName"`				// tokenName
 	Confirmed				bool				`json:"confirmed"`				// confirmed
 }
-
-type AssetBlacklist struct {
-	OwnerAddress     		string 				`json:"ownerAddress"`    		// ownerAddress
-	AssetName				string 				`json:"assetName"`				// assetName
-}
-
 
 type TokenFrozenSupply struct {
 	FrozenDays 				int64			`json:"frozen_days"`				// frozen_days

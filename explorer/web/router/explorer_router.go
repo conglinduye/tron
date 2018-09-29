@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/web/router/middleware"
 )
 
 //Start  启动服务
@@ -34,6 +35,15 @@ func Start(address string, objectpool int) {
 	//ginRouter.Use(cors.Default())
 
 	ginRouter.POST("/api/login", Login)
+
+	tokenBlacklist := ginRouter.Group("/api/tokenBlacklist")
+	// 授权处理
+	tokenBlacklist.Use(middleware.AuthMiddleware())
+	{
+		tokenBlacklist.POST("/add", AddTokenBlackList)
+		tokenBlacklist.DELETE("/delete/:id", DeleteTokenBlackList)
+		tokenBlacklist.GET("/list", QueryTokenBlackList)
+	}
 
 	service := http.Server{
 		Addr:           address,

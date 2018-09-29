@@ -12,7 +12,7 @@ import (
 func GetApiUser(username string) (*entity.ApiUsers, error) {
 	strSQL := fmt.Sprintf(`
 		select id, username, password
-		from wlcy_api_users where username=%v`, username)
+		from wlcy_api_users where username='%v'`, username)
 	log.Sql(strSQL)
 	dataPtr, err := mysql.QueryTableData(strSQL)
 	if err != nil {
