@@ -11,7 +11,7 @@ import (
 )
 
 var bulkFetchLimit = int64(100)
-var maxErrCnt = 60
+var maxErrCnt = 10
 
 var wc1 *workerCounter
 
