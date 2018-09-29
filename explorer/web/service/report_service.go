@@ -191,26 +191,7 @@ func SyncPersistYesterdayReport() {
 		}
 	}
 
-	historyOverviewValue, err := config.RedisCli.Get(HistoryOverviewKey).Result()
-	if err == redis.Nil {
-		SyncCacheHistoryReport()
-		historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
-	} else if err != nil {
-		log.Errorf("SyncPersistYesterdayReport historyOverviewValue redis get value error :[%v]\n", err)
-		return
-	}
-	if historyOverviewValue == "" {
-		SyncCacheHistoryReport()
-		historyOverviewValue, _ = config.RedisCli.Get(HistoryOverviewKey).Result()
-	}
-	reportOverviewList := make([]*entity.ReportOverview, 0)
-	json.Unmarshal([]byte(historyOverviewValue), &reportOverviewList)
-	reportOverviewList = append(reportOverviewList, reportOverview)
-	value, _ := json.Marshal(reportOverviewList)
-	err = config.RedisCli.Set(HistoryOverviewKey, string(value), 0).Err()
-	if err != nil {
-		log.Errorf("SyncPersistYesterdayReport redis set err:[%v]", err)
-	}
+	SyncCacheHistoryReport()
 
 	log.Info("SyncPersistYesterdayReport handle done")
 
