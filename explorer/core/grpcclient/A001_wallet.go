@@ -51,12 +51,17 @@ func (w *Wallet) Connect() (err error) {
 
 // GetAccount 获取账户信息
 func (w *Wallet) GetAccount(addr string) (*core.Account, error) {
-	return w.GetAccountRawAddr(utils.Base58DecodeAddr(addr))
+	return w.GetAccountRawAddr(utils.Base58DecodeAddr(addr), 0)
 }
 
 // GetAccountRawAddr 获取账户信息
-func (w *Wallet) GetAccountRawAddr(addr []byte) (*core.Account, error) {
-	ctx, cancel := getTimeoutContext(defaultTimeout)
+func (w *Wallet) GetAccountRawAddr(addr []byte, timeoutSecond time.Duration) (*core.Account, error) {
+	if timeoutSecond > 0 {
+		timeoutSecond = timeoutSecond * time.Second
+	} else {
+		timeoutSecond = defaultTimeout
+	}
+	ctx, cancel := getTimeoutContext(timeoutSecond)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 
@@ -117,12 +122,17 @@ func (w *Wallet) GetAssetIssueByAccount(addr string) ([]*core.AssetIssueContract
 
 // GetAccountNet ...
 func (w *Wallet) GetAccountNet(addr string) (*api.AccountNetMessage, error) {
-	return w.GetAccountNetRawAddr(utils.Base58DecodeAddr(addr))
+	return w.GetAccountNetRawAddr(utils.Base58DecodeAddr(addr), 0)
 }
 
 // GetAccountNetRawAddr ...
-func (w *Wallet) GetAccountNetRawAddr(addr []byte) (*api.AccountNetMessage, error) {
-	ctx, cancel := getTimeoutContext(defaultTimeout)
+func (w *Wallet) GetAccountNetRawAddr(addr []byte, timeoutSecond time.Duration) (*api.AccountNetMessage, error) {
+	if timeoutSecond > 0 {
+		timeoutSecond = timeoutSecond * time.Second
+	} else {
+		timeoutSecond = defaultTimeout
+	}
+	ctx, cancel := getTimeoutContext(timeoutSecond)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 
