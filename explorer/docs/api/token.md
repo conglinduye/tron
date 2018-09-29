@@ -221,7 +221,6 @@ input:param
 ```param
 
 eg:
-/api/asset/transfer
 http://18.216.57.65:20110/api/asset/transfer?start=0&limit=20&name=VIP
 ```
 ouput:json
