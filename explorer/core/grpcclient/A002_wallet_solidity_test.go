@@ -204,11 +204,26 @@ transaction_num: 9
 */
 
 func TestGetAccount(*testing.T) {
-	utils.TestNet = true
+	// utils.TestNet = true
 
 	sw := GetRandomSolidity()
 	addr := "TCaCaa6DhXkaRXu4T2BwCfu14WPyBwx2Ef" // smart contract addr
 	addr = "TAHAyhFkRz37o6mYepBtikrrnCNETEFtW5"  // common addr
+	addr = "TNTYHpa71hW9y2i55FovHYwt2MmPdD76nt"
+	addr = "TYmns3F1Je57RLCC8rGSRHCuhM4XKEseEU"
+	addr = "TA2XgvKJXHvoFC25TTfTVmfsYp5sriDrY3"
+	addr = "TQw7CVALENBqCP3uZuo1KxiTnvCqGnoeod"
 	account, err := sw.GetAccount(addr)
 	fmt.Printf("%v\n%v\n", utils.ToJSONStr(account), err)
 }
+
+func TestGetAssetIssue(*testing.T) {
+	sw := GetRandomWallet()
+
+	ctx, err := sw.GetAssetIssueByName("ZZZZZB")
+
+	fmt.Printf("%v\n%v\n", utils.ToJSONStr(ctx), err)
+}
+
+// 1536737988000
+// 1538033451000

@@ -70,3 +70,9 @@ func TestX(*testing.T) {
 
 	fmt.Println(formatContractJSONStr(a))
 }
+
+func TestJSONNil(*testing.T) {
+	acc := new(core.Account)
+	fmt.Printf("%v\n", ToJSONStr(acc.FrozenSupply))
+	fmt.Printf("%v\n", ToJSONStr(acc.LatestAssetOperationTime))
+}

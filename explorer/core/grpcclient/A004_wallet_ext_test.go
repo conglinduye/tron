@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
-	"github.com/tronprotocol/grpc-gateway/api"
 	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/utils"
 
@@ -27,14 +25,16 @@ func TestWalletExt(*testing.T) {
 	fmt.Println(client.GetState(), client.Target())
 
 	addr := "TGo9Me13BSagSHXmKZDbZrLaFW9PXYYs3T"
+	addr = "TDPgbSpKrLnaBMF79QUg3aigsG1tsWoxLJ"
 
-	trans, _ := client.GetTransactionsFromThis(addr, 0, 10)
+	// trans, _ := client.GetTransactionsFromThis2(addr, 0, 100)
+	trans, _ := client.GetTransactionsToThisi2(addr, 0, 100)
 	// utils.VerifyCall(client.GetTransactionsToThis(addr, 0, 100))
 
-	a := api.TransactionList{Transaction: trans}
-	utils.VerifyCall(proto.Marshal(&a))
+	// a := api.TransactionList{Transaction: trans}
+	utils.VerifyCall(trans, nil)
 
-	serializeTransactionToDB(addr, 0, trans)
+	// serializeTransactionToDB(addr, 0, trans)
 
 }
 
@@ -95,4 +95,9 @@ func getMysqlDB() *sql.DB {
 		return nil
 	}
 	return db
+}
+
+func TestDecode(*testing.T) {
+	txid := "3aZ9A3QMD/Tk6WFFA81ZZwcOTJAI5KMKXpQeNkZzw3g="
+	fmt.Println(utils.HexEncode(utils.Base64Decode(txid)))
 }

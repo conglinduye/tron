@@ -14,7 +14,7 @@ import (
 	"github.com/wlcy/tron/explorer/core/utils"
 )
 
-var gIntMaxWorker = flag.Int("worker", 10, "maximum worker for fetch blocks")
+var gIntMaxWorker = flag.Int("worker", 60, "maximum worker for fetch blocks")
 var gStrMysqlDSN = flag.String("dsn", "tron:tron@tcp(172.16.21.224:3306)/tron", "mysql connection string(DSN)")
 var gInt64MaxWorkload = flag.Int64("workload", 10000, "maximum workload for each worker")
 var gStartBlokcID = flag.Int64("start_block", 0, "block num start to synchronize")
@@ -22,7 +22,7 @@ var gEndBlokcID = flag.Int64("end_block", 0, "block num end to synchronize, defa
 var gRedisDSN = flag.String("redisDSN", "127.0.0.1:6379", "redis DSN")
 var gMaxErrCntPerNode = flag.Int("max_err_per_node", 10, "max error before we try to other node")
 var gMaxAccountWorkload = flag.Int("max_account_workload", 200, "max account a node need handle not fork new worker")
-var gIntHandleAccountInterval = flag.Int("account_handle_interval", 30, "account info synchronize handle minmum interval in seconds")
+var gIntHandleAccountInterval = flag.Int("account_handle_interval", 3, "account info synchronize handle minmum interval in seconds")
 var gMaxTrxDB = flag.Int("trxdb_oper_cnt", 8, "the block/transaction db operation routine limit at the same time")
 var gNetType = flag.String("net", "main", "connect to main net or test net, default main net")
 

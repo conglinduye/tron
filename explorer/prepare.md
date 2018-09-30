@@ -93,6 +93,20 @@
     cd $GOPATH/src/github.com/tronprotocol/grpc-gateway/core
     go build
     ```
+6. DB init
+    tron  主网数据库       
+    tron_test_net 测试网数据库      
+    二者表结构大体相同，表结构文件：main/schema/tron.sql          
+    local DB data init:
+    ```shell
+    cd main/fullnode
+    go build
+    nohup ./fullnode -net main -start_block 2500000 -dsn "budev:tron**1@tcp(127.0.0.1:3306)/tron" > sync-main.log 2>&1 &
+    nohup ./fullnode -net test -dsn "budev:tron**1@tcp(127.0.0.1:3306)/tron_test_net" > sync.log 2>&1 &
+    ```
+    + -dsn 本地数据库连接信息
+    + make sure redis-server started at 6379
+
 
 ## 2. explorerService
 1.  安装gin环境

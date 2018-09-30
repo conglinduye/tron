@@ -71,7 +71,7 @@ func storeTransactionsInner(trans []*core.Transaction) bool {
 			tran.RawData.RefBlockNum = blockID                          // set it back as store contract need this value
 			trxRetData := []byte{}
 			if len(tran.Ret) > 0 {
-				trxRetData, _ = proto.Marshal(tran.Ret[0])
+				trxRetData = []byte(utils.ToJSONStr(tran.Ret))
 			}
 			toAddr, _ := utils.GetContractInfoStr(tran.RawData.Contract[0])
 			_, err = stmt.Exec(

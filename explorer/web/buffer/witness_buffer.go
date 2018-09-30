@@ -143,7 +143,7 @@ func (w *witnessBuffer) loadStatistic() { //QueryWitnessStatistic()
 		log.Error(err)
 		return
 	}
-	totalBlocks, err := module.QueryTotalBlocks(curMaintenanceTime)
+	totalBlocks, minBlockId, err := module.QueryTotalBlocks(curMaintenanceTime)
 	if err != nil {
 		log.Error(err)
 		return
@@ -155,18 +155,18 @@ func (w *witnessBuffer) loadStatistic() { //QueryWitnessStatistic()
 		blocks = totalBlocks
 	}
 	strSQL := fmt.Sprintf(`
-	select acc.address, acc.account_name,witt.url
-		   ,ifnull(blocks.blockproduce,0) as blockproduce , 
-		   ifnull(blocks.blockproduce,0)/%v as blockRate
-    from  tron_account acc
-    left join witness witt on witt.address=acc.address 
-    left join (
-	    select witness_address,count(block_id) as blockproduce
-        from blocks blk
-        where 1=1 and blk.create_time>%v 
-        group by witness_address
-    ) blocks on blocks.witness_address=acc.address
-    where 1=1 and acc.is_witness=1`, blocks, curMaintenanceTime)
+	SELECT	
+		acc.address, acc.account_name, wit.url, ifnull(blk.blockproduce,0) as blockproduce,
+    	ifnull(blk.blockproduce,0)/%v as blockRate
+	FROM
+    	(SELECT 
+        	witness_address, COUNT(1) AS blockproduce
+		FROM
+        	blocks
+    	WHERE block_id >= %v
+    GROUP BY witness_address) blk
+	LEFT JOIN witness wit ON wit.address = blk.witness_address
+	LEFT JOIN tron_account acc ON acc.address = blk.witness_address`, blocks, minBlockId)
 
 	statistic, err := module.QueryWitnessStatisticRealize(strSQL, totalBlocks)
 	if err != nil {

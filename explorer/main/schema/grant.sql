@@ -37,6 +37,7 @@ grant select on tron.wlcy_statistics to `tron`@`%`;
 grant select on tron.wlcy_trx_request to `tron`@`%`;                         
 grant select on tron.wlcy_witness_create_info to `tron`@`%`;
 grant select on tron.wlcy_asset_blacklist to `tron`@`%`;
+grant select on tron.wlcy_api_users to `tron`@`%`;
 
 
 
@@ -50,4 +51,6 @@ grant insert, update, delete on tron.wlcy_statistics to `tron`@`%`;
 grant insert, update, delete on tron.wlcy_trx_request to `tron`@`%`;                         
 grant insert, update, delete on tron.wlcy_witness_create_info to `tron`@`%`;
 grant insert, update, delete on tron.wlcy_asset_blacklist to `tron`@`%`;
+grant insert, update, delete on tron.wlcy_api_users to `tron`@`%`;
+
 

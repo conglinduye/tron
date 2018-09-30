@@ -174,3 +174,24 @@ func ExecuteSQLCommands(sqls []string) error {
 
 	return dbPtr.TransactionDB(sqls)
 }
+
+// ExecuteDeleteSQLCommand 执行delete语句
+func ExecuteDeleteSQLCommand(strSQL string) (int64, int64, error) {
+	var key int64
+	var rows int64
+	var err error
+	var dbPtr *TronDB
+
+	//获取数据库对象
+	if dbPtr, err = GetWriteDatabase(); err != nil {
+		return 0, 0, util.NewError(util.Error_common_db_not_connected, util.GetErrorMsgSleek(util.Error_common_db_not_connected))
+	}
+
+	//执行语句
+	if key, rows, err = dbPtr.Delete(strSQL); err != nil {
+		log.Errorf("execute [%s] error [%s] ", strSQL, err)
+		return key, rows, util.NewError(util.Error_common_internal_error, util.GetErrorMsgSleek(util.Error_common_internal_error)) //返回一个逻辑错误
+	}
+
+	return key, rows, err
+}

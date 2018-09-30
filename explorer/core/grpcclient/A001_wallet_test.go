@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/utils"
 )
 
@@ -54,4 +55,25 @@ func TestWallet(*testing.T) {
 	// utils.VerifyCall(client.ListWitnesses())
 	// utils.VerifyCall(client.ListProposals())
 	// utils.VerifyCall(client.GetPaginatedAssetIssueList())
+}
+
+func TestJ(*testing.T) {
+	var w *Wallet
+
+	fmt.Printf("[%v]\n", utils.ToJSONStr(w))
+	fmt.Printf("[%v]\n", utils.ToJSONStr(int64(0)))
+
+}
+
+func TestGenTrx(*testing.T) {
+	trx := new(core.Transaction)
+
+	trx.RawData = new(core.TransactionRaw)
+
+	tran := new(core.TransferContract)
+	tran.OwnerAddress = utils.Base58DecodeAddr("TMLQYUXX6R3tMyEG2CNkjWigLgLxNQ5Uj2")
+	tran.ToAddress = utils.Base58DecodeAddr("TDPgbSpKrLnaBMF79QUg3aigsG1tsWoxLJ")
+	tran.Amount = 1230 // sun
+	trx.RawData.Timestamp = 888888888
+	trx.RawData.Expiration = time.Now().Unix() * 1000
 }
