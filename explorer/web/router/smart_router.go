@@ -74,7 +74,7 @@ func smartRegister(ginRouter *gin.Engine) {
 	})
 
 	//  查询智能合约event信息
-	/*ginRouter.GET("/api/contracts/event", func(c *gin.Context) {
+	ginRouter.GET("/api/contracts/event", func(c *gin.Context) {
 		req := &entity.Contracts{}
 		req.Address = c.Query("contract")
 		log.Debugf("Hello /api/contracts/event?%#v", req)
@@ -86,7 +86,7 @@ func smartRegister(ginRouter *gin.Engine) {
 		c.JSON(http.StatusOK, resp)
 	})
 	// 查询智能合约内部交易
-	ginRouter.GET("/api/contracts/internalTxs", func(c *gin.Context) {
+	/*ginRouter.GET("/api/contracts/internalTxs", func(c *gin.Context) {
 		req := &entity.Contracts{}
 		req.Sort = c.Query("sort")
 		req.Limit = mysql.ConvertStringToInt64(c.Query("limit"), 40)

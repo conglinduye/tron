@@ -94,6 +94,13 @@ func VerifyContractCode(req *entity.ContractCodeInfo) (*entity.State, error) {
 
 }
 
+//QueryContractEvent 获取mongodb的数据
+func QueryContractEvent(req *entity.ContractCodeInfo) (*entity.ContractEventResp, error) {
+
+	return nil, nil
+
+}
+
 func parsingSQL(req *entity.Contracts) (string, string, string) {
 	var filterSQL, sortSQL, pageSQL string
 	mutiFilter := false
