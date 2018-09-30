@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/wlcy/tron/explorer/lib/log"
+	"github.com/wlcy/tron/explorer/lib/mongo"
+
 	"github.com/wlcy/tron/explorer/lib/util"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
@@ -95,9 +99,37 @@ func VerifyContractCode(req *entity.ContractCodeInfo) (*entity.State, error) {
 }
 
 //QueryContractEvent 获取mongodb的数据
-func QueryContractEvent(req *entity.ContractCodeInfo) (*entity.ContractEventResp, error) {
+func QueryContractEvent(req *entity.Contracts) (*entity.EventLogResp, error) {
+	eventLogs := &entity.EventLogResp{}
+	events := make([]*entity.EventLog, 0)
+	eventLogs.Status = &entity.State{Code: 0, Message: "success"}
+	result, err := mongo.GetMongodbInstance().GetMultiRecordWithSort("EventLogCenter", "eventLog", bson.M{"contract_address": req.Address}, bson.M{}, req.Sort)
+	if err != nil || result == nil {
+		eventLogs.Status = &entity.State{Code: 20200, Message: "mongodb query err"}
+		log.Errorf("query mongodb err:[%v]", err)
+		return eventLogs, err
+	}
+	event := make(map[string]*entity.EventLog, 0)
 
-	return nil, nil
+	bsonBytes, err := bson.Marshal(result)
+	if err != nil {
+		eventLogs.Status = &entity.State{Code: 20201, Message: "mongodb query result bson marshal err"}
+		log.Errorf("mongodb query result bson marshal err:[%v]", err)
+		return eventLogs, err
+	}
+	err = bson.Unmarshal(bsonBytes, &event)
+	if err != nil {
+		eventLogs.Status = &entity.State{Code: 20203, Message: "mongodb query result bson Unmarshal to struct err"}
+		log.Errorf("mongodb query result bson Unmarshal to struct err:[%v]", err)
+		return eventLogs, err
+	}
+	for _, eventLog := range event {
+		if eventLog != nil {
+			events = append(events, eventLog)
+		}
+	}
+	eventLogs.Data = events
+	return eventLogs, err
 
 }
 

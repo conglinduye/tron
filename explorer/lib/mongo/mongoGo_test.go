@@ -10,11 +10,13 @@ import (
 
 type eventLog struct {
 	ID              bson.ObjectId `json:"_id,omitempty" bson:"_id,omitempty"`
-	BlockNum        string        `json:"block_number,omitempty" bson:"block_number,omitempty"`
+	BlockNum        int64         `json:"block_number,omitempty" bson:"block_number,omitempty"`
 	BlockTimestamp  int64         `json:"block_timestamp,omitempty" bson:"block_timestamp,omitempty"`
 	ContractAddress string        `json:"contract_address,omitempty" bson:"contract_address,omitempty"`
 	EventName       string        `json:"event_name,omitempty" bson:"event_name,omitempty"`
-	Result          []string      `json:"result,omitempty" bson:"result,omitempty"`
+	Raw             interface{}   `json:"raw,omitempty" bson:"raw,omitempty"`
+	Class           string        `json:"_class,omitempty" bson:"_class,omitempty"`
+	Result          interface{}   `json:"result,omitempty" bson:"result,omitempty"`
 	TransactionID   string        `json:"transaction_id,omitempty" bson:"transaction_id,omitempty"`
 }
 
@@ -29,5 +31,18 @@ func TestMongo(t *testing.T) {
 		log.Printf("total json:%v\n", ss)
 		log.Printf("total:%v", event)
 	}
+
+}
+
+func TestMongoSort(t *testing.T) {
+	Initialize("47.90.203.178", "18890", "EventLogCenter", "root", "root")
+	result, _ := GetMongodbInstance().GetMultiRecordWithSort("EventLogCenter", "eventLog", bson.M{"contract_address": "TKvAo1oYXKhmv5CogMQL5SMc3DTqW27FcD"}, bson.M{}, "-block_timestamp")
+
+	event := make(map[string]*eventLog, 0)
+	bsonBytes, err := bson.Marshal(result)
+	err1 := bson.Unmarshal(bsonBytes, &event)
+	ss, _ := mysql.JSONObjectToString(event)
+
+	log.Printf("total json:%v\n%v\n%v\n", ss, err, err1)
 
 }

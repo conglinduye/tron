@@ -44,7 +44,7 @@
         cd $GOPATH/src/Shopify
         git clone https://github.com/Shopify/sarama.git
         ```
-    5. redis:::`go get github.com/go-redis/redis`
+    5. redis:::`go get github.com/go-redis/redis`   `go get -u gopkg.in/redis.v4`
         ```shell
         
         ```
@@ -60,6 +60,8 @@
         sudu make install
         ```
     8. mongo:::`go get -u gopkg.in/mgo.v2`
+    9. websocket:::`go get -u github.com/gorilla/websocket`
+    10. toml:::`go get -u github.com/pelletier/go-toml`
 
 4. 获取tron接口协议
     1. tron接口定义 (grpc定义: api/api.proto, 数据类型定义: core/*.proto)

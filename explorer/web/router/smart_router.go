@@ -75,7 +75,7 @@ func smartRegister(ginRouter *gin.Engine) {
 
 	//  查询智能合约event信息
 	ginRouter.GET("/api/contracts/event", func(c *gin.Context) {
-		req := &entity.ContractCodeInfo{}
+		req := &entity.Contracts{}
 		req.Address = c.Query("contract")
 		log.Debugf("Hello /api/contracts/event?%#v", req)
 		resp, err := service.QueryContractEvent(req)

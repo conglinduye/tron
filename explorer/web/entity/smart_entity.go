@@ -7,6 +7,7 @@ import (
 
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/mysql"
+	"gopkg.in/mgo.v2/bson"
 )
 
 //Contracts 查询确认后的智能合约列表的请求参数
@@ -185,4 +186,23 @@ type ContractInternalTxsInfo struct {
 	ToAddress    string `json:"toAddress"`    //:"**************",//接收人地址
 	Value        int64  `json:"value"`        //:100,//交易额
 	TxFee        int64  `json:"txFee"`        //:1,//交易费
+}
+
+//EventLogResp eventlog 返回内容
+type EventLogResp struct {
+	Status *State      `json:"status"` // 状态
+	Data   []*EventLog `json:"data"`   // 记录详情
+}
+
+//EventLog eventlog
+type EventLog struct {
+	ID              bson.ObjectId `json:"_id,omitempty" bson:"_id,omitempty"`
+	BlockNum        int64         `json:"block_number,omitempty" bson:"block_number,omitempty"`
+	BlockTimestamp  int64         `json:"block_timestamp,omitempty" bson:"block_timestamp,omitempty"`
+	ContractAddress string        `json:"contract_address,omitempty" bson:"contract_address,omitempty"`
+	EventName       string        `json:"event_name,omitempty" bson:"event_name,omitempty"`
+	Raw             interface{}   `json:"raw,omitempty" bson:"raw,omitempty"`
+	Class           string        `json:"_class,omitempty" bson:"_class,omitempty"`
+	Result          interface{}   `json:"result,omitempty" bson:"result,omitempty"`
+	TransactionID   string        `json:"transaction_id,omitempty" bson:"transaction_id,omitempty"`
 }
