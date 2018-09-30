@@ -326,7 +326,7 @@ output:json
 }
 ```
 
-## 登录获取token信息
+## 登录获取访问api的token信息
 - url:/api/login
 input:param
 ```param
@@ -356,7 +356,7 @@ start=0                                             //起始序号
 &name=tokenName                                     //通证名称
 
 eg: 
-curl -XGET -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyMjMwMzUsImlhdCI6MTUzODIyMTIzNSwiaWQiOjEsIm5iZiI6MTUzODIyMTIzNSwidXNlcm5hbWUiOiJ0cm9uIn0.eemY-FhIM1wCMiRMn7XkzzsV7WKkgekVvYr0U424cBg" -H "Content-Type: application/json" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenBlacklist/list
+curl -XGET -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyMjMwMzUsImlhdCI6MTUzODIyMTIzNSwiaWQiOjEsIm5iZiI6MTUzODIyMTIzNSwidXNlcm5hbWUiOiJ0cm9uIn0.eemY-FhIM1wCMiRMn7XkzzsV7WKkgekVvYr0U424cBg" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenBlacklist/list
 
 ```
 output:json
@@ -454,7 +454,7 @@ input:param
 ```param
 
 eg:
-curl -XPOST -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyMjMwMzUsImlhdCI6MTUzODIyMTIzNSwiaWQiOjEsIm5iZiI6MTUzODIyMTIzNSwidXNlcm5hbWUiOiJ0cm9uIn0.eemY-FhIM1wCMiRMn7XkzzsV7WKkgekVvYr0U424cBg" -H "Content-Type: application/json" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenBlacklist/add -d'{"ownerAddress":"test", "AssetName":"test"}'
+curl -XPOST -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyMjMwMzUsImlhdCI6MTUzODIyMTIzNSwiaWQiOjEsIm5iZiI6MTUzODIyMTIzNSwidXNlcm5hbWUiOiJ0cm9uIn0.eemY-FhIM1wCMiRMn7XkzzsV7WKkgekVvYr0U424cBg" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenBlacklist/add -d'{"ownerAddress":"test", "AssetName":"test"}'
 ```
 output:json
 ```json
@@ -470,9 +470,68 @@ input:param
 
 eg:
 
-curl -XDELETE -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyMjMwMzUsImlhdCI6MTUzODIyMTIzNSwiaWQiOjEsIm5iZiI6MTUzODIyMTIzNSwidXNlcm5hbWUiOiJ0cm9uIn0.eemY-FhIM1wCMiRMn7XkzzsV7WKkgekVvYr0U424cBg" -H "Content-Type: application/json" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenBlacklist/delete/13
+curl -XDELETE -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyMjMwMzUsImlhdCI6MTUzODIyMTIzNSwiaWQiOjEsIm5iZiI6MTUzODIyMTIzNSwidXNlcm5hbWUiOiJ0cm9uIn0.eemY-FhIM1wCMiRMn7XkzzsV7WKkgekVvYr0U424cBg" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenBlacklist/delete/13
 ```
 ouput:json
 ```json
 {"code":0,"message":"OK","data":null}
 ```
+
+## 添加tokenExt信息
+- url:/api/tokenExt/addInfo
+- method:post
+
+input:param
+```param
+
+eg:
+curl -XPOST -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyOTYyMzQsImlhdCI6MTUzODI5NDQzNCwiaWQiOjEsIm5iZiI6MTUzODI5NDQzNCwidXNlcm5hbWUiOiJ0cm9uIn0.nYBlNxYaL8cxGZxTTYEr5uwiODwJj3_8ilFdbjH2V20" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenExt/addInfo -d'{"address":"testAddress", "tokenName":"testTokenName", "tokenId":"111", "brief":"test2", "website":"test3", "whitePaper":"test4", "github":"test5", "country":"test6", "credit":"1", "reddit":"test7", "twitter":"test8", "facebook":"test9", "telegram":"test10", "steam":"test11", "medium":"test12", "webchat":"test13", "weibo":"test14", "review":"1", "status":"1"}'
+```
+ouput:json
+```json
+{"code":0,"message":"OK","data":null}
+```
+
+## 修改tokenExt信息
+- url:/api/tokenExt/updateInfo
+- method:post
+
+input:param
+```param
+
+eg:
+curl -XPOST -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyOTYyMzQsImlhdCI6MTUzODI5NDQzNCwiaWQiOjEsIm5iZiI6MTUzODI5NDQzNCwidXNlcm5hbWUiOiJ0cm9uIn0.nYBlNxYaL8cxGZxTTYEr5uwiODwJj3_8ilFdbjH2V20" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenExt/updateInfo -d'{"address":"testAddress", "tokenName":"000testTokenName", "tokenId":"000111", "brief":"000test2", "website":"000test3", "whitePaper":"000test4", "github":"000test5", "country":"000test6", "credit":"0001", "reddit":"000test7", "twitter":"000test8", "facebook":"000test9", "telegram":"000test10", "steam":"000test11", "medium":"000test12", "webchat":"000test13", "weibo":"000test14", "review":"0", "status":"0"}'
+```
+ouput:json
+```json
+{"code":0,"message":"OK","data":null}
+```
+
+## 添加tokenLogo信息
+- url:/api/tokenExt/addLogo
+- method:post
+
+input:param
+```param
+
+eg:
+curl -XPOST -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyOTYyMzQsImlhdCI6MTUzODI5NDQzNCwiaWQiOjEsIm5iZiI6MTUzODI5NDQzNCwidXNlcm5hbWUiOiJ0cm9uIn0.nYBlNxYaL8cxGZxTTYEr5uwiODwJj3_8ilFdbjH2V20" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenExt/addLogo -d'{"address":"testAddress", "logoUrl":"testurl"}'
+```
+ouput:json
+```json
+{"code":0,"message":"OK","data":null}
+```
+
+## 修改tokenLogo信息
+- url:/api/tokenExt/updateLogo
+- method:post
+
+input:param
+```param
+
+eg:
+curl -XPOST -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MzgyOTYyMzQsImlhdCI6MTUzODI5NDQzNCwiaWQiOjEsIm5iZiI6MTUzODI5NDQzNCwidXNlcm5hbWUiOiJ0cm9uIn0.nYBlNxYaL8cxGZxTTYEr5uwiODwJj3_8ilFdbjH2V20" -H "Content-Type: application/json" https://wlcyapi.tronscan.org/api/tokenExt/updateLogo -d'{"address":"testAddress", "logoUrl":"000testurl"}'
+```
+ouput:json
+```json
+{"code":0,"message":"OK","data":null}
