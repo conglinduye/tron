@@ -404,7 +404,7 @@ func (b *blockBuffer) getRestTrx(minBlockID int64, offset, count, total int64) [
 	}
 	//else { // part in confirmed list ...
 	cTrxBegin := offset - int64(len(b.trxListUnconfirmed))
-	if count > cTrxLen { // part in confirmed list, part in redis
+	if cTrxBegin < int64(len(b.trxList)) && count > cTrxLen { // part in confirmed list, part in redis
 		copy(ret, b.trxList[cTrxBegin:])
 		cList := b.getRestTrxRedis(minCTrxBlockID, offset, cTrxBegin+count-cTrxLen, total)
 		copy(ret[cTrxLen-cTrxBegin:], cList)

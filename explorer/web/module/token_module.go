@@ -260,7 +260,7 @@ func UpdateLogoInfo(address, url string) error {
 	update wlcy_asset_logo
 	set logo_url='%v' where address='%v'`,
 		url, address)
-	_, _, err := mysql.ExecuteSQLCommand(strSQL, true)
+	_, _, err := mysql.ExecuteSQLCommand(strSQL, false)
 	if err != nil {
 		log.Errorf("update logoInfo result fail:[%v]  sql:%s", err, strSQL)
 		return err
@@ -475,29 +475,4 @@ func QueryAssetTransfer(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.Ass
 	assetTransferResp.Data = assetTransferList
 
 	return assetTransferResp, nil
-}
-
-// QueryAssetBlacklist
-func QueryAssetBlacklist() ([]*entity.AssetBlacklist, error) {
-	assetBlackLists := make([]*entity.AssetBlacklist, 0)
-	strSQL := fmt.Sprintf(`select owner_address, asset_name from wlcy_asset_blacklist`)
-	log.Sql(strSQL)
-	dataPtr, err := mysql.QueryTableData(strSQL)
-	if err != nil {
-		log.Errorf("QueryAssetBlacklist error :[%v]", err)
-		return assetBlackLists, util.NewErrorMsg(util.Error_common_internal_error)
-	}
-	if dataPtr == nil {
-		log.Errorf("QueryAssetBlacklist dataPtr is nil ")
-		return assetBlackLists, util.NewErrorMsg(util.Error_common_internal_error)
-	}
-
-	for dataPtr.NextT() {
-		assetBlackList := &entity.AssetBlacklist{}
-		assetBlackList.OwnerAddress = dataPtr.GetField("owner_address")
-		assetBlackList.AssetName = dataPtr.GetField("asset_name")
-		assetBlackLists = append(assetBlackLists, assetBlackList)
-	}
-
-	return assetBlackLists, nil
 }

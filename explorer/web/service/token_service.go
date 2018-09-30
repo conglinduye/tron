@@ -18,7 +18,11 @@ import (
 	"io"
 	"errors"
 	"github.com/wlcy/tron/explorer/web/buffer"
+	"github.com/wlcy/tron/explorer/lib/config"
+	"gopkg.in/redis.v4"
 )
+
+const LockSyncAssetIssueParticipatedKey = "org.tron.explorer.asset.lock.participated"
 
 // QueryCommonTokenListBuffer
 func QueryCommonTokenListBuffer() ([]*entity.TokenInfo, error) {
@@ -149,6 +153,15 @@ func InsertOrUpdateLogo(address, url string) error {
 
 // SyncAssetIssueParticipated
 func SyncAssetIssueParticipated() {
+	if !lockSyncAssetIssueParticipated(LockSyncAssetIssueParticipatedKey) {
+		log.Infof("SyncAssetIssueParticipated lock exit, key:%v", LockSyncAssetIssueParticipatedKey)
+		return
+	}
+	err := config.RedisCli.Set(LockSyncAssetIssueParticipatedKey, "SyncAssetIssueParticipated", 60 * time.Second).Err()
+	if err != nil {
+		log.Errorf("SyncAssetIssueParticipated lock redis set err:[%v]", err)
+	}
+
 	assetIssues, _ := module.QueryAllAssetIssue()
 	if len(assetIssues) == 0 {
 		log.Info("SyncAssetIssueParticipated len(assetIssues) == 0")
@@ -203,3 +216,21 @@ func QueryAssetTransfer(req *entity.AssetTransferReq) (*entity.AssetTransferResp
 
 	return module.QueryAssetTransfer(strSQL, filterSQL, sortSQL, pageSQL)
 }
+
+func lockSyncAssetIssueParticipated(key string) bool {
+	value, err := config.RedisCli.Get(key).Result()
+	if err == redis.Nil {
+		return true
+	} else if err != nil {
+		log.Errorf("lock redis get value error :[%v]\n", err)
+		return false
+	}
+	if value == "" {
+		return true
+	} else {
+		return false
+	}
+}
+
+
+

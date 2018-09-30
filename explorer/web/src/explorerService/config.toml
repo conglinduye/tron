@@ -3,7 +3,7 @@ address = ":20110"
 objectpool = 10
 
 #********************************************************************************
-# config the main database of tron-explorer system. 
+# config the main database of tron-explorer system.
 #********************************************************************************
 [MysqlMain]
 # config the mysql conns, first item is the primary item.
@@ -60,4 +60,3 @@ host = "oline-tronscan-redis.jw6c3k.ng.0001.use2.cache.amazonaws.com:6379"
 pass = ""
 index = 0
 poolsize = 10
-

@@ -36,8 +36,8 @@ func TestBlockList(t *testing.T) {
 	req.Start = 0
 	//req.Number = "2287351"
 
-	//resp, err := QueryBlocks(req)
-	resp, err := QueryBlocksBuffer(req)
+	resp, err := QueryBlocks(req)
+	//resp, err := QueryBlocksBuffer(req)
 	if err != nil {
 		log.Error(err)
 	}

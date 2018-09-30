@@ -11,6 +11,7 @@ import (
 
 func startAccountDaemon() {
 	wc2 = newWorkerCounter(*gIntMaxWorker)
+	wc3 = newWorkerCounter(*gIntMaxWorker)
 
 	wg.Add(1)
 	go func() {
@@ -31,7 +32,7 @@ func startAccountDaemon() {
 		}
 
 		syncAccount()
-		fmt.Printf("Account Daemon QUIT")
+		fmt.Printf("Account Daemon QUIT\n")
 	}()
 
 }
@@ -41,7 +42,7 @@ func syncAccount() {
 		return
 	}
 	for wc2.currentWorker() > 0 { // wait
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 	cleanAccountBuffer()
 	list, err := ClearRefreshAddress() // load all address from redis and prepare handle it
@@ -51,9 +52,15 @@ func syncAccount() {
 	accList, restAddr, _ := getAccount(list)
 	fmt.Printf("### total account syncrhonzed:%-10v, bad address:%-10v, cost:%v, synchronize to db .....\n", len(accList), len(restAddr), time.Since(ts))
 
-	ts1 := time.Now()
-	blukStoreAccount(accList)
-	fmt.Printf("### store account size:%-10v to DB cost:%v\n", len(accList), time.Since(ts1))
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		wc3.startOne()
+		ts1 := time.Now()
+		blukStoreAccount(accList)
+		fmt.Printf("### store account size:%-10v to DB cost:%v\n", len(accList), time.Since(ts1))
+		wc3.stopOne()
+	}()
 }
 
 func blukStoreAccount(accList []*account) {

@@ -2,7 +2,6 @@ package grpcclient
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/tronprotocol/grpc-gateway/api"
 	"github.com/tronprotocol/grpc-gateway/core"
@@ -61,7 +60,7 @@ func (g *WalletExt) Connect() (err error) {
 // GetTransactionsFromThis ...
 func (g *WalletExt) GetTransactionsFromThis(addr string, offset, limit int64) ([]*core.Transaction, error) {
 
-	ctx, cancel := getTimeoutContext(30 * time.Second)
+	ctx, cancel := getTimeoutContext(defaultTimeout)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 	msg := &api.AccountPaginated{}
@@ -84,7 +83,7 @@ func (g *WalletExt) GetTransactionsFromThis(addr string, offset, limit int64) ([
 // GetTransactionsFromThis2 ...
 func (g *WalletExt) GetTransactionsFromThis2(addr string, offset, limit int64) ([]*api.TransactionExtention, error) {
 
-	ctx, cancel := getTimeoutContext(30 * time.Second)
+	ctx, cancel := getTimeoutContext(defaultTimeout)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 	msg := &api.AccountPaginated{}
@@ -107,7 +106,7 @@ func (g *WalletExt) GetTransactionsFromThis2(addr string, offset, limit int64) (
 // GetTransactionsToThis ...
 func (g *WalletExt) GetTransactionsToThis(addr string, offset, limit int64) ([]*core.Transaction, error) {
 
-	ctx, cancel := getTimeoutContext(30 * time.Second)
+	ctx, cancel := getTimeoutContext(defaultTimeout)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 	msg := &api.AccountPaginated{}
@@ -128,9 +127,10 @@ func (g *WalletExt) GetTransactionsToThis(addr string, offset, limit int64) ([]*
 }
 
 // GetTransactionsToThisi2 ...
+// 默认就是倒叙
 func (g *WalletExt) GetTransactionsToThisi2(addr string, offset, limit int64) ([]*api.TransactionExtention, error) {
 
-	ctx, cancel := getTimeoutContext(30 * time.Second)
+	ctx, cancel := getTimeoutContext(defaultTimeout)
 	defer cancel()
 	callOpt := getDefaultCallOptions()
 	msg := &api.AccountPaginated{}

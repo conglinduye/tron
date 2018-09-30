@@ -97,7 +97,7 @@ func (b *blockBuffer) getRestTran(minBlockID int64, offset, count, total int64) 
 	}
 	//else { // part in confirmed list ...
 	cTranBegin := offset - int64(len(b.tranListUnconfirmed))
-	if cTranBegin+count > cTranLen { // part in confirmed list, part in redis
+	if cTranBegin < int64(len(b.tranList)) && cTranBegin+count > cTranLen { // part in confirmed list, part in redis
 		copy(ret, b.tranList[cTranBegin:])
 		cList := b.getRestTranRedis(minCTranBlockID, offset, cTranBegin+count-cTranLen, total)
 		copy(ret[cTranLen-cTranBegin:], cList)
