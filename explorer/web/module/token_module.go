@@ -10,12 +10,13 @@ import (
 	"github.com/wlcy/tron/explorer/lib/mysql"
 	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/entity"
+	"time"
 )
 
 //QueryTokenList
 func QueryTokenList(strSQL, filterSQL, sortSQL, pageSQL string) ([]*entity.TokenInfo, error) {
 	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
-	log.Info(strFullSQL)
+	log.Sql(strFullSQL)
 	dataPtr, err := mysql.QueryTableData(strFullSQL)
 	if err != nil {
 		log.Errorf("QueryTokensList error:[%v]\n", err)
@@ -42,6 +43,9 @@ func QueryTokenList(strSQL, filterSQL, sortSQL, pageSQL string) ([]*entity.Token
 		token.Description = string(utils.HexDecode(dataPtr.GetField("asset_desc")))
 		token.Url = dataPtr.GetField("url")
 		frozenJson := dataPtr.GetField("frozen_supply")
+		if frozenJson == "" {
+			frozenJson = "[]"
+		}
 		tokenFrozenInfoList := make([]*entity.TokenFrozenInfo, 0)
 		tokenFrozenSupplyList := make([]*entity.TokenFrozenSupply, 0)
 		err := json.Unmarshal([]byte(frozenJson), &tokenFrozenSupplyList)
@@ -50,8 +54,11 @@ func QueryTokenList(strSQL, filterSQL, sortSQL, pageSQL string) ([]*entity.Token
 		} else {
 			for _, tokenFrozenSupply := range tokenFrozenSupplyList {
 				tokenFrozenInfo := &entity.TokenFrozenInfo{}
-				tokenFrozenInfo.Amount = tokenFrozenSupply.FrozenAmount
-				tokenFrozenInfo.Days = tokenFrozenSupply.FrozenDays
+				tokenFrozenInfo.Amount = tokenFrozenSupply.FrozenBalance
+				t := time.Now()
+				datetime := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(),t.Minute(),0,0, time.UTC)
+				days := (tokenFrozenSupply.ExpireTime - datetime.UnixNano() / 1e6) / (1000 * 60 * 60 * 24)
+				tokenFrozenInfo.Days = days
 				tokenFrozenInfoList = append(tokenFrozenInfoList, tokenFrozenInfo)
 			}
 			token.Frozen = tokenFrozenInfoList
