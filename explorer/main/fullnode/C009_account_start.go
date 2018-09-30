@@ -1,14 +1,58 @@
 package main
 
 import (
-	"fmt"
+	"sync"
 	"time"
 
-	"github.com/tronprotocol/grpc-gateway/api"
-	"github.com/tronprotocol/grpc-gateway/core"
-	"github.com/wlcy/tron/explorer/core/utils"
+	"github.com/wlcy/tron/explorer/main/module/account"
+	"github.com/wlcy/tron/explorer/main/module/rawmysql"
 )
 
+// "github.com/wlcy/tron/explorer/utils"
+
+var _accOnce sync.Once
+var accWorker *account.SyncWorker
+
+func startAccountDaemonNew() {
+	_accOnce.Do(func() {
+		rawmysql.DSN = *gStrMysqlDSN
+
+		accWorker = account.NewAccountWorker(*gIntMaxWorker, *gAccountWorkerQueue, 1, *gAccUniqBufferTime, *gAccRecordPerCommit)
+		accWorker.StartAccountWorker()
+		accWorker.StartDBWorker()
+	})
+
+	wg.Add(1)
+	go func() {
+		for {
+			time.Sleep(10 * time.Second)
+			if needQuit() {
+				break
+			}
+			accWorker.GetStatus()
+		}
+		wg.Done()
+	}()
+}
+
+func syncAddress(addrList [][]byte) {
+	accWorker.AppendTask2(addrList)
+}
+
+// AddRefreshAddress add address to acc worker
+func AddRefreshAddress(addrs ...interface{}) (newLen int, err error) {
+	list := make([][]byte, 0, len(addrs))
+	for _, addr := range addrs {
+		tmp, ok := addr.([]byte)
+		if ok && len(tmp) > 0 {
+			list = append(list, tmp)
+		}
+	}
+	accWorker.AppendTask2(list)
+	return len(list), nil
+}
+
+/*
 func startAccountDaemon() {
 	wc2 = newWorkerCounter(*gIntMaxWorker)
 	wc3 = newWorkerCounter(*gIntMaxWorker)
@@ -102,21 +146,7 @@ type account struct {
 	AssetNetUsed   string
 	AssetNetLimit  string
 
-	/*
-		`account_name` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Account name',
-		`address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'Base 58 encoding address',
-		`balance` bigint(20) NOT NULL DEFAULT '0' COMMENT 'TRX balance, in sun',
-		`create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户创建时间',
-		`latest_operation_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '账户最后操作时间',
-		`is_witness` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否为wintness; 0: 不是，1:是',
-		`frozen` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '冻结金额, 投票权',
-		`create_unix_time` int(32) NOT NULL DEFAULT '0' COMMENT '账户创建时间unix时间戳，用于分区',
-		`allowance` bigint(20) DEFAULT '0',
-		`latest_withdraw_time` bigint(20) DEFAULT '0',
-		`latest_consume_time` bigint(20) DEFAULT '0',
-		`latest_consume_free_time` bigint(20) DEFAULT '0',
-		`votes` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT '',
-	*/
+
 }
 
 // var maxErrCnt = 10
@@ -161,3 +191,5 @@ func (a *account) SetNetRaw(netRaw *api.AccountNetMessage) {
 	a.totalNetLimit = netRaw.TotalNetLimit
 	a.totalNetWeight = netRaw.TotalNetWeight
 }
+
+*/
