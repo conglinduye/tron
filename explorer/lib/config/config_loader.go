@@ -17,6 +17,7 @@ import (
 	"github.com/wlcy/tron/explorer/lib/redis"
 	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/buffer"
+	mgo "gopkg.in/mgo.v2"
 
 	"github.com/pelletier/go-toml"
 )
@@ -54,6 +55,10 @@ func LoadConfig(confFile string) error {
 		log.Errorf("get db config failed:[%v]!", err)
 		return err
 	}
+	if err = initMongoDB(config); nil != err {
+		log.Errorf("get mongodb config failed:[%v]!", err)
+		return err
+	}
 	if err = initToken(config); nil != err {
 		log.Errorf("get token config failed:[%v]!", err)
 		return err
@@ -63,6 +68,24 @@ func LoadConfig(confFile string) error {
 		return err
 	}
 
+	return nil
+}
+
+func initMongoDB(config *toml.Tree) error {
+	host := config.GetDefault("mongo.host", "47.90.203.178").(string)
+	port := config.GetDefault("mongo.port", "18890").(string)
+	schema := config.GetDefault("mongo.schema", "EventLogCenter").(string)
+	user := config.GetDefault("mongo.user", "root").(string)
+	passwd := config.GetDefault("mongo.passwd", "root").(string)
+
+	//mongodb: //myuser:mypass@localhost:40001,otherhost:40001/mydb
+	conStr := fmt.Sprintf("mongodb://%v:%v@%v:%v/%v", user, passwd, host, port, schema)
+	log.Debugf("conStr:[%v]", conStr)
+	gMongoSession, err := mgo.Dial(conStr)
+	gMongoSession.SetMode(mgo.Monotonic, true)
+	if err != nil {
+		log.Errorf("mongodb connect error:[%v]", err)
+	}
 	return nil
 }
 

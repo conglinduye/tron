@@ -59,6 +59,7 @@
         make
         sudu make install
         ```
+    8. mongo:::`go get -u gopkg.in/mgo.v2`
 
 4. 获取tron接口协议
     1. tron接口定义 (grpc定义: api/api.proto, 数据类型定义: core/*.proto)

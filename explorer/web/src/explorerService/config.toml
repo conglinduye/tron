@@ -44,6 +44,14 @@ protocol = "tcp"
 schema = "tron"
 charset = "utf8"
 
+#only for contract event 
+[mongo]
+host = "47.90.203.178"
+port = "18890"
+user = "root"
+passwd = "root"
+schema = "EventLogCenter"
+
 [token]
 defaultPath   = "/data/images/tokenLogo"
 tokenTemplate = "/data/images/tokenTemplate/"
