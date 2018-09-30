@@ -11,9 +11,21 @@ import (
 )
 
 func Init() {
-	//mysql.InitializeReader("127.0.0.1", "3306", "tron", "budev", "tron**1")
-	/*	blockBuffer := module.GetBlockBuffer()
-		go blockBuffer.BackgroundWorker()*/
+	var dbParams = make(map[string]map[string]string, 0)
+	var dbConns = []string{"primary", "secondary"}
+	//init read database
+	for _, db := range dbConns {
+		params := make(map[string]string, 0)
+		params[mysql.DBHost] = "127.0.0.1"
+		params[mysql.DBPort] = "3306"
+		params[mysql.DBSchema] = "tron_test_net"
+		params[mysql.DBName] = "budev"
+		params[mysql.DBPass] = "tron**1"
+		dbParams[db] = params
+		log.Debugf("read database init:db:[%v],param:[%v]", db, params)
+	}
+	mysql.InitializeReader(dbParams, dbConns)
+	mysql.InitializeWriter("127.0.0.1", "3306", "tron_test_net", "budev", "tron**1")
 }
 
 func TestBlockList(t *testing.T) {
@@ -24,8 +36,8 @@ func TestBlockList(t *testing.T) {
 	req.Start = 0
 	//req.Number = "2287351"
 
-	//resp, err := QueryBlocks(req)
-	resp, err := QueryBlocksBuffer(req)
+	resp, err := QueryBlocks(req)
+	//resp, err := QueryBlocksBuffer(req)
 	if err != nil {
 		log.Error(err)
 	}
