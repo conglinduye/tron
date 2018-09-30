@@ -101,7 +101,7 @@
     ```shell
     cd main/fullnode
     go build
-    nohup ./fullnode -net test -dsn "budev:tron**1@tcp(127.0.0.1:3306)/tron_test_net" > sync.log 2>&1 &
+    nohup ./fullnode -net main -start_block 2500000 -dsn "budev:tron**1@tcp(127.0.0.1:3306)/tron" > sync-main.log 2>&1 &
     nohup ./fullnode -net test -dsn "budev:tron**1@tcp(127.0.0.1:3306)/tron_test_net" > sync.log 2>&1 &
     ```
     + -dsn 本地数据库连接信息
