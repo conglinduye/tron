@@ -4,6 +4,7 @@ import (
 	"github.com/wlcy/tron/explorer/web/entity"
 	"github.com/wlcy/tron/explorer/web/module"
 	"fmt"
+	"time"
 )
 
 func QueryAssetBlacklist(req *entity.AssetBlacklistReq) (*entity.AssetBlacklistResp, error) {
@@ -29,5 +30,30 @@ func InsertAssetBlacklist(ownerAddress, tokenName string) error {
 
 func DeleteAssetBlacklist(id uint64) error {
 	return module.DeleteAssetBlacklist(id)
+}
+
+
+func InsertAssetExtInfo(info *entity.AssetExtInfo) error {
+	return module.InsertAssetExtInfo(info)
+}
+
+func UpdateAssetExtInfo(info *entity.AssetExtInfo) error {
+	timestamp := time.Now().Unix()
+	tm := time.Unix(timestamp, 0)
+	updateTime := tm.Format("2006-01-02 15:04:05")
+	info.UpdateTime = updateTime
+	return module.UpdateAssetExtInfo(info)
+}
+
+func InsertAssetExtLogo(logo *entity.AssetExtLogo) error {
+	return module.InsertAssetExtLogo(logo)
+}
+
+func UpdateAssetExtLogo(logo *entity.AssetExtLogo) error {
+	timestamp := time.Now().Unix()
+	tm := time.Unix(timestamp, 0)
+	updateTime := tm.Format("2006-01-02 15:04:05")
+	logo.UpdateTime = updateTime
+	return module.UpdateAssetExtLogo(logo)
 }
 

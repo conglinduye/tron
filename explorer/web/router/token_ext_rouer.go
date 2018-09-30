@@ -63,3 +63,97 @@ func DeleteTokenBlackList(c *gin.Context) {
 
 	handler.SendResponse(c, nil, nil)
 }
+
+func AddAssetExtInfo(c *gin.Context) {
+	var info entity.AssetExtInfo
+	if err := c.Bind(&info); err != nil {
+		log.Infof("err:%v", err)
+		handler.SendResponse(c, errno.ErrBind, nil)
+		return
+	}
+	if info.Address == ""  || info.TokenName == "" {
+		handler.SendResponse(c, errno.ErrValidation, nil)
+		return
+	}
+
+	str, _ := json.Marshal(info)
+	log.Infof("Create msg: %s\n", str)
+
+	if err := service.InsertAssetExtInfo(&info); err != nil {
+		handler.SendResponse(c, errno.InternalServerError, nil)
+		return
+	}
+
+	handler.SendResponse(c, nil, nil)
+}
+
+
+func UpdateAssetExtInfo(c *gin.Context) {
+	var info entity.AssetExtInfo
+	if err := c.Bind(&info); err != nil {
+		handler.SendResponse(c, errno.ErrBind, nil)
+		return
+	}
+	if info.Address == "" || info.TokenName == "" {
+		handler.SendResponse(c, errno.ErrValidation, nil)
+		return
+	}
+
+	str, _ := json.Marshal(info)
+	log.Infof("Update msg: %s\n", str)
+
+	if err := service.UpdateAssetExtInfo(&info); err != nil {
+		handler.SendResponse(c, errno.InternalServerError, nil)
+		return
+	}
+
+	handler.SendResponse(c, nil, nil)
+}
+
+func AddAssetExtLogo(c *gin.Context) {
+	var logo entity.AssetExtLogo
+	if err := c.Bind(&logo); err != nil {
+		handler.SendResponse(c, errno.ErrBind, nil)
+		return
+	}
+	if logo.Address == "" || logo.LogoUrl == "" {
+		handler.SendResponse(c, errno.ErrValidation, nil)
+		return
+	}
+
+	str, _ := json.Marshal(logo)
+	log.Infof("Create msg: %s\n", str)
+
+	if err := service.InsertAssetExtLogo(&logo); err != nil {
+		handler.SendResponse(c, errno.InternalServerError, nil)
+		return
+	}
+
+	handler.SendResponse(c, nil, nil)
+}
+
+
+func UpdateAssetExtLogo(c *gin.Context) {
+	var logo entity.AssetExtLogo
+	if err := c.Bind(&logo); err != nil {
+		handler.SendResponse(c, errno.ErrBind, nil)
+		return
+	}
+	if logo.Address == "" || logo.LogoUrl == "" {
+		handler.SendResponse(c, errno.ErrValidation, nil)
+		return
+	}
+
+	str, _ := json.Marshal(logo)
+	log.Infof("update msg: %s\n", str)
+
+	if err := service.UpdateAssetExtLogo(&logo); err != nil {
+		handler.SendResponse(c, errno.InternalServerError, nil)
+		return
+	}
+
+	handler.SendResponse(c, nil, nil)
+}
+
+
+

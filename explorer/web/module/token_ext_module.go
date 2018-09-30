@@ -25,7 +25,7 @@ func QueryAllAssetBlacklist() ([]*entity.AssetBlacklist, error) {
 
 	for dataPtr.NextT() {
 		assetBlackList := &entity.AssetBlacklist{}
-		assetBlackList.Id = mysql.ConvertDBValueToInt64(dataPtr.GetField("id"))
+		assetBlackList.Id = dataPtr.GetField("id")
 		assetBlackList.OwnerAddress = dataPtr.GetField("owner_address")
 		assetBlackList.TokenName = dataPtr.GetField("asset_name")
 		assetBlackList.CreateTime = dataPtr.GetField("create_time")
@@ -54,7 +54,7 @@ func QueryAssetBlacklist(strSQL, filterSQL, sortSQL, pageSQL string) (*entity.As
 
 	for dataPtr.NextT() {
 		assetBlackList := &entity.AssetBlacklist{}
-		assetBlackList.Id = mysql.ConvertDBValueToInt64(dataPtr.GetField("id"))
+		assetBlackList.Id = dataPtr.GetField("id")
 		assetBlackList.OwnerAddress = dataPtr.GetField("owner_address")
 		assetBlackList.TokenName = dataPtr.GetField("asset_name")
 		assetBlackList.CreateTime = dataPtr.GetField("create_time")
@@ -102,6 +102,78 @@ func DeleteAssetBlacklist(id uint64) error {
 	log.Debugf("DeleteAssetBlacklist success, insert id: [%v]", insID)
 	return nil
 }
+
+// InsertAssetExtInfo
+func InsertAssetExtInfo(info *entity.AssetExtInfo) error {
+	strSQL := fmt.Sprintf(`
+		insert into wlcy_asset_info 
+		(address, token_name, token_id, brief, website, white_paper, github, country, credit, reddit,
+         twitter, facebook, telegram, steam, medium, webchat, weibo, review, status)
+		values('%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', %v, '%v',
+		'%v', '%v', '%v', '%v', '%v', '%v', '%v', %v, %v)`,
+		info.Address, info.TokenName, info.TokenId, info.Brief, info.Website, info.WhitePaper,
+		info.Github, info.Country, info.Credit, info.Reddit, info.Twitter, info.Facebook,
+		info.Telegram, info.Steam, info.Medium, info.Webchat, info.Weibo, info.Review, info.Status)
+	insertID, _, err := mysql.ExecuteSQLCommand(strSQL, true)
+	if err != nil {
+		log.Errorf("InsertAssetExtInfo fail:[%v]  sql:%s", err, strSQL)
+		return err
+	}
+	log.Debugf("InsertAssetExtInfo success, insert id: [%v]", insertID)
+	return nil
+}
+
+// UpdateAssetExtInfo
+func UpdateAssetExtInfo(info *entity.AssetExtInfo) error {
+	strSQL := fmt.Sprintf(`
+		update wlcy_asset_info set token_name = '%v', white_paper = '%v', github = '%v', country = '%v', credit = %v,
+		reddit = '%v', twitter = '%v', facebook = '%v', telegram = '%v', steam = '%v', medium = '%v', webchat = '%v',
+		weibo = '%v', review = %v, status = %v, update_time = '%v' where address = '%v' `,
+		info.TokenName, info.WhitePaper, info.Github, info.Country, info.Credit,
+		info.Reddit, info.Twitter, info.Facebook, info.Telegram, info.Steam, info.Medium, info.Webchat,
+		info.Weibo, info.Review, info.Status, info.UpdateTime, info.Address)
+	updateID, _, err := mysql.ExecuteSQLCommand(strSQL, false)
+	if err != nil {
+		log.Errorf("UpdateAssetExtInfo fail:[%v]  sql:%s", err, strSQL)
+		return err
+	}
+	log.Debugf("UpdateAssetExtInfo success, update id: [%v]", updateID)
+	return nil
+}
+
+
+// InsertAssetExtLogo
+func InsertAssetExtLogo(logo *entity.AssetExtLogo) error {
+	strSQL := fmt.Sprintf(`
+		insert into wlcy_asset_logo 
+		(address, logo_url) values('%v', '%v')`,
+		logo.Address, logo.LogoUrl)
+	insertID, _, err := mysql.ExecuteSQLCommand(strSQL, true)
+	if err != nil {
+		log.Errorf("InsertAssetExtLogo fail:[%v]  sql:%s", err, strSQL)
+		return err
+	}
+	log.Debugf("InsertAssetExtLogo success, insert id: [%v]", insertID)
+	return nil
+}
+
+// UpdateAssetExtInfo
+func UpdateAssetExtLogo(logo *entity.AssetExtLogo) error {
+	strSQL := fmt.Sprintf(`
+		update wlcy_asset_logo set address = '%v', logo_url = '%v', update_time = '%v' where address = '%v' `,
+		logo.Address, logo.LogoUrl, logo.UpdateTime, logo.Address)
+	updateID, _, err := mysql.ExecuteSQLCommand(strSQL, false)
+	if err != nil {
+		log.Errorf("UpdateAssetExtLogo fail:[%v]  sql:%s", err, strSQL)
+		return err
+	}
+	log.Debugf("UpdateAssetExtLogo success, update id: [%v]", updateID)
+	return nil
+}
+
+
+
+
 
 
 

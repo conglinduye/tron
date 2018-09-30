@@ -45,6 +45,17 @@ func Start(address string, objectpool int) {
 		tokenBlacklist.GET("/list", QueryTokenBlackList)
 	}
 
+	tokenExt := ginRouter.Group("/api/tokenExt")
+	// 授权处理
+	tokenExt.Use(middleware.AuthMiddleware())
+	{
+		tokenExt.POST("/addInfo", AddAssetExtInfo)
+		tokenExt.POST("/updateInfo", UpdateAssetExtInfo)
+		tokenExt.POST("/addLogo", AddAssetExtLogo)
+		tokenExt.POST("/updateLogo", UpdateAssetExtLogo)
+	}
+
+
 	service := http.Server{
 		Addr:           address,
 		Handler:        ginRouter,
