@@ -1,0 +1,62 @@
+[server]
+address = ":20210"
+objectpool = 10
+
+#********************************************************************************
+# config the main database of tron-explorer system.
+#********************************************************************************
+[MysqlMain]
+# config the mysql conns, first item is the primary item.
+readConnections = "primary,secondary"
+writeConnections = "writary"
+
+[primary]
+# primary read database connection
+
+#host = "18.216.57.65"
+host = "tronscan-mysql02.c36e8tfqp8gx.us-east-2.rds.amazonaws.com"
+port = "3306"
+user = "tron"
+pass = "tron"
+protocol = "tcp"
+schema = "tron"
+charset = "utf8"
+
+[secondary]
+# secondary read database connection, if primary database crashed, use secondary instead
+#host = "18.216.57.65"
+host = "tronscan-mysql03.c36e8tfqp8gx.us-east-2.rds.amazonaws.com"
+port = "3306"
+user = "tron"
+pass = "tron"
+protocol = "tcp"
+schema = "tron"
+charset = "utf8"
+
+[writary]
+# write database connection, the one can only exec write operation
+#host = "18.216.57.65"
+host = "tronscan-mysql01.c36e8tfqp8gx.us-east-2.rds.amazonaws.com"
+port = "3306"
+user = "tron"
+pass = "tron"
+protocol = "tcp"
+schema = "tron"
+charset = "utf8"
+
+[token]
+defaultPath   = "/data/images/tokenLogo"
+tokenTemplate = "/data/images/tokenTemplate/"
+imgURL        = "https://coin.top/tokenLogo"
+tokenTemplateFile = "https://coin.top/tokenTemplate/TronscanTokenInformationSubmissionTemplate.xlsx"
+
+[common]
+httpWebKey="WoiYeI5brZy4S8wQfVz7M5BczMkIhnugYW5QIibNgnWsAsktgHn5"
+netType="mainnet"
+
+[Redis]
+#host = "127.0.0.1:6379"
+host = "oline-tronscan-redis.jw6c3k.ng.0001.use2.cache.amazonaws.com:6379"
+pass = ""
+index = 0
+poolsize = 10
