@@ -13,7 +13,7 @@ func Start(address string, objectpool int) {
 	ginRouter := gin.Default()
 	ginRouter.Use(corsMiddleware())
 	// define your register
-	//blockRegister(ginRouter)
+	accountRegister(ginRouter)
 
 	service := http.Server{
 		Addr:           address,
