@@ -9,6 +9,7 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/web/ext/entity"
+	"github.com/wlcy/tron/explorer/web/ext/module"
 )
 
 //CreateAccount 只生成地址，不存数据库
@@ -36,4 +37,25 @@ func CreateAccount() (*entity.CreateAccount, error) {
 	account.Address = base58Addr
 	account.Key = hexPrivKey
 	return account, nil
+}
+
+//QueryAccountBalance 获取账户余额信息
+func QueryAccountBalance(address string) (*entity.AccountBalance, error) {
+	var filterSQL string
+	strSQL := fmt.Sprintf(`
+	select account_name,acc.address,acc.balance as totalBalance,frozen,create_time,latest_operation_time,votes ,
+		wit.url,wit.is_job,acc.allowance,acc.latest_withdraw_time,acc.is_witness,acc.net_usage,
+		acc.free_net_used,acc.free_net_limit,acc.net_used,acc.net_limit,acc.asset_net_used,acc.asset_net_limit,
+        ass.asset_name as token_name,ass.creator_address,ass.balance,asset.owner_address
+    from tron_account acc
+	left join account_asset_balance ass on ass.address=acc.address
+	left join asset_issue asset on asset.asset_name=ass.asset_name
+    left join witness wit on wit.address=acc.address
+			where 1=1 `)
+
+	//按传入条件拼接sql
+	if address != "" {
+		filterSQL = fmt.Sprintf(" and (acc.address='%v' or acc.account_name='%v')", address, address)
+	}
+	return module.QueryAccountRealize(strSQL, filterSQL, address)
 }

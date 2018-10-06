@@ -20,4 +20,15 @@ func accountRegister(ginRouter *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, resp)
 	})
+	//
+	ginRouter.GET("/api/account/:address/balance", func(c *gin.Context) {
+		address := c.Param("address") //占位符传参
+		log.Debugf("Hello /api/account/:%#v", address)
+		resp, err := service.QueryAccountBalance(address)
+		if err != nil {
+			errCode, _ := util.GetErrorCode(err)
+			c.JSON(errCode, err)
+		}
+		c.JSON(http.StatusOK, resp)
+	})
 }
