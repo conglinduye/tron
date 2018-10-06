@@ -161,7 +161,6 @@ type AssetTransfer struct {
 }
 
 type TokenFrozenSupply struct {
-	FrozenDays 				int64			`json:"frozen_days"`				// frozen_days
-	FrozenAmount  			int64			`json:"frozen_amount"`				// frozen_amount
+	ExpireTime 				int64				`json:"expire_time"`			// expire_time
+	FrozenBalance  			int64				`json:"frozen_balance"`			// frozen_balance
 }
-

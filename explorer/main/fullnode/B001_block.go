@@ -19,12 +19,16 @@ var gStrMysqlDSN = flag.String("dsn", "tron:tron@tcp(172.16.21.224:3306)/tron", 
 var gInt64MaxWorkload = flag.Int64("workload", 10000, "maximum workload for each worker")
 var gStartBlokcID = flag.Int64("start_block", 0, "block num start to synchronize")
 var gEndBlokcID = flag.Int64("end_block", 0, "block num end to synchronize, default 0 means run as daemon")
-var gRedisDSN = flag.String("redisDSN", "127.0.0.1:6379", "redis DSN")
+
+// var gRedisDSN = flag.String("redisDSN", "127.0.0.1:6379", "redis DSN")
 var gMaxErrCntPerNode = flag.Int("max_err_per_node", 10, "max error before we try to other node")
-var gMaxAccountWorkload = flag.Int("max_account_workload", 200, "max account a node need handle not fork new worker")
 var gIntHandleAccountInterval = flag.Int("account_handle_interval", 3, "account info synchronize handle minmum interval in seconds")
 var gMaxTrxDB = flag.Int("trxdb_oper_cnt", 8, "the block/transaction db operation routine limit at the same time")
 var gNetType = flag.String("net", "main", "connect to main net or test net, default main net")
+var gAccountWorkerQueue = flag.Int("acc_worker_queue", 100000, "account address queue size for sync")
+
+var gAccUniqBufferTime = flag.Int("acc_uniq_buffer_time", 10, "account sync unqiue buffer data time gap in second")
+var gAccRecordPerCommit = flag.Int("acc_record_per_commit", 1000, "account sync to db record count per transaction")
 
 var quit = make(chan struct{}) // quit signal channel
 var wg sync.WaitGroup
@@ -35,9 +39,12 @@ func signalHandle() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		<-sigs
-		if !needQuit() {
-			close(quit)
+		for {
+			sig := <-sigs
+			fmt.Printf("Receive signal:%v\n", sig)
+			if !needQuit() {
+				close(quit)
+			}
 		}
 	}()
 }
@@ -57,8 +64,8 @@ func startDaemon() {
 	}
 	startAssetDaemon()
 	startWintnessDaemon()
-	startRedisAccountRefreshPush()
-	startAccountDaemon()
+	// startRedisAccountRefreshPush()
+	startAccountDaemonNew()
 	startNodeDaemon()
 }
 
@@ -68,16 +75,15 @@ func main() {
 
 	if *gNetType == "test" {
 		utils.TestNet = true
-		setTestNetRedisKey()
+		// setTestNetRedisKey()
 	}
 
 	maxErrCnt = *gMaxErrCntPerNode
-	getAccountWorkerLimit = *gMaxAccountWorkload
 
 	signalHandle()
 
 	initDB(*gStrMysqlDSN)
-	initRedis([]string{*gRedisDSN})
+	// initRedis([]string{*gRedisDSN})
 	startDaemon()
 
 	getAllBlocks()
@@ -85,10 +91,9 @@ func main() {
 		close(quit)
 	}
 
-	syncAccount() // syn account after getAllBlocks() quit
-
 	fmt.Println("Wait other daemon quit .......")
 	wg.Wait()
+	accWorker.WaitStop()
 
 	fmt.Println("fullnode QUIT")
 }

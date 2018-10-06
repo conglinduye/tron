@@ -59,10 +59,11 @@ func (w *tokenBuffer) GetCommonTokenList() (commonTokenList []*entity.TokenInfo)
 // loadCommonQueryTokenList
 func (w *tokenBuffer) loadQueryCommonTokenList() {
 	strSQL := fmt.Sprintf(`
-			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
-			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
-			from asset_issue
-			where 1=1 order by participated desc `)
+			select a.owner_address, a.asset_name, a.asset_abbr, a.total_supply, b.frozen_supply,
+			a.trx_num, a.num, a.participated, a.start_time, a.end_time, a.order_num, a.vote_score, a.asset_desc, a.url
+			from asset_issue a
+			left join tron_account b on a.owner_address = b.address
+			where 1=1 order by a.participated desc `)
 
 	commonTokenList, err := module.QueryTokenList(strSQL, "", "", "")
 	if err != nil {
@@ -92,16 +93,17 @@ func (w *tokenBuffer) GetIcoTokenList() (icoTokenList []*entity.TokenInfo) {
 // loadIcoQueryTokens
 func (w *tokenBuffer) loadQueryIcoTokenList() {
 	strSQL := fmt.Sprintf(`
-			select owner_address, asset_name, asset_abbr, total_supply, frozen_supply,
-			trx_num, num, participated, start_time, end_time, order_num, vote_score, asset_desc, url
-			from asset_issue
+			select a.owner_address, a.asset_name, a.asset_abbr, a.total_supply, b.frozen_supply,
+			a.trx_num, a.num, a.participated, a.start_time, a.end_time, a.order_num, a.vote_score, a.asset_desc, a.url
+			from asset_issue a
+			left join tron_account b on a.owner_address = b.address
 			where 1=1 `)
 
 	t := time.Now()
 	dateTime := t.UnixNano() / 1e6
-	filterSQL := fmt.Sprintf(" and start_time<=%v and end_time>=%v", dateTime, dateTime)
+	filterSQL := fmt.Sprintf(" and a.start_time<=%v and a.end_time>=%v", dateTime, dateTime)
 
-	sortSQL := "order by participated desc"
+	sortSQL := "order by a.participated desc"
 
 	icoTokenList, err := module.QueryTokenList(strSQL, filterSQL, sortSQL, "")
 	if err != nil {
@@ -133,10 +135,11 @@ func (w *tokenBuffer) GetTokensDetailList() (tokenDetailList []*entity.TokenInfo
 // loadQueryTokensDetailList
 func (w *tokenBuffer) loadQueryTokensDetailList() {
 	strSQL := fmt.Sprintf(`
-		select a.owner_address, a.asset_name, a.asset_abbr, a.total_supply, a.frozen_supply,
+		select a.owner_address, a.asset_name, a.asset_abbr, a.total_supply, d.frozen_supply,
 			a.trx_num, a.num, a.participated, a.start_time, a.end_time, a.order_num, a.vote_score, a.asset_desc, a.url,
 			b.totalTokenTransfers, c.totalTokenHolders
 		from asset_issue a
+			left join tron_account d on d.address = a.owner_address 
 			left join(
 				select asset_name, count(1) as totalTokenTransfers
 				from contract_asset_transfer
