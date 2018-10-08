@@ -96,3 +96,14 @@ func ExtractTransactionContracts(trx *core.Transaction) (ctxType []core.Transact
 
 	return
 }
+
+// GetBlockByteRefHashRef gen refBlockBytes and refBlockHash by giving block, the return values are used in transaction
+func GetBlockByteRefHashRef(block *core.Block) (refByte []byte, refHash []byte) {
+	if nil == block || nil == block.BlockHeader || nil == block.BlockHeader.RawData {
+		return
+	}
+
+	refByte = BinaryBigEndianEncodeInt64(block.BlockHeader.RawData.Number)[6:8]
+	refHash = CalcBlockHash(block)[8:16]
+	return
+}
