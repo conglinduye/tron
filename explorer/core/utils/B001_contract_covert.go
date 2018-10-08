@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/golang/protobuf/ptypes"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/tronprotocol/grpc-gateway/core"
 )
@@ -66,7 +68,29 @@ func GetContract(contract *core.Transaction_Contract) (reflect.Type, interface{}
 	// }
 	// return nil, nil
 
+<<<<<<< HEAD
 	return GetContractByParamVal(contract.Type, contract.Parameter.Value)
+=======
+	if nil == contract || nil == contract.Parameter {
+		return nil, nil
+	}
+	pbMsg, err := ptypes.Empty(contract.Parameter)
+	if nil != err {
+		return nil, err
+	}
+	err = ptypes.UnmarshalAny(contract.Parameter, pbMsg)
+	if nil != err {
+		return nil, err
+	}
+
+	retType := reflect.TypeOf(pbMsg)
+	if retType.Kind() == reflect.Ptr {
+		retType = retType.Elem()
+	}
+	return retType, pbMsg
+
+	// return GetContractByParamVal(contract.Type, contract.Parameter.Value)
+>>>>>>> master
 }
 
 // GetContractByParamVal 获取实际的协议内容
@@ -85,8 +109,10 @@ func GetContractByParamVal(ctxType core.Transaction_Contract_ContractType, val [
 }
 
 // GetContractInfoStr ...
+//	use reflect to create contract
 func GetContractInfoStr(contract *core.Transaction_Contract) (ownerAddr string, contractDetail string) {
-	_, ctx := GetContractByParamVal(contract.Type, contract.Parameter.Value)
+	_, ctx := GetContract(contract)
+	// _, ctx := GetContractByParamVal(contract.Type, contract.Parameter.Value)
 	if nil != ctx {
 		contractDetail = ToJSONStr(formatContractJSONStr(ToJSONStr(ctx)))
 		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
@@ -96,15 +122,36 @@ func GetContractInfoStr(contract *core.Transaction_Contract) (ownerAddr string, 
 	return
 }
 
-// GetContractInfoObj ...
-func GetContractInfoObj(contract *core.Transaction_Contract) (ownerAddr string, contractDetail interface{}) {
-	_, ctx := GetContractByParamVal(contract.Type, contract.Parameter.Value)
+// GetContractInfoObj2 ...
+//	use reflect to create contract
+func GetContractInfoObj2(contract *core.Transaction_Contract) (ownerAddr string, contractDetail interface{}) {
+	_, ctx := GetContract(contract)
+	// _, ctx := GetContractByParamVal(contract.Type, contract.Parameter.Value)
 	if nil != ctx {
 		contractDetail = formatContractJSONStr(ToJSONStr(ctx))
 		if ownerIF, ok := ctx.(OwnerAddressIF); ok {
 			ownerAddr = Base58EncodeAddr(ownerIF.GetOwnerAddress())
 		}
 	}
+	return
+}
+
+// GetContractInfoObj ...
+//	use pb any unmarshal to create contract, use this one
+func GetContractInfoObj(ctxRaw *core.Transaction_Contract) (ret map[string]interface{}, err error) {
+
+	_, ctx := GetContract(ctxRaw)
+	jsonByte, err := json.Marshal(ctx)
+	if nil != err {
+		return nil, err
+	}
+
+	var ok bool
+	ret, ok = formatContractJSONStr(string(jsonByte)).(map[string]interface{})
+	if !ok {
+		return nil, err
+	}
+
 	return
 }
 
