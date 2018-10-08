@@ -33,6 +33,61 @@
                 }
             }
         },
+        "/api/vote": {
+            "get": {
+                "description": "Query votes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vote"
+                ],
+                "summary": "Query votes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "sort",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "start",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "candidate",
+                        "name": "candidate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "voter",
+                        "name": "voter",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{total\":29744,\"totalVotes\":5465411009,\"data\":[{\"voterAddress\":\"TZ2MikDjJZ9ghGs8Uc37aTyg2NNXzQtU8s\",\"candidateAddress\":\"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp\",\"votes\":1,\"candidateUrl\":\"\",\"candidateName\":\"Sesameseed\",\"voterAvailableVotes\":1}...]}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/witness": {
             "get": {
                 "description": "Query witness",

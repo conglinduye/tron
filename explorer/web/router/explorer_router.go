@@ -28,7 +28,7 @@ func Start(address string, objectpool int) {
 	// 注册账户查询路由
 	accountRegister(ginRouter)
 	// 注册投票查询路由
-	voteRegister(ginRouter)
+	//voteRegister(ginRouter)
 	// 注册超级代表查询路由
 	//witnessRegister(ginRouter)
 	// 注册通证查询路由
@@ -39,6 +39,12 @@ func Start(address string, objectpool int) {
 	otherRegister(ginRouter)
 
 	//ginRouter.Use(cors.Default())
+
+	// 注册投票路由
+	vote := ginRouter.Group("/api/vote")
+	{
+		vote.GET("", QueryVotes)
+	}
 
 	// 注册超级代表路由
 	witness := ginRouter.Group("/api/witness")
