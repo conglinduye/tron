@@ -21,6 +21,42 @@ paths:
       summary: Query statistics
       tags:
       - statistics
+  /api/vote:
+    get:
+      consumes:
+      - application/json
+      description: Query votes
+      parameters:
+      - description: sort
+        in: query
+        name: sort
+        type: string
+      - description: start
+        in: query
+        name: start
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      - description: candidate
+        in: query
+        name: candidate
+        type: string
+      - description: voter
+        in: query
+        name: voter
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{total":29744,"totalVotes":5465411009,"data":[{"voterAddress":"TZ2MikDjJZ9ghGs8Uc37aTyg2NNXzQtU8s","candidateAddress":"TGzz8gjYiYRqpfmDwnLxfgPuLVNmpCswVp","votes":1,"candidateUrl":"","candidateName":"Sesameseed","voterAvailableVotes":1}...]}'
+          schema:
+            type: string
+      summary: Query votes
+      tags:
+      - Vote
   /api/witness:
     get:
       consumes:

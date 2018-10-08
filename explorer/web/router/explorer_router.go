@@ -28,7 +28,7 @@ func Start(address string, objectpool int) {
 	// 注册账户查询路由
 	accountRegister(ginRouter)
 	// 注册投票查询路由
-	voteRegister(ginRouter)
+	//voteRegister(ginRouter)
 	// 注册超级代表查询路由
 	//witnessRegister(ginRouter)
 	// 注册通证查询路由
