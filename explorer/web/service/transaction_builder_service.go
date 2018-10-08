@@ -5,14 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
-
-	"github.com/golang/protobuf/ptypes"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/protobuf/proto"
 	"github.com/tronprotocol/grpc-gateway/core"
-	"github.com/wlcy/tron/explorer/core/grpcclient"
 	"github.com/wlcy/tron/explorer/core/utils"
 	"github.com/wlcy/tron/explorer/lib/log"
 )
@@ -21,7 +16,7 @@ import (
 func TBTransfer(ctx *gin.Context) {
 	ctxReq, err := getContextBody(ctx)
 	if nil != err || nil == ctxReq {
-		ctx.JSON(http.StatusOK, newTBResponse(err))
+		ctx.JSON(http.StatusOK, newTBResponse(nil, err))
 		return
 	}
 
@@ -63,45 +58,98 @@ func getContextBody(ctx *gin.Context) (*TBRequestType, error) {
 	}
 
 	err = tbReq.ConvertContract()
+	if nil != err {
+		return nil, err
+	}
 
+	tbReq.Trx, err = utils.BuildTransaction(tbReq.ContractType, tbReq.RealContract, []byte(tbReq.Data))
 	if nil != err {
 		return nil, err
 	}
 
 	if tbReq.Broadcast {
-		_, err = signAndBroadcastContract(tbReq.ContractType, tbReq.RealContract, tbReq.Data, tbReq.Key)
+		resp, err := signAndBroadcastTrx(tbReq.Trx, tbReq.Key)
+		if nil != err {
+			return nil, err
+		}
+		tbReq.Resp = resp
+	} else {
+		tbReq.Resp = extractTrx(tbReq.Trx)
 	}
+
+	tbResp := newTBResponse(tbReq, err)
+
+	ctx.JSON(http.StatusOK, tbResp)
 
 	return tbReq, err
 }
 
-func signAndBroadcastContract(ctxType core.Transaction_Contract_ContractType, contract interface{}, data string, privatekey string) (resp interface{}, err error) {
+func extractTrx(trx *core.Transaction) interface{} {
+	if nil == trx || nil == trx.RawData || 0 == len(trx.RawData.Contract) {
+		return nil
+	}
+
+	ret := new(TrxOutputType)
+	ret.Hash = utils.Base64Encode(utils.CalcTransactionHash(trx))
+	ret.Timestamp = trx.RawData.Timestamp
+	ret.Data = string(trx.RawData.Data)
+
+	ret.Signature = extractTrxSign(trx)
+
+	ret.Contracts = extractTrxCtx(trx)
+
+	return ret
+}
+
+func extractTrxCtx(trx *core.Transaction) (ret []map[string]interface{}) {
+	for _, ctx := range trx.RawData.Contract {
+		_, tmp := utils.GetContractInfoStr3(int32(ctx.Type), ctx.Parameter.Value)
+		tmpMap, ok := tmp.(map[string]interface{})
+		if ok {
+			tmpMap["contractType"] = ctx.Type.String()
+			tmpMap["contractTypeId"] = int32(ctx.Type)
+			ret = append(ret, tmpMap)
+		}
+	}
+	return
+}
+
+func extractTrxSign(trx *core.Transaction) (ret []*SignOutputType) {
+	for _, sign := range trx.Signature {
+		signOut := new(SignOutputType)
+		signOut.Bytes = utils.Base64Encode(sign)
+
+		pubKey, err := utils.GetSignedPublicKey(trx)
+		if nil != err {
+			continue
+		}
+		signOut.Address, _ = utils.GetTronHexAddress(utils.Base64Encode(pubKey))
+
+		ret = append(ret, signOut)
+	}
+	return
+}
+
+// TrxOutputType ...
+type TrxOutputType struct {
+	Hash      string                   `json:"hash"`
+	Timestamp int64                    `json:"timestamp"`
+	Contracts []map[string]interface{} `json:"contracts"`
+	Data      string                   `json:"data"`
+	Signature []*SignOutputType        `json:"signature"`
+}
+
+// SignOutputType ...
+type SignOutputType struct {
+	Bytes   string `json:"bytes"`
+	Address string `json:"address"`
+}
+
+func signAndBroadcastTrx(trx *core.Transaction, privatekey string) (resp interface{}, err error) {
 	if 0 == len(privatekey) {
-		log.Errorf("broadcast need private key for signature:%v:%#v", ctxType, contract)
+		log.Errorf("broadcast need private key for signature:%#v", trx)
 		return nil, errInvalidRequest
 	}
-
-	trx := new(core.Transaction)
-	trx.RawData = new(core.TransactionRaw)
-
-	// fill contract data
-	if 0 < len(data) {
-		trx.RawData.Data = []byte(data)
-	}
-
-	// fill contract detail
-	contractRaw := new(core.Transaction_Contract)
-	contractRaw.Type = ctxType
-	pbMsg, ok := contract.(proto.Message)
-	if ok {
-		contractRaw.Parameter, err = ptypes.MarshalAny(pbMsg)
-	} else {
-		return nil, errInvalidRequest
-	}
-	trx.RawData.Contract = append(trx.RawData.Contract, contractRaw)
-
-	// set transaction timestamp, in millisecon
-	trx.RawData.Timestamp = time.Now().UTC().UnixNano() / int64(time.Millisecond)
 
 	// sign transaction
 	sign, err := utils.SignTransaction(trx, privatekey)
@@ -110,20 +158,26 @@ func signAndBroadcastContract(ctxType core.Transaction_Contract_ContractType, co
 	}
 	trx.Signature = append(trx.Signature, sign)
 
-	// broadcast
-	client := grpcclient.GetRandomWallet()
-	resp, err = client.BroadcastTransaction(trx)
+	resp, err = GetWalletClient().BroadcastTransaction(trx)
 
 	return
 }
 
-func newTBResponse(err error) *TBResponseType {
+func newTBResponse(req *TBRequestType, err error) *TBResponseType {
 	resp := new(TBResponseType)
 
-	resp.Success = false
+	if nil != err || nil == req {
+		resp.Success = false
+		resp.Result = TBResultType{}
+		resp.Result.Code = "Failed"
+		resp.Result.Message = err.Error()
+		return resp
+	}
+
+	resp.Success = true
 	resp.Result = TBResultType{}
-	resp.Result.Code = "Failed"
-	resp.Result.Message = err.Error()
+	resp.Result.Message = req.Resp
+	resp.Result.Code = "Success"
 
 	return resp
 }
@@ -137,6 +191,8 @@ type TBRequestType struct {
 
 	RealContract interface{}                            `json:"-"`
 	ContractType core.Transaction_Contract_ContractType `json:"-"`
+	Trx          *core.Transaction                      `json:"-"`
+	Resp         interface{}                            `json:"-"`
 }
 
 var (
