@@ -76,6 +76,7 @@ func TestJSONNil(*testing.T) {
 	fmt.Printf("%v\n", ToJSONStr(acc.FrozenSupply))
 	fmt.Printf("%v\n", ToJSONStr(acc.LatestAssetOperationTime))
 }
+<<<<<<< HEAD
 
 func TestBuildTrx(*testing.T) {
 	ctx := new(core.TransferContract)
@@ -92,3 +93,5 @@ func TestBuildTrx(*testing.T) {
 	ctxType, contract, err := GetTransactionContract(trx)
 	fmt.Printf("%#v\n%#v\n%v\n", ctxType, contract, err)
 }
+=======
+>>>>>>> master

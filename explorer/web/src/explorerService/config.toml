@@ -59,4 +59,8 @@ netType="mainnet"
 host = "oline-tronscan-redis.jw6c3k.ng.0001.use2.cache.amazonaws.com:6379"
 pass = ""
 index = 0
+<<<<<<< HEAD
 poolsize = 10
+=======
+poolsize = 10
+>>>>>>> master
