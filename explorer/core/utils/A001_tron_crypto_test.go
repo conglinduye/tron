@@ -76,3 +76,19 @@ func TestJSONNil(*testing.T) {
 	fmt.Printf("%v\n", ToJSONStr(acc.FrozenSupply))
 	fmt.Printf("%v\n", ToJSONStr(acc.LatestAssetOperationTime))
 }
+
+func TestBuildTrx(*testing.T) {
+	ctx := new(core.TransferContract)
+	ctx.OwnerAddress = []byte("abcdefg")
+	ctx.ToAddress = []byte("gfedcba")
+	ctx.Amount = 1 * 1000000 // in sun
+
+	trx, err := BuildTransaction(core.Transaction_Contract_TransferContract, ctx, nil)
+	fmt.Printf("%v\n%#v\n", err, ToJSONStr(trx))
+
+	ctxTypes, contracts, data, err := ExtractTransactionContracts(trx)
+	fmt.Printf("%#v\n%#v\n%v\n%v\n", ctxTypes, contracts, data, err)
+
+	ctxType, contract, err := GetTransactionContract(trx)
+	fmt.Printf("%#v\n%#v\n%v\n", ctxType, contract, err)
+}
