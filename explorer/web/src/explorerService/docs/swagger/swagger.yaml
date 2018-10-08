@@ -1,0 +1,10 @@
+info:
+  contact:
+    name: tron
+    url: http://www.swagger.io/support
+  description: Tronscan API
+  license: {}
+  title: Tronscan API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

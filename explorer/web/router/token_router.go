@@ -14,7 +14,6 @@ import (
 )
 
 func tokenRegister(ginRouter *gin.Engine) {
-	// 查询通证列表信息
 	ginRouter.GET("/api/token", func(c *gin.Context) {
 		tokenReq := &entity.Token{}
 		tokenReq.Start = c.Query("start")

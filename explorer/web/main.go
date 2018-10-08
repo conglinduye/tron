@@ -25,6 +25,10 @@ var gLogFile = flag.String("log", "appLog", "set log base file, default is \"app
 var gDebug = flag.String("debug", "false", "debug flag default is \"false\"")
 var gLogLevel = flag.String("logLevel", "info", "debug level default is Debug")
 
+// @title Tronscan
+// @version 1.0
+// @description Tronscan API
+// @contact.name tron
 func main() {
 
 	flag.Parse()

@@ -1,0 +1,14 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Tronscan API",
+        "title": "Tronscan API",
+        "contact": {
+            "name": "tron",
+            "url": "http://www.swagger.io/support"
+        },
+        "license": {},
+        "version": "1.0"
+    },
+    "paths": {}
+}
