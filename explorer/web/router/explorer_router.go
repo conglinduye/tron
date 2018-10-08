@@ -40,6 +40,12 @@ func Start(address string, objectpool int) {
 
 	//ginRouter.Use(cors.Default())
 
+	// 注册投票路由
+	vote := ginRouter.Group("/api/vote")
+	{
+		vote.GET("", QueryVotes)
+	}
+
 	// 注册超级代表路由
 	witness := ginRouter.Group("/api/witness")
 	{
