@@ -231,7 +231,7 @@ func PostTransaction(req *entity.PostTransaction, dryRun string) (*entity.PostTr
 	if dryRun != "1" {
 		//向主网发布广播
 		result, err := GetWalletClient().BroadcastTransaction(transaction)
-		if err != nil {
+		if err != nil || result == nil {
 			log.Errorf("call broadcastTransaction err[%v],transaction:[%#v]", err, transaction)
 			return postResult, err
 		}
