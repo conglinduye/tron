@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/wlcy/tron/explorer/lib/mysql"
 
@@ -125,7 +126,6 @@ func QueryTestRequestCoin(req *entity.TestCoin, ip string) (*entity.TestCoinResp
 			fromAccount := config.TestPk
 			amount := mysql.ConvertStringToInt64(config.TestAmount, 0)
 			//计算地址
-
 			hexPubKey, hexAddr, base58Addr, err := utils.GetTronPublicInfoByPrivateKey(fromAccount)
 			if nil != err {
 				log.Errorf(" GetTronPublicInfoByPrivateKey err :[%v]", err)
@@ -137,9 +137,11 @@ func QueryTestRequestCoin(req *entity.TestCoin, ip string) (*entity.TestCoinResp
 			transferCtx.OwnerAddress = utils.HexDecode(base58Addr)
 			transferCtx.ToAddress = utils.Base58DecodeAddr(req.Address)
 			transferCtx.Amount = amount
-			ctx, _ := proto.Marshal(transferCtx)
-			log.Debugf("ctx:%v", ctx)
-			transaction := &core.Transaction{}
+			transaction, err := utils.BuildTransaction(core.Transaction_Contract_TransferContract, transferCtx, nil)
+			transaction.RawData.Timestamp = time.Now().UTC().UnixNano() / 1000000
+			sign, err := utils.SignTransaction(transaction, fromAccount)
+			transaction.Signature = append(transaction.Signature, sign)
+			log.Debugf("gen transaction:[%#v]", transaction)
 			//向主网发布广播
 			result, err := GetWalletClient().BroadcastTransaction(transaction)
 			if err != nil {
@@ -156,36 +158,6 @@ func QueryTestRequestCoin(req *entity.TestCoin, ip string) (*entity.TestCoinResp
 			requestResult.Amount = amount
 			requestResult.Code = result.Code.String()
 			requestResult.Message = string(result.Message)
-			/*
-			   val fromAccount = config.get[String]("testnet.trx-distribution.pk")
-			                   val amount = config.get[Long]("testnet.trx-distribution.amount")
-			                   val fromAccountKey = ECKey.fromPrivate(ByteArray.fromHexString(fromAccount))
-
-			                   val transfer = transactionBuilder.buildTrxTransfer(
-			                     fromAccountKey.getAddress,
-			                     to,
-			                     amount)
-
-			                   await(for {
-			                     transactionWithRef <- transactionBuilder.setReference(transfer)
-			                     signedTransaction = transactionBuilder.sign(transactionWithRef, ByteArray.fromHexString(fromAccount))
-			                     result <- wallet.broadcastTransaction(signedTransaction)
-			                   } yield {
-
-			                     if (result.result) {
-			                       trxRequestModelRepository.insertAsync(TrxRequestModel(
-			                         address = to,
-			                         ip = ip,
-			                       ))
-			                     }
-
-			                     Ok(Json.obj(
-			                       "success" -> result.result.asJson,
-			                       "amount" -> amount.asJson,
-			                       "code" -> result.code.toString.asJson,
-			                       "message" -> new String(result.message.toByteArray).toString.asJson,
-			                     ))
-			*/
 		} else {
 			requestResult.Success = false
 			requestResult.Code = "WRONG_CAPTCHA"
@@ -202,6 +174,7 @@ func verifyCode(code string) bool {
 	var verifyURL = "https://www.google.com/recaptcha/api/siteverify"
 	siteCode := config.TestCaptchaSiteKey
 	verifyCode := &entity.VerifyCode{Secret: siteCode, Response: code}
+	log.Debugf("verifcode:[%#v]", verifyCode)
 	requestBytes, err := json.Marshal(verifyCode)
 	if err != nil {
 		log.Error(err)
@@ -226,5 +199,5 @@ func verifyCode(code string) bool {
 	log.Debugf("verifyCode return :[%#v]", response)
 	result = response.Success
 	//始终返回true，暂定
-	return true
+	return result
 }
