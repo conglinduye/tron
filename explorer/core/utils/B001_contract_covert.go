@@ -68,9 +68,6 @@ func GetContract(contract *core.Transaction_Contract) (reflect.Type, interface{}
 	// }
 	// return nil, nil
 
-<<<<<<< HEAD
-	return GetContractByParamVal(contract.Type, contract.Parameter.Value)
-=======
 	if nil == contract || nil == contract.Parameter {
 		return nil, nil
 	}
@@ -90,7 +87,6 @@ func GetContract(contract *core.Transaction_Contract) (reflect.Type, interface{}
 	return retType, pbMsg
 
 	// return GetContractByParamVal(contract.Type, contract.Parameter.Value)
->>>>>>> master
 }
 
 // GetContractByParamVal 获取实际的协议内容
