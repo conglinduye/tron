@@ -69,16 +69,16 @@ func getContextBody(ctx *gin.Context) (*TBRequestType, error) {
 	}
 
 	if tbReq.Broadcast {
-		err = signAndBroadcastContrat(tbReq.ContractType, tbReq.RealContract, tbReq.Data, tbReq.Key)
+		err = signAndBroadcastContract(tbReq.ContractType, tbReq.RealContract, tbReq.Data, tbReq.Key)
 	}
 
 	return tbReq, err
 }
 
-func signAndBroadcastContract(ctxType core.Transaction_Contract_ContractType, contract interface{}, data string, privatekey string) (err error) {
+func signAndBroadcastContract(ctxType core.Transaction_Contract_ContractType, contract interface{}, data string, privatekey string) (resp interface{}, err error) {
 	if 0 == len(privatekey) {
 		log.Errorf("broadcast need private key for signature:%v:%#v", ctxType, contract)
-		return errInvalidRequest
+		return nil, errInvalidRequest
 	}
 
 	trx := new(core.Transaction)
@@ -96,7 +96,7 @@ func signAndBroadcastContract(ctxType core.Transaction_Contract_ContractType, co
 	if ok {
 		contractRaw.Parameter, err = ptypes.MarshalAny(pbMsg)
 	} else {
-		return errInvalidRequest
+		return nil, errInvalidRequest
 	}
 	trx.RawData.Contract = append(trx.RawData.Contract, contractRaw)
 
@@ -106,13 +106,13 @@ func signAndBroadcastContract(ctxType core.Transaction_Contract_ContractType, co
 	// sign transaction
 	sign, err := utils.SignTransaction(trx, privatekey)
 	if nil != err {
-		return errInvalidRequest
+		return nil, errInvalidRequest
 	}
 	trx.Signature = append(trx.Signature, sign)
 
 	// broadcast
 	client := grpcclient.GetRandomWallet()
-	resp, err := client.BroadcastTransaction(trx)
+	resp, err = client.BroadcastTransaction(trx)
 
 	return
 }
