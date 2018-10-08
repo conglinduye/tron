@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/wlcy/tron/explorer/lib/config"
 
@@ -68,7 +69,7 @@ func otherRegister(ginRouter *gin.Engine) {
 
 	//申请测试币
 	ginRouter.GET("/api/testnet/request-coins", func(c *gin.Context) {
-		if config.NetType != "mainnet" {
+		if strings.ToUpper(config.NetType) != "mainnet" {
 			//获取header
 			realIP := c.Request.Header.Get("X-Real-IP")
 			log.Debugf("Hello /api/testnet/request-coins get Header[X-Real-IP]:%#v", realIP)
