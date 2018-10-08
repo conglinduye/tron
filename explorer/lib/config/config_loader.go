@@ -31,6 +31,7 @@ var Address string
 var TokenTemplateFile string
 
 var HttpWebKey, NetType string
+var TestPk, TestCaptchaSiteKey, TestCaptchaEnabled, TestAmount string
 
 // LoadConfig read config from file and init dspFrontServer run environment variable
 //  call before Start pool.Server()
@@ -62,6 +63,10 @@ func LoadConfig(confFile string) error {
 		log.Errorf("get common config failed:[%v]!", err)
 		return err
 	}
+	/*if err = initTestNet(config); nil != err {
+		log.Errorf("get testnet config failed:[%v]!", err)
+		return err
+	}*/
 
 	return nil
 }
@@ -159,5 +164,15 @@ func initCommon(config *toml.Tree) error {
 	NetType = config.GetDefault(fmt.Sprintf("%v.netType", NodeName), "testnet").(string)
 	log.Printf("HttpWebKey:[%v], NetType:[%v]", HttpWebKey, NetType)
 
+	return nil
+}
+
+func initTestNet(config *toml.Tree) error {
+	const NodeName = "testnet"
+	TestPk = config.GetDefault(fmt.Sprintf("%v.pk", NodeName), "EFFA55B420A2FE39E3F73D14B8C46824FD0D5EE210840B9C27B2E2F42A09F1F9").(string)
+	TestAmount = config.GetDefault(fmt.Sprintf("%v.amount", NodeName), "10000000000").(string)
+	TestCaptchaEnabled = config.GetDefault(fmt.Sprintf("%v.captchaEnabled", NodeName), "true").(string)
+	TestCaptchaSiteKey = config.GetDefault(fmt.Sprintf("%v.captchaSitekey", NodeName), "6Le7AV4UAAAAAJrQtg21DuwipJP05XqxTn1xAqW6").(string)
+	log.Printf("TestPk:[%v], TestAmount:[%v],TestCaptchaEnabled:[%v], TestCaptchaSiteKey:[%v]", TestPk, TestAmount, TestCaptchaEnabled, TestCaptchaSiteKey)
 	return nil
 }

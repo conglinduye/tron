@@ -1,6 +1,12 @@
 package service
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+
+	"github.com/wlcy/tron/explorer/lib/mysql"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/tronprotocol/grpc-gateway/core"
 	"github.com/wlcy/tron/explorer/core/utils"
@@ -9,6 +15,7 @@ import (
 	"github.com/wlcy/tron/explorer/lib/util"
 	"github.com/wlcy/tron/explorer/web/buffer"
 	"github.com/wlcy/tron/explorer/web/entity"
+	"github.com/wlcy/tron/explorer/web/module"
 )
 
 //QuerySystemStatus ...
@@ -102,7 +109,122 @@ func QueryAuth(req *entity.Auth) (*entity.AuthResp, error) {
 }
 
 //QueryTestRequestCoin ...
-func QueryTestRequestCoin() (*entity.TransfersResp, error) {
+func QueryTestRequestCoin(req *entity.TestCoin, ip string) (*entity.TestCoinResp, error) {
+	requestResult := &entity.TestCoinResp{}
+	//1. 校验ip最近一小时是否申请过，如果申请过，则退出
+	if module.FindByRecentIP(ip) {
+		requestResult.Success = false
+		requestResult.Code = "ALREADY_REQUESTED_IP"
+		requestResult.Message = "Already requested TRX from IP recently"
+	} else if module.FindByAddress(req.Address) { //1. 校验address是否申请过，如果申请过，则退出
+		requestResult.Success = false
+		requestResult.Code = "ALREADY_REQUESTED_IP"
+		requestResult.Message = fmt.Sprintf("Already requested for address %v", req.Address)
+	} else {
+		if verifyCode(req.CaptchaCode) {
+			fromAccount := config.TestPk
+			amount := mysql.ConvertStringToInt64(config.TestAmount, 0)
+			//计算地址
 
-	return nil, nil
+			hexPubKey, hexAddr, base58Addr, err := utils.GetTronPublicInfoByPrivateKey(fromAccount)
+			if nil != err {
+				log.Errorf(" GetTronPublicInfoByPrivateKey err :[%v]", err)
+				return nil, err
+			}
+
+			log.Debugf("CreateAccount done: hexPubKey:[%v],hexAddr:[%v],base58Addr:[%v]", hexPubKey, hexAddr, base58Addr)
+			transferCtx := &core.TransferContract{}
+			transferCtx.OwnerAddress = utils.HexDecode(base58Addr)
+			transferCtx.ToAddress = utils.Base58DecodeAddr(req.Address)
+			transferCtx.Amount = amount
+			ctx, _ := proto.Marshal(transferCtx)
+			log.Debugf("ctx:%v", ctx)
+			transaction := &core.Transaction{}
+			//向主网发布广播
+			result, err := GetWalletClient().BroadcastTransaction(transaction)
+			if err != nil {
+				log.Errorf("call broadcastTransaction err[%v],transaction:[%#v]", err, transaction)
+				return requestResult, err
+			}
+			//解析主网接口返回
+			if result.Result { //如果成功则写trxRequest
+				log.Debugf("trx request result:%v", result.Result)
+				err = module.InsertTrxRequest(req.Address, ip)
+				log.Debugf("trx request insert db result:%v", err)
+			}
+			requestResult.Success = result.Result
+			requestResult.Amount = amount
+			requestResult.Code = result.Code.String()
+			requestResult.Message = string(result.Message)
+			/*
+			   val fromAccount = config.get[String]("testnet.trx-distribution.pk")
+			                   val amount = config.get[Long]("testnet.trx-distribution.amount")
+			                   val fromAccountKey = ECKey.fromPrivate(ByteArray.fromHexString(fromAccount))
+
+			                   val transfer = transactionBuilder.buildTrxTransfer(
+			                     fromAccountKey.getAddress,
+			                     to,
+			                     amount)
+
+			                   await(for {
+			                     transactionWithRef <- transactionBuilder.setReference(transfer)
+			                     signedTransaction = transactionBuilder.sign(transactionWithRef, ByteArray.fromHexString(fromAccount))
+			                     result <- wallet.broadcastTransaction(signedTransaction)
+			                   } yield {
+
+			                     if (result.result) {
+			                       trxRequestModelRepository.insertAsync(TrxRequestModel(
+			                         address = to,
+			                         ip = ip,
+			                       ))
+			                     }
+
+			                     Ok(Json.obj(
+			                       "success" -> result.result.asJson,
+			                       "amount" -> amount.asJson,
+			                       "code" -> result.code.toString.asJson,
+			                       "message" -> new String(result.message.toByteArray).toString.asJson,
+			                     ))
+			*/
+		} else {
+			requestResult.Success = false
+			requestResult.Code = "WRONG_CAPTCHA"
+			requestResult.Message = "Wrong Captcha Code"
+
+		}
+	}
+	return requestResult, nil
+}
+
+//verifyCode 校验code
+func verifyCode(code string) bool {
+	var result bool
+	var verifyURL = "https://www.google.com/recaptcha/api/siteverify"
+	siteCode := config.TestCaptchaSiteKey
+	verifyCode := &entity.VerifyCode{Secret: siteCode, Response: code}
+	requestBytes, err := json.Marshal(verifyCode)
+	if err != nil {
+		log.Error(err)
+		return result
+	}
+
+	postData := bytes.NewBuffer(requestBytes)
+	resp, err := util.SendRequest(verifyURL, "POST", "", postData)
+	if err != nil {
+		log.Error(err)
+		return result
+	}
+
+	//fmt.Println(string(resp))
+	var response entity.VerifyCodeResp
+
+	err = json.Unmarshal(resp.Bytes(), &response)
+	if err != nil {
+		log.Error(err)
+		return result
+	}
+	log.Debugf("verifyCode return :[%#v]", response)
+	result = response.Success
+	//始终返回true，暂定
+	return true
 }
