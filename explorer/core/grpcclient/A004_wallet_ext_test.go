@@ -32,7 +32,11 @@ func TestWalletExt(*testing.T) {
 	// utils.VerifyCall(client.GetTransactionsToThis(addr, 0, 100))
 
 	// a := api.TransactionList{Transaction: trans}
-	utils.VerifyCall(trans, nil)
+	// utils.VerifyCall(trans, nil)
+
+	for _, tran := range trans {
+		_ = tran
+	}
 
 	// serializeTransactionToDB(addr, 0, trans)
 

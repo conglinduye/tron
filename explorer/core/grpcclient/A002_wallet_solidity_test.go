@@ -33,13 +33,13 @@ func TestWalletSolidity(*testing.T) {
 	blockNum := block.BlockHeader.RawData.Number
 	blockNumByte := utils.BinaryBigEndianEncodeInt64(blockNum)
 
-	fmt.Printf("%v\n%v\t%v\n%v\n", blockNum, blockNumByte, blockNumByte[6:8], utils.BinaryBigEndianDecodeUint64(blockNumByte))
+	fmt.Printf("blockNum:%v\nblockNum bytes:%v\tblockNum byte[6~8]%v\nblockNum again:%v\n", blockNum, blockNumByte, blockNumByte[6:], utils.BinaryBigEndianDecodeUint64(blockNumByte))
 
-	fmt.Printf("%v\nblock hash:[%v]\n%v\n", blockNum, utils.HexEncode(blockHash), blockHash[8:16])
+	fmt.Printf("blockNum:%v\nblock hash:[%v]\nblock hash ref[8~16]%v\n", blockNum, utils.HexEncode(blockHash), blockHash[8:16])
 
 	for _, tran := range block.Transactions {
 		trxHash := utils.HexEncode(utils.CalcTransactionHash(tran))
-		fmt.Printf("transaction hash:[%v](%v)[%v]-->%#v\n\n", trxHash, tran.RawData.RefBlockHash, tran.RawData.RefBlockBytes, tran.RawData)
+		fmt.Printf("transaction hash:[%v](refBlockByte:%v)[refBlockHash:%v]-->%#v\n\n", trxHash, tran.RawData.RefBlockHash, tran.RawData.RefBlockBytes, tran.RawData)
 	}
 
 	return
