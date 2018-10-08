@@ -14,34 +14,27 @@ import (
 
 // TBTransfer transfer contract
 func TBTransfer(ctx *gin.Context) {
-	ctxReq, err := getContextBody(ctx)
-	if nil != err || nil == ctxReq {
-		ctx.JSON(http.StatusOK, newTBResponse(nil, err))
-		return
-	}
-
-	if ctxReq.Broadcast {
-
-	}
+	getContextBody(ctx)
 }
 
 // TBTransferAsset transfer asset contract
 func TBTransferAsset(ctx *gin.Context) {
+	getContextBody(ctx)
 }
 
 // TBAccountCreate account create contract
 func TBAccountCreate(ctx *gin.Context) {
-
+	getContextBody(ctx)
 }
 
 // TBAccountUpdate account update contract
 func TBAccountUpdate(ctx *gin.Context) {
-
+	getContextBody(ctx)
 }
 
 // TBWithdrawBalance withdraw balance contract
 func TBWithdrawBalance(ctx *gin.Context) {
-
+	getContextBody(ctx)
 }
 
 func getContextBody(ctx *gin.Context) (*TBRequestType, error) {
@@ -72,6 +65,8 @@ func getContextBody(ctx *gin.Context) (*TBRequestType, error) {
 		if nil != err {
 			return nil, err
 		}
+
+		fmt.Printf("result:%v\nerr:%v\n", utils.ToJSONStr(resp), err)
 		tbReq.Resp = resp
 	} else {
 		tbReq.Resp = extractTrx(tbReq.Trx)
@@ -103,9 +98,8 @@ func extractTrx(trx *core.Transaction) interface{} {
 
 func extractTrxCtx(trx *core.Transaction) (ret []map[string]interface{}) {
 	for _, ctx := range trx.RawData.Contract {
-		_, tmp := utils.GetContractInfoStr3(int32(ctx.Type), ctx.Parameter.Value)
-		tmpMap, ok := tmp.(map[string]interface{})
-		if ok {
+		tmpMap, err := utils.GetContractInfoObj(ctx)
+		if nil == err {
 			tmpMap["contractType"] = ctx.Type.String()
 			tmpMap["contractTypeId"] = int32(ctx.Type)
 			ret = append(ret, tmpMap)
@@ -158,9 +152,19 @@ func signAndBroadcastTrx(trx *core.Transaction, privatekey string) (resp interfa
 	}
 	trx.Signature = append(trx.Signature, sign)
 
-	resp, err = GetWalletClient().BroadcastTransaction(trx)
+	ret, err := GetWalletClient().BroadcastTransaction(trx)
+	if nil != ret {
+		retMap := make(map[string]interface{})
+		retMap["code"] = ret.Code
+		// retMap["code"] = "failed"
+		// if 0 == ret.Code {
+		// 	retMap["code"] = "success"
+		// }
+		retMap["message"] = string(ret.Message)
+		return retMap, err
+	}
 
-	return
+	return ret, err
 }
 
 func newTBResponse(req *TBRequestType, err error) *TBResponseType {
@@ -235,7 +239,7 @@ func (tbR *TBRequestType) ConvertContract() (err error) {
 		realCtx := new(core.TransferContract)
 		realCtx.OwnerAddress = utils.Base58DecodeAddr(ownerAddress.(string))
 		realCtx.ToAddress = utils.Base58DecodeAddr(toAddress.(string))
-		realCtx.Amount = amount.(int64)
+		realCtx.Amount = int64(amount.(float64))
 
 		tbR.RealContract = realCtx
 		tbR.ContractType = core.Transaction_Contract_TransferContract
