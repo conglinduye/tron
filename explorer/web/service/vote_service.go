@@ -2,8 +2,6 @@ package service
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/wlcy/tron/explorer/core/grpcclient"
 	"github.com/wlcy/tron/explorer/lib/log"
 	"github.com/wlcy/tron/explorer/lib/util"
@@ -73,7 +71,6 @@ func QueryVoteNextCycle() (*entity.VoteNextCycleResp, error) {
 func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	votesResp := &entity.VotesResp{}
 	var filterSQL, sortSQL, pageSQL string
-	mutiFilter := false
 
 	strSQL := fmt.Sprintf(`
 			select address, to_address, vote from account_vote_result where 1=1 `)
@@ -84,24 +81,8 @@ func QueryVotes(req *entity.Votes) (*entity.VotesResp, error) {
 	if req.Candidate != "" {
 		filterSQL = fmt.Sprintf(" and to_address='%v'", req.Candidate)
 	}
-	for _, v := range strings.Split(req.Sort, ",") {
-		if strings.Index(v, "votes") > 0 {
-			if mutiFilter {
-				sortSQL = fmt.Sprintf("%v ,", sortSQL)
-			}
-			sortSQL = fmt.Sprintf("%v vote", sortSQL)
-			if strings.Index(v, "-") == 0 {
-				sortSQL = fmt.Sprintf("%v desc", sortSQL)
-			}
-			mutiFilter = true
-		}
-	}
-	if sortSQL != "" {
-		if strings.Index(sortSQL, ",") == 0 {
-			sortSQL = sortSQL[1:]
-		}
-		sortSQL = fmt.Sprintf("order by %v", sortSQL)
-	}
+
+	sortSQL = fmt.Sprintf("order by vote desc")
 	pageSQL = fmt.Sprintf("limit %v, %v", req.Start, req.Limit)
 	accountVoteResultRes, err := module.QueryAccountVoteResultRealize(strSQL, filterSQL, sortSQL, pageSQL)
 	if err != nil {
@@ -220,3 +201,30 @@ func QueryAddressVoter(address string) *entity.AddressVotes {
 	}
 	return addressVotes
 }
+
+
+func QueryVoteCurrentCycleBuffer() (*entity.VoteCurrentCycleResp, error) {
+	voteBuffer := buffer.GetVoteBuffer()
+	voteCurrentCycleResp := voteBuffer.GetVoteCurrentCycle()
+	if voteCurrentCycleResp == nil {
+		voteCurrentCycleResp = &entity.VoteCurrentCycleResp{}
+		voteCurrentCycleResp.TotalVotes = 0
+		voteCurrentCycleList := make([]*entity.VoteCurrentCycle, 0)
+		voteCurrentCycleResp.Candidates = voteCurrentCycleList
+		return voteCurrentCycleResp, nil
+	}
+	return voteCurrentCycleResp, nil
+}
+
+
+func QueryVoteLiveBuffer() (*entity.VoteLiveResp, error) {
+	voteBuffer := buffer.GetVoteBuffer()
+	voteLiveResp := voteBuffer.GetVoteLive()
+	if voteLiveResp == nil {
+		voteLiveResp = &entity.VoteLiveResp{}
+		return voteLiveResp, nil
+	}
+	return voteLiveResp, nil
+}
+
+

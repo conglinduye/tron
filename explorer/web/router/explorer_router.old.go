@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/wlcy/tron/explorer/web/ext/router"
-
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
@@ -15,51 +13,38 @@ import (
 )
 
 //Start  启动服务
-func Start(address string, objectpool int) {
+func Start1(address string, objectpool int) {
 	ginRouter := gin.Default()
 	ginRouter.Use(corsMiddleware())
 
 	// swagger api docs
 	ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// 注册账户查询路由
-	ginRouter.GET("/api/account", QueryAccounts)
-	ginRouter.GET("/api/account/:address", QueryAccountByAddress)
-	ginRouter.GET("/api/account/:address/media", QueryAccountAddressMedia) ////查询某地址的媒体信息
-	ginRouter.POST("/api/account/:address/sr", PostAccountAddressSr)       //修改超级代表github信息
-	ginRouter.GET("/api/account/:address/sr", QueryAccountAddressSr)       //查询超级代表github信息
-	ginRouter.GET("/api/account/:address/stats", QueryAccountAddressStats) //查询用户的交易统计信息
-
-	// 注册通证查询路由
-	tokenRegister(ginRouter)
-
 	// 注册区块链查询路由
-	ginRouter.GET("/api/block", QueryBlocks)
-	ginRouter.GET("/api/block/:number", QueryBlockByID)
-
+	//blockRegister(ginRouter)
 	// 注册交易查询路由
-	ginRouter.GET("/api/transaction", QueryTransactions)
-	ginRouter.GET("/api/transaction/:hash", QueryTransactionByHash)
-	ginRouter.POST("/api/transaction", PostTransaction)
-
+	//transactionRegister(ginRouter)
 	// 注册转账查询路由
-	ginRouter.GET("/api/transfer", QueryTransfers)
-	ginRouter.GET("/api/transfer/:hash", QueryTransferByHash)
-
+	//transferRegister(ginRouter)
+	// 注册账户查询路由
+	//accountRegister(ginRouter)
+	// 注册投票查询路由
+	//voteRegister(ginRouter)
+	// 注册超级代表查询路由
+	//witnessRegister(ginRouter)
+	// 注册通证查询路由
+	//tokenRegister(ginRouter)
+	// 注册统计查询路由
+	//reportRegister(ginRouter)
 	// 注册其他查询路由
-	ginRouter.GET("/api/system/status", QuerySystemStatus)
-	ginRouter.GET("/api/market/markets", QueryMarkets)
-	ginRouter.GET("/socket.io/", SocketIO)
-	ginRouter.GET("/api/auth", Auth)
-	ginRouter.GET("/api/testnet/request-coins", RequestCoins)
+	//otherRegister(ginRouter)
+
+	//ginRouter.Use(cors.Default())
 
 	// 注册投票路由
 	vote := ginRouter.Group("/api/vote")
 	{
 		vote.GET("", QueryVotes)
-		vote.GET("/next-cycle", QueryVotesNextCycle)
-		vote.GET("/current-cycle", QueryVoteCurrentCycle)
-		vote.GET("/live", QueryVoteLive)
 	}
 
 	// 注册超级代表路由
@@ -99,10 +84,6 @@ func Start(address string, objectpool int) {
 		tokenExt.POST("/updateLogo", UpdateAssetExtLogo)
 	}
 
-	//ext api
-	ginRouter.POST("/api/account", router.GenAccount)
-	ginRouter.GET("/api/account/:address/balance", router.QueryBalanceByAddress)
-
 	service := http.Server{
 		Addr:           address,
 		Handler:        ginRouter,
@@ -117,7 +98,7 @@ func Start(address string, objectpool int) {
 
 }
 
-func corsMiddleware() gin.HandlerFunc {
+func corsMiddleware1() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := c.Request.Method
 		var isAccess = true

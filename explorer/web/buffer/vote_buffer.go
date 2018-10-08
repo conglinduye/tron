@@ -37,11 +37,16 @@ type voteBuffer struct {
 	voteWitness *entity.VoteWitnessResp
 
 	nextMaintenanceTime int64
+
+	voteCurrentCycle *entity.VoteCurrentCycleResp
+
+	voteLive *entity.VoteLiveResp
 }
 
 func voteWitnessBufferLoader() {
 	for {
 		_voteBuffer.loadVoteWitness()
+		_voteBuffer.loadVoteCurrentCycle()
 		time.Sleep(30 * time.Second)
 	}
 }
@@ -172,4 +177,104 @@ func getVoteWitnessFastestRise(voteWitnessList []*entity.VoteWitness) *entity.Vo
 		fastestRise = sortList[0]
 	}
 	return fastestRise
+}
+
+func (w *voteBuffer) GetVoteCurrentCycle() (voteCurrentCycle *entity.VoteCurrentCycleResp) {
+	w.RLock()
+	voteCurrentCycle = w.voteCurrentCycle
+	w.RUnlock()
+	return
+}
+
+func (w *voteBuffer) loadVoteCurrentCycle() {
+	var filterSQL, sortSQL, pageSQL string
+	voteCurrentCycleResp := &entity.VoteCurrentCycleResp{}
+	strSQL := fmt.Sprintf(`
+		select witt.address, witt.vote_count, witt.url, acc.account_name,votes.realTimeVotes
+		from witness witt
+		left join tron_account acc on acc.address=witt.address
+		left join (
+			select to_address,sum(vote) as realTimeVotes from account_vote_result  group by to_address 
+		) votes on votes.to_address=witt.address
+		where 1=1 `)
+
+	sortSQL = "order by votes.realTimeVotes desc"
+
+	voteCurrentCycleList, err := module.QueryVoteCurrentCycle(strSQL, filterSQL, sortSQL, pageSQL)
+	if err != nil {
+		log.Errorf("loadVoteCurrentCycle strSQL:%v, err:[%v]", strSQL, err)
+		return
+	}
+
+	for _, voteCurrentCycle := range voteCurrentCycleList {
+		if voteCurrentCycle.URL != "" {
+			voteCurrentCycle.HasPage = true
+		}
+	}
+
+	getVoteCurrentCycleRankingChange(voteCurrentCycleList)
+
+	voteCurrentCycleResp.Candidates = voteCurrentCycleList
+
+	totalVotes := module.QueryTotalVotes()
+	voteCurrentCycleResp.TotalVotes = totalVotes
+
+	w.Lock()
+	w.voteCurrentCycle = voteCurrentCycleResp
+	w.Unlock()
+}
+
+func getVoteCurrentCycleRankingChange(voteCurrentCycleList []*entity.VoteCurrentCycle) {
+	lastCycleSortList := make([]*entity.VoteCurrentCycle, 0, len(voteCurrentCycleList))
+	for _, temp := range voteCurrentCycleList {
+		voteCurrentCycle := new(entity.VoteCurrentCycle)
+		*voteCurrentCycle = *temp
+		lastCycleSortList = append(lastCycleSortList, voteCurrentCycle)
+	}
+
+	if len(lastCycleSortList) > 0 {
+		sort.SliceStable(lastCycleSortList, func(i, j int) bool { return lastCycleSortList[i].Votes > lastCycleSortList[j].Votes })
+	}
+
+	for index1 := range voteCurrentCycleList {
+		temp1 := voteCurrentCycleList[index1]
+		for index2 := range lastCycleSortList {
+			temp2 := lastCycleSortList[index2]
+			if temp1.Address == temp2.Address {
+				temp1.ChangeCycle = int32(index2+1) - int32(index1+1)
+				temp1.ChangeDay = 0
+				break
+			}
+		}
+	}
+}
+
+func (w *voteBuffer) GetVoteLive() (voteLive *entity.VoteLiveResp) {
+	w.RLock()
+	voteLive = w.voteLive
+	w.RUnlock()
+	return
+}
+
+
+// QueryVoteLive
+func (w *voteBuffer) loadVoteLive() () {
+	voteLiveResp := &entity.VoteLiveResp{}
+	data := make(map[string]*entity.VoteLive, 0)
+	strSQL := fmt.Sprintf(`select to_address as address, sum(vote) as totalVote from account_vote_result group by to_address`)
+	VoteLiveList, err := module.QueryVoteLive(strSQL)
+	if err != nil {
+		log.Errorf("QueryVoteLive strSQL:%v, err:[%v]", strSQL, err)
+		return
+	} else {
+		for _, voteLive := range VoteLiveList {
+			data[voteLive.Address] = voteLive
+		}
+	}
+
+	voteLiveResp.Data = data
+
+	w.Lock()
+	w.voteLive = voteLiveResp
+	w.Unlock()
 }
