@@ -213,8 +213,19 @@ func TestGetAccount(*testing.T) {
 	addr = "TYmns3F1Je57RLCC8rGSRHCuhM4XKEseEU"
 	addr = "TA2XgvKJXHvoFC25TTfTVmfsYp5sriDrY3"
 	addr = "TQw7CVALENBqCP3uZuo1KxiTnvCqGnoeod"
+	addr = "TM5jRzWJqCSRDgSpdqS15Ejxrg2oA568US"
 	account, err := sw.GetAccount(addr)
 	fmt.Printf("%v\n%v\n", utils.ToJSONStr(account), err)
+}
+func TestGetAccountNet(*testing.T) {
+	sw := GetRandomWallet()
+
+	addr := "TM5jRzWJqCSRDgSpdqS15Ejxrg2oA568US"
+	account, err := sw.GetAccountNet(addr)
+	fmt.Printf("%v\n%v\n", utils.ToJSONStr(account), err)
+
+	account1, err1 := sw.GetAccount(addr)
+	fmt.Printf("%v\n%v\n", utils.ToJSONStr(account1), err1)
 }
 
 func TestGetAssetIssue(*testing.T) {

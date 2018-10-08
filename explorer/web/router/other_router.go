@@ -2,6 +2,9 @@ package router
 
 import (
 	"net/http"
+	"strings"
+
+	"github.com/wlcy/tron/explorer/lib/config"
 
 	"github.com/wlcy/tron/explorer/lib/websocket"
 
@@ -63,16 +66,28 @@ func otherRegister(ginRouter *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, resp)
 	})
-	/*
-		//申请测试币
-		ginRouter.GET("/api/testnet/request-coins", func(c *gin.Context) {
-			log.Debugf("Hello /api/testnet/request-coins")
-			resp, err := service.QueryTestRequestCoin()
+
+	//申请测试币
+	ginRouter.GET("/api/testnet/request-coins", func(c *gin.Context) {
+		if strings.ToUpper(config.NetType) != "mainnet" {
+			//获取header
+			realIP := c.Request.Header.Get("X-Real-IP")
+			log.Debugf("Hello /api/testnet/request-coins get Header[X-Real-IP]:%#v", realIP)
+			req := &entity.TestCoin{}
+			if c.BindJSON(req) == nil {
+				if req == nil {
+					log.Errorf("parsing request parameter err!")
+					c.JSON(http.StatusInternalServerError, http.ErrBodyNotAllowed)
+				}
+			}
+			log.Debugf("Hello /api/testnet/request-coins %#v", req)
+			resp, err := service.QueryTestRequestCoin(req, realIP)
 			if err != nil {
 				errCode, _ := util.GetErrorCode(err)
 				c.JSON(errCode, err)
 			}
 			c.JSON(http.StatusOK, resp)
-		})*/
+		}
+	})
 
 }
