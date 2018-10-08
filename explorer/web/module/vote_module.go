@@ -253,3 +253,58 @@ func QueryAddressVoter(strSQL string) ([]*entity.AddressVoteInfo, error) {
 	}
 	return AddressVoteInfoList, nil
 }
+
+
+// QueryVoteLive
+func QueryVoteLive(strSQL string) ([]*entity.VoteLive, error) {
+	log.Sql(strSQL)
+	dataPtr, err := mysql.QueryTableData(strSQL)
+	if err != nil {
+		log.Errorf("QueryVoteLive error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryVoteLive dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	VoteLiveList := make([]*entity.VoteLive, 0)
+
+	for dataPtr.NextT() {
+		var voteLive = &entity.VoteLive{}
+		voteLive.Address = dataPtr.GetField("address")
+		voteLive.Votes = mysql.ConvertDBValueToInt64(dataPtr.GetField("totalVote"))
+
+		VoteLiveList = append(VoteLiveList, voteLive)
+	}
+	return VoteLiveList, nil
+}
+
+// QueryVoteCurrentCycle
+func QueryVoteCurrentCycle(strSQL, filterSQL, sortSQL, pageSQL string) ([]*entity.VoteCurrentCycle, error) {
+	strFullSQL := strSQL + " " + filterSQL + " " + sortSQL + " " + pageSQL
+	log.Sql(strFullSQL)
+	voteCurrentCycleList := make([]*entity.VoteCurrentCycle, 0)
+	dataPtr, err := mysql.QueryTableData(strFullSQL)
+	if err != nil {
+		log.Errorf("QueryVoteCurrentCycle error :[%v]\n", err)
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+	if dataPtr == nil {
+		log.Errorf("QueryVoteCurrentCycle dataPtr is nil ")
+		return nil, util.NewErrorMsg(util.Error_common_internal_error)
+	}
+
+	for dataPtr.NextT() {
+		var voteCurrentCycle = &entity.VoteCurrentCycle{}
+		voteCurrentCycle.Address = dataPtr.GetField("address")
+		voteCurrentCycle.Votes = mysql.ConvertDBValueToInt64(dataPtr.GetField("vote_count"))
+		voteCurrentCycle.Name = dataPtr.GetField("account_name")
+		voteCurrentCycle.URL = dataPtr.GetField("url")
+		voteCurrentCycle.RealTimeVotes = mysql.ConvertDBValueToInt64(dataPtr.GetField("realTimeVotes"))
+
+		voteCurrentCycleList = append(voteCurrentCycleList, voteCurrentCycle)
+	}
+
+	return voteCurrentCycleList, nil
+}

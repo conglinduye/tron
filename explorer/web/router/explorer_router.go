@@ -44,6 +44,9 @@ func Start(address string, objectpool int) {
 	vote := ginRouter.Group("/api/vote")
 	{
 		vote.GET("", QueryVotes)
+		vote.GET("/next-cycle", QueryVotesNextCycle)
+		vote.GET("/current-cycle", QueryVoteCurrentCycle)
+		vote.GET("/live", QueryVoteLive)
 	}
 
 	// 注册超级代表路由

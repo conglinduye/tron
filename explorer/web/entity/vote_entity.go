@@ -99,3 +99,31 @@ type AddressVoteInfo struct {
 	CandidateAddress    string 	`json:"candidateAddress"`    // 被投票人(候选人)地址
 	Votes               int64  	`json:"votes"`               // 票数
 }
+
+type VoteLiveResp struct {
+	Data				map[string]*VoteLive 	`json:"data"`
+}
+
+type VoteLive struct {
+	Address 			string 	`json:"address"`
+	Votes				int64	`json:"votes"`
+}
+
+type VoteCurrentCycleResp struct {
+	TotalVotes			int64					`json:"total_votes"`
+	Candidates    		[]*VoteCurrentCycle		`json:"candidates"`
+}
+
+
+type VoteCurrentCycle struct {
+	Address     		string 		`json:"address"`
+	Name        		string 		`json:"name"`
+	URL         		string 		`json:"url"`
+	HasPage     		bool   		`json:"hasPage"`
+	Votes      			int64  		`json:"votes"`
+	RealTimeVotes		int64 		`json:"realTimeVotes"`
+	ChangeCycle 		int32  		`json:"change_cycle"`
+	ChangeDay			int32		`json:"change_day"`
+}
+
+

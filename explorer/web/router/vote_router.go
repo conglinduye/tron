@@ -66,7 +66,7 @@ func voteRegister(ginRouter *gin.Engine) {
 
 // @Summary Query votes
 // @Description Query votes
-// @Tags Vote
+// @Tags Votes
 // @Accept  json
 // @Produce  json
 // @Param sort query string false "sort"
@@ -91,4 +91,49 @@ func QueryVotes(c *gin.Context) {
 		c.JSON(errCode, err)
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary Query votes next cycle
+// @Description Query votes next cycle
+// @Tags Votes
+// @Accept  json
+// @Produce  json
+// @Success 200 {string} json "{"nextCycle":13383000}"
+// @Router /api/vote/next-cycle [get]
+func QueryVotesNextCycle(c *gin.Context) {
+	log.Debugf("Hello /api/vote/next-cycle")
+	//resp, err := service.QueryVoteNextCycle()
+	resp, err := service.QueryVoteNextCycleBuffer()
+	if err != nil {
+		errCode, _ := util.GetErrorCode(err)
+		c.JSON(errCode, err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+
+// @Summary Query votes current cycle
+// @Description Query votes current cycle
+// @Tags Votes
+// @Accept  json
+// @Produce  json
+// @Success 200 {string} json "{"total_votes":8165982956,"candidates":[{"address":"TCvwc3FV3ssq2rD82rMmjhT4PVXYTsFcKV","name":"","url":"http://TronGr10.com","hasPage":false,"votes":100013931,"change_cycle":0,"change_day":7}...]}"
+// @Router /api/vote/current-cycle [get]
+func QueryVoteCurrentCycle(c *gin.Context) {
+	voteCurrentCycleResp, _:= service.QueryVoteCurrentCycleBuffer()
+	c.JSON(http.StatusOK, voteCurrentCycleResp)
+}
+
+
+// @Summary Query votes live
+// @Description votes live
+// @Tags Votes
+// @Accept  json
+// @Produce  json
+// @Success 200 {string} json "{"data":{"TCvwc3FV3ssq2rD82rMmjhT4PVXYTsFcKV":{"address":"TCvwc3FV3ssq2rD82rMmjhT4PVXYTsFcKV","votes":100013931}...}"
+// @Router /api/vote/live [get]
+func QueryVoteLive(c *gin.Context) {
+	voteLiveResp, _:= service.QueryVoteLiveBuffer()
+	c.JSON(http.StatusOK, voteLiveResp)
 }
