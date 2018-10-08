@@ -59,8 +59,14 @@ netType="mainnet"
 host = "oline-tronscan-redis.jw6c3k.ng.0001.use2.cache.amazonaws.com:6379"
 pass = ""
 index = 0
-<<<<<<< HEAD
 poolsize = 10
-=======
-poolsize = 10
->>>>>>> master
+
+[testnet]
+#only used by test-coin replication for test net
+pk = "EFFA55B420A2FE39E3F73D14B8C46824FD0D5EE210840B9C27B2E2F42A09F1F9"
+amount = "10000000000"
+captchaEnabled = "true"
+captchaSitekey = "6Ldl8XMUAAAAAPmbNxBGB-TYPFdIvThawN8pBduD"
+# old captchaSitekey = "6Le7AV4UAAAAAJrQtg21DuwipJP05XqxTn1xAqW6"
+# new client site=“6Ldl8XMUAAAAAEY3l76E7ipZrYXXOfk8kNdRjgMb”
+

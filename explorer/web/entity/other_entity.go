@@ -56,3 +56,31 @@ type AuthResp struct {
 type Address struct {
 	Address string `json:"address"` //
 }
+
+//TestCoin  申请测试币 传入参数
+type TestCoin struct {
+	Address     string `json:"address"`     //
+	CaptchaCode string `json:"captchaCode"` //
+}
+
+//TestCoinResp  申请测试币 响应参数
+type TestCoinResp struct {
+	Success bool   `json:"success"`          //:false,
+	Amount  int64  `json:"amount,omitempty"` //:10000000000,
+	Code    string `json:"code"`             //:"TAPOS_ERROR",
+	Message string `json:"message"`          //:"Tapos check error"
+}
+
+//VerifyCode 调用google验证接口结构体
+type VerifyCode struct {
+	Secret   string `json:"secret"`   //
+	Response string `json:"response"` //
+}
+
+//VerifyCodeResp 调用google验证接口结构体
+type VerifyCodeResp struct {
+	Success        bool     `json:"success"`          //
+	ErrorCodes     []string `json:"error-codes"`      //
+	ChallengeTs    string   `json:"challenge_ts"`     //: timestamp,  // timestamp of the challenge load (ISO format yyyy-MM-dd'T'HH:mm:ssZZ)
+	ApkPackageName string   `json:"apk_package_name"` //:: string,
+}
