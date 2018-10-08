@@ -8,12 +8,13 @@ import (
 	"github.com/wlcy/tron/explorer/lib/log"
 )
 
+// not used
 //Start  启动服务
 func Start(address string, objectpool int) {
 	ginRouter := gin.Default()
 	ginRouter.Use(corsMiddleware())
 	// define your register
-	accountRegister(ginRouter)
+	//AccountRegister(ginRouter)
 
 	service := http.Server{
 		Addr:           address,

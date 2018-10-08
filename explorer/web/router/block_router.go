@@ -11,41 +11,57 @@ import (
 	"github.com/wlcy/tron/explorer/web/service"
 )
 
-func blockRegister(ginRouter *gin.Engine) {
+// QueryBlocks ...
+// @Summary QueryBlocks ...
+// @Description Query blocks
+// @Tags Blocks
+// @Accept  json
+// @Produce  json
+// @Param sort query string false "sort"
+// @Param start query string false "start"
+// @Param limit query string false "limit"
+// @Param order query string false "order"
+// @Param number query string false "number"
+// @Param producer query string false "producer"
+// @Success 200 {string} json "{total":0,"data":[]}"
+// @Router /api/block [get]
+func QueryBlocks(c *gin.Context) {
+	blockReq := &entity.Blocks{}
+	blockReq.Sort = c.Query("sort")
+	blockReq.Limit = mysql.ConvertStringToInt64(c.Query("limit"), 40)
+	blockReq.Count = c.Query("count")
+	blockReq.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
+	blockReq.Order = c.Query("order")
+	blockReq.Number = c.Query("number")
+	blockReq.Producer = c.Query("producer")
+	log.Debugf("Hello /api/block?%#v", blockReq)
+	//blockResp, err := service.QueryBlocks(blockReq)
+	blockResp, err := service.QueryBlocksBuffer(blockReq)
+	if err != nil {
+		errCode, _ := util.GetErrorCode(err)
+		c.JSON(errCode, err)
+	}
+	c.JSON(http.StatusOK, blockResp)
+}
 
-	//?sort=-number&limit=1&count=true&number=2135998
-	ginRouter.GET("/api/block", func(c *gin.Context) {
-		blockReq := &entity.Blocks{}
-		blockReq.Sort = c.Query("sort")
-		blockReq.Limit = mysql.ConvertStringToInt64(c.Query("limit"), 40)
-		blockReq.Count = c.Query("count")
-		blockReq.Start = mysql.ConvertStringToInt64(c.Query("start"), 0)
-		blockReq.Order = c.Query("order")
-		blockReq.Number = c.Query("number")
-		//log.Debugf("c.params:[%v]", c.Query("producer"))
-		blockReq.Producer = c.Query("producer")
-		//log.Debugf("c.params111:[%v]", c.Query("producer1"))
-		//log.Debugf("Hello /api/block?%#v", blockReq)
-		//blockResp, err := service.QueryBlocks(blockReq)
-		blockResp, err := service.QueryBlocksBuffer(blockReq)
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
-		}
-		c.JSON(http.StatusOK, blockResp)
-	})
-	//:number=2135998
-	ginRouter.GET("/api/block/:number", func(c *gin.Context) {
-		blockReq := &entity.Blocks{}
-		blockReq.Number = c.Param("number") //占位符传参
-		log.Debugf("Hello /api/block/:%#v", blockReq.Number)
-		//blockResp, err := service.QueryBlock(blockReq)
-		blockResp, err := service.QueryBlockBuffer(blockReq)
-		if err != nil {
-			errCode, _ := util.GetErrorCode(err)
-			c.JSON(errCode, err)
-		}
-		c.JSON(http.StatusOK, blockResp)
-	})
-
+// QueryBlockByID ...
+// @Summary QueryBlockByID ...
+// @Description Query block by ID
+// @Tags Blocks
+// @Accept  json
+// @Produce  json
+// @Param number query string false "number"
+// @Success 200 {string} json "{}"
+// @Router /api/block/:number [get]
+func QueryBlockByID(c *gin.Context) {
+	blockReq := &entity.Blocks{}
+	blockReq.Number = c.Param("number") //占位符传参
+	log.Debugf("Hello /api/block/:%#v", blockReq.Number)
+	//blockResp, err := service.QueryBlock(blockReq)
+	blockResp, err := service.QueryBlockBuffer(blockReq)
+	if err != nil {
+		errCode, _ := util.GetErrorCode(err)
+		c.JSON(errCode, err)
+	}
+	c.JSON(http.StatusOK, blockResp)
 }
