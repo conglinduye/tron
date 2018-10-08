@@ -65,6 +65,7 @@ func GetContract(contract *core.Transaction_Contract) (reflect.Type, interface{}
 	// 	}
 	// }
 	// return nil, nil
+
 	return GetContractByParamVal(contract.Type, contract.Parameter.Value)
 }
 
