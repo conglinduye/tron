@@ -69,7 +69,7 @@ func getContextBody(ctx *gin.Context) (*TBRequestType, error) {
 	}
 
 	if tbReq.Broadcast {
-		err = signAndBroadcastContract(tbReq.ContractType, tbReq.RealContract, tbReq.Data, tbReq.Key)
+		_, err = signAndBroadcastContract(tbReq.ContractType, tbReq.RealContract, tbReq.Data, tbReq.Key)
 	}
 
 	return tbReq, err
